@@ -5,219 +5,100 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 # Writing Skills
 
-A skill is a reference guide for a proven technique, pattern, or tool — not a narrative about how you solved something once.
+A skill is a reference guide for a proven technique, pattern, or tool, not a story about solving something once. Skills are behavior-shaping code; write them under TDD.
 
-Skills are behavior-shaping code. You write them the way you write code under TDD: watch an agent fail without the skill, write the skill against that specific failure, verify the failure stops, then close the loopholes the agent finds next.
+**REQUIRED BACKGROUND:** `toolbelt:test-driven-development` defines the RED-GREEN-REFACTOR cycle this adapts; `toolbelt:writing-for-agents` holds the editorial rules every skill edit applies. Anthropic's authoring guidance: [anthropic-best-practices.md](anthropic-best-practices.md).
 
-**Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
+**Scope.** New behavior-shaping guidance — a new skill, rule, or gate — needs a baseline first: watch an agent fail without it, write against that failure, then close the loopholes it finds next. Editing what exists does not: condensing, restructuring, fixing a link, or rewording a rule whose behavior you are not changing needs only to be *correct*. Can't tell? Ask whether an agent would behave differently after the edit. Yes → baseline first.
 
-**REQUIRED BACKGROUND:** `toolbelt:test-driven-development` defines the RED-GREEN-REFACTOR cycle this adapts. `toolbelt:writing-for-agents` holds the editorial rules every skill edit applies — context pointers, information hierarchy, leading words, the no-op test. For Anthropic's official authoring guidance, see [anthropic-best-practices.md](anthropic-best-practices.md).
+## Testing
 
-## The Iron Law
-
-```
-NO NEW BEHAVIOR-SHAPING GUIDANCE WITHOUT A FAILING TEST FIRST
-```
-
-Write the skill before seeing the baseline? Delete it. Start over.
-
-**No exceptions:**
-- Not for "simple additions"
-- Not for "just adding a section"
-- Don't keep untested guidance as "reference"
-- Don't "adapt" it while running tests
-- Delete means delete
-
-**Scope.** This gate governs guidance that changes what an agent does — a new skill, a new rule, a new gate. It does not govern editing what already exists: condensing, restructuring, fixing a broken link, or rewording a rule whose behavior you are not changing. Those need the change to be *correct*, not a pressure scenario. If you can't tell which you're doing, ask: would an agent behave differently after this edit? Yes → baseline first.
+Test a new or changed behavior-shaping skill before shipping it. The method, pressure scenarios, micro-tests, and the checklist are in [testing-skills-with-subagents.md](testing-skills-with-subagents.md).
 
 ## When to Create a Skill
 
-**Create when** the technique wasn't intuitively obvious, you'd reference it again across projects, and it applies broadly.
+**Create when** the technique wasn't obvious, you'd use it again across projects, and it applies broadly.
 
-**Don't create for** one-off solutions, standard practices documented elsewhere, project-specific conventions (those go in the consuming project's instructions file), or mechanical constraints — if regex or a validator can enforce it, automate it and save documentation for judgment calls.
+**Don't create for** one-off solutions, standard practices documented elsewhere, project-specific conventions (those belong in the consuming project's instructions file), or constraints a regex or validator can enforce. Automate those; document judgment calls.
 
-**Split by trigger, not by size.** A distinct entry condition earns its own skill and its own description, however short the body. One description straddling two entry conditions degrades both.
+**Split by trigger, not by size.** A distinct entry condition earns its own skill and description, however short the body; one description straddling two degrades both.
 
 ## Structure
 
 ```
 skills/skill-name/
   SKILL.md              # required
-  supporting-file.*     # only for heavy reference (100+ lines) or reusable tools
+  supporting-file.*     # heavy reference (100+ lines) or reusable tools
 ```
 
-Flat namespace, all skills searchable together. Keep principles, concepts, and code patterns under ~50 lines inline. Split out API references, comprehensive syntax, and scripts — those get loaded only when needed.
+Flat namespace; all skills are searchable together. Keep principles, concepts, and code patterns under ~50 lines inline; split out API references, full syntax, and scripts, loaded only when needed.
 
-Frontmatter requires exactly two fields, `name` and `description`, max 1024 characters total ([full spec](https://agentskills.io/specification)). Name uses letters, numbers, and hyphens only.
-
-A typical body: overview and core principle → when to use → the pattern or contract → quick-reference table → common mistakes. Deviate freely; that order is a starting point, not a template to fill in.
+Frontmatter is exactly `name` and `description`, max 1024 characters ([full spec](https://agentskills.io/specification)); names use letters, numbers, hyphens.
 
 ## The Description Field
 
-**This is the highest-leverage line in any skill.** It decides whether the skill fires at all. An agent reads descriptions to choose what to load, so it must answer one question: "should I read this right now?"
+**The highest-leverage line in any skill.** It answers one question for an agent choosing what to load: "should I read this now?"
 
-**Describe when to use it. Never summarize what it does.**
+**Describe when to use it. Never summarize what it does.** A description that summarized the workflow caused one review instead of two: the agent followed it and never read the body.
 
 ```yaml
-# ❌ Summarizes workflow — agents follow this instead of reading the skill
+# ❌ Summarizes workflow
 description: Use when executing plans - dispatches subagent per task with code review between tasks
-
-# ❌ Process detail
-description: Use for TDD - write test first, watch it fail, write minimal code, refactor
-
-# ❌ First person, vague, no trigger
-description: I can help you with async tests when they're flaky
 
 # ✅ Triggering conditions only
 description: Use when executing implementation plans with independent tasks in the current session
-
-# ✅ Describes the problem, not the mechanism
-description: Use when tests have race conditions, timing dependencies, or pass/fail inconsistently
 ```
 
-**Why this is a hard rule, not a style preference:** a description summarizing "code review between tasks" caused an agent to run ONE review when the skill body specified TWO. It followed the description and never read the body. Removing the workflow summary fixed it. A description that summarizes workflow creates a shortcut agents will take, and the skill body becomes documentation they skip.
-
-Write in third person (it lands in the system prompt). Use concrete triggers, symptoms, and error strings an agent would search for — "Hook timed out", "ENOTEMPTY", "flaky", "zombie", "pollution". Describe the *problem* (race conditions) rather than language-specific symptoms (`setTimeout`), unless the skill really is technology-specific — then make that explicit in the trigger.
+Write in third person (it lands in the system prompt). Use triggers, symptoms, and error strings an agent would search for — "Hook timed out", "ENOTEMPTY", "flaky". Name the *problem* (race conditions), not a language-specific symptom (`setTimeout`), unless the skill is technology-specific.
 
 ## Match the Form to the Failure
 
-Before writing guidance, classify the baseline failure. The form that bulletproofs one failure type measurably backfires on another.
+Classify the baseline failure first: the form that bulletproofs one failure measurably backfires on another.
 
 | Baseline failure | Right form | Wrong form |
 |---|---|---|
-| Skips/violates a rule under pressure (knows better, does it anyway) | Prohibition + rationalization table + red flags | Soft guidance ("prefer...", "consider...") |
-| Complies, but output has the wrong shape (bloated prompt, buried verdict, restated spec) | Positive recipe or contract: state what the output IS — its parts, in order | Prohibition list ("don't restate", "never narrate") |
-| Omits a required element from something they already produce | Structural: REQUIRED field or slot in the template they fill in | Prose reminders near the template |
-| Behavior should depend on a condition | Conditional keyed to an observable predicate ("if the brief exists, reference it") | Unconditional rule + exemption clauses |
+| Skips a rule under pressure (knows better, does it anyway) | One-sentence rule + reason; after that measurably fails, prohibition + rationalization table | Soft guidance ("prefer", "consider") |
+| Output has the wrong shape (bloated prompt, buried verdict, restated spec) | Recipe: what the output IS, its parts in order | Prohibitions ("don't restate") |
+| Omits an element from what they already produce | Structural: a REQUIRED slot in the template | Prose reminders near the template |
+| Behavior should depend on a condition | Conditional on an observable predicate ("if the brief exists, reference it") | Unconditional rule + exemptions |
 
-**Why prohibitions backfire on shaping problems:** under a competing incentive ("make the prompt self-contained"), agents negotiate with "don't X". In head-to-head wording tests on dispatch-prompt guidance, the prohibition arm produced clearly more of the unwanted content than the recipe arm (fully separated distributions), and trended worse than even the no-guidance control — micro-test your own case rather than assuming, but never reach for the prohibition by default. A recipe leaves nothing to negotiate: the output matches the stated shape or it doesn't.
+**Why prohibitions backfire on shaping problems:** under a competing incentive, agents negotiate with "don't X". In wording tests on dispatch prompts, the prohibition arm produced more unwanted content than the recipe arm (fully separated distributions), and trended worse than the no-guidance control. A recipe leaves nothing to negotiate. Micro-test your own case.
 
-**Rules for whichever form you pick:**
-- **No nuance clauses.** "Don't X unless it matters" reopens the negotiation — appending a single nuance clause to a winning recipe degraded it from consistent to noisy in the same wording tests. Express a real exception as its own conditional on an observable predicate.
-- **Exemption clauses don't scope.** "This limit doesn't apply to code blocks" still suppresses code blocks. If part of the output must be exempt, restructure so the rule can't reach it.
+**Whichever form you pick:**
+- **No nuance clauses.** "Don't X unless it matters" reopens the negotiation — one appended to a winning recipe degraded it from consistent to noisy in the same tests. Express a real exception as a conditional on an observable predicate.
+- **Exemption clauses don't scope.** "This limit doesn't apply to code blocks" still suppresses them; restructure so the rule can't reach the exempt part.
 
 ## Bulletproofing Against Rationalization
 
-For discipline failures only — an agent that knows the rule and skips it under pressure. For wrong-shaped output or omitted elements, this toolkit backfires; use the forms above.
+Use this only after a baseline shows the agent skipping a known rule under pressure and a brief instruction has failed to stop it. Frontier models overtrigger on aggressive phrasing; the default form is one sentence stating the rule and its reason.
 
-Agents are smart and will find loopholes. Four techniques, all sourced from what baseline testing actually caught:
+- **Close every loophole.** Name the workarounds the baseline produced, not just the rule.
+- **Build a rationalization table.** Each baseline excuse gets a row and a one-line reality, quoted verbatim rather than paraphrased.
+- **List the red-flag thoughts,** so an agent mid-rationalization can self-check, ending with what to do instead.
+- **Cut off spirit-versus-letter arguments** by saying the rule binds as written.
 
-**Close every loophole explicitly.** Don't just state the rule, forbid the specific workarounds. "Write code before test? Delete it." invites keeping it as reference. The version that holds adds: *Start over. No exceptions: don't keep it as "reference", don't "adapt" it while writing tests, don't look at it, delete means delete.*
-
-**Cut off spirit-vs-letter arguments early:**
-
-```markdown
-**Violating the letter of the rules is violating the spirit of the rules.**
-```
-
-**Build a rationalization table.** Every excuse an agent made during baseline testing gets a row and a one-line reality. Verbatim excuses beat paraphrases — you're matching the thought the agent is about to have.
-
-**Create a red flags list** of the thoughts themselves, so an agent mid-rationalization can self-check, ending with what to do: *All of these mean: Delete code. Start over with TDD.*
-
-Understanding why these work helps you apply them systematically — see [persuasion-principles.md](persuasion-principles.md) for the research foundation (Cialdini, 2021; Meincke et al., 2025).
-
-## RED-GREEN-REFACTOR
-
-**RED — baseline.** Run the pressure scenario with a subagent WITHOUT the skill. Document what they chose, which pressures triggered the violation, and the rationalizations **verbatim**. You cannot write the skill until you have seen this.
-
-**GREEN — minimal skill.** Address those specific rationalizations. No content for hypothetical cases. Re-run the same scenarios; the agent should comply.
-
-**REFACTOR — close loopholes.** New rationalization? Add its counter. Re-test until bulletproof.
-
-**Test each skill through the full cycle before starting the next one.** Batching is not more efficient; it just defers finding out that the first one doesn't work.
-
-Full methodology — writing pressure scenarios, pressure types (time, sunk cost, authority, exhaustion), plugging holes, meta-testing — is in [testing-skills-with-subagents.md](testing-skills-with-subagents.md).
-
-## Micro-Testing Wording
-
-Pressure scenarios are the final gate but are slow per iteration. Verify the wording itself first:
-
-1. **One fresh-context sample per call** — a raw API call, or a single-shot subagent if you don't have API access. System prompt = the realistic context the guidance will live in (the full skill or prompt template, not the guidance in isolation); user message = a task that tempts the failure.
-2. **Always include a no-guidance control.** If the control doesn't exhibit the failure, there is nothing to fix — stop, don't author the guidance.
-3. **5+ reps per variant.** Single samples lie.
-4. **Manually read every flagged match.** Score programmatically if you like, but template echoes and quoted counter-examples masquerade as hits; automated counts alone overstate both failure and success.
-5. **Variance is a metric.** When guidance lands, reps converge on the same shape. Five different interpretations across five reps means the wording isn't binding — tighten the form before adding words.
-
-Micro-tests verify wording; they do not replace pressure scenarios for discipline skills.
-
-## Testing by Skill Type
-
-| Type | Test with | Success criteria |
-|---|---|---|
-| **Discipline** (TDD, verification-before-completion) | Academic questions, then pressure scenarios — 3+ pressures combined | Follows the rule under maximum pressure |
-| **Technique** (condition-based-waiting, root-cause-tracing) | Application scenarios, variations, missing-information tests | Applies the technique to a new scenario |
-| **Pattern** (reducing-complexity, information-hiding) | Recognition scenarios, application, counter-examples | Identifies when *and when not* to apply it |
-| **Reference** (APIs, command guides) | Retrieval scenarios, application, gap testing | Finds and correctly applies the information |
-
-## Common Rationalizations for Skipping Testing
-
-| Excuse | Reality |
-|--------|---------|
-| "Skill is obviously clear" | Clear to you ≠ clear to other agents. Test it. |
-| "It's just a reference" | References can have gaps, unclear sections. Test retrieval. |
-| "Testing is overkill" | Untested skills have issues. Always. 15 min testing saves hours. |
-| "I'll test if problems emerge" | Problems = agents can't use skill. Test BEFORE deploying. |
-| "Too tedious to test" | Testing is less tedious than debugging bad skill in production. |
-| "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
-| "Academic review is enough" | Reading ≠ using. Test application scenarios. |
-| "No time to test" | Deploying untested skill wastes more time fixing it later. |
-
-**All of these mean: Test before deploying. No exceptions.**
+Why these work: [persuasion-principles.md](persuasion-principles.md) (Cialdini 2021; Meincke et al. 2025).
 
 ## Naming
 
-Name by what you DO or by the core insight, verb-first, gerunds for processes:
+Name by what you DO or the core insight — verb-first, gerunds for processes:
 
 - ✅ `condition-based-waiting` > `async-test-helpers`
 - ✅ `root-cause-tracing` > `debugging-techniques`
-- ✅ `flatten-with-flags` > `data-structure-refactoring`
 - ✅ `creating-skills` > `skill-creation`
 
 ## Cross-Referencing Other Skills
 
-Use the skill name with an explicit requirement marker — `**REQUIRED BACKGROUND:** You MUST understand toolbelt:systematic-debugging`. A bare `See skills/testing/test-driven-development` leaves it unclear whether it's required.
+Name the skill with a requirement marker — `**REQUIRED BACKGROUND:** You MUST understand toolbelt:systematic-debugging`. A bare `See skills/testing/test-driven-development` leaves it unclear whether it's required.
 
-**Never use `@` links.** `@skills/.../SKILL.md` force-loads the file immediately, burning context before you need it.
+**Never use `@` links.** `@skills/.../SKILL.md` force-loads the file, burning context before you need it.
 
 ## Flowcharts
 
-Use one ONLY for a non-obvious decision point, a process loop where you'd stop too early, or an "A vs B" choice. Never for reference material (use tables), code (use markdown blocks), or linear instructions (use numbered lists). Labels must carry semantic meaning — `helper1`, `step3` are useless in a diagram.
+Use one only for a non-obvious decision point, a loop where you'd stop early, or an A-vs-B choice. Use tables for reference, markdown blocks for code, numbered lists for linear steps. Labels carry meaning: `helper1` and `step3` are useless.
 
-Style rules are in `graphviz-conventions.dot`. To show a skill's diagrams to your human partner:
-
-```bash
-./render-graphs.js ../some-skill           # Each diagram separately
-./render-graphs.js ../some-skill --combine # All diagrams in one SVG
-```
+Style rules are in `graphviz-conventions.dot`. Show diagrams to your human partner with `./render-graphs.js ../some-skill` (`--combine` for one SVG).
 
 ## Code Examples
 
-**One excellent example beats many mediocre ones.** Complete, runnable, from a real scenario, commented to explain WHY, ready to adapt. Pick the language that fits the domain — TypeScript for testing techniques, shell or Python for system debugging.
-
-Don't implement in five languages, don't write fill-in-the-blank templates, and don't invent contrived scenarios. You're good at porting; one great example is enough.
-
-## Checklist
-
-**IMPORTANT: Create a todo for EACH item.**
-
-**RED:**
-- [ ] Pressure scenarios written (3+ combined pressures for discipline skills)
-- [ ] Run WITHOUT the skill — baseline behavior documented verbatim
-- [ ] Patterns in the rationalizations identified
-
-**GREEN:**
-- [ ] Frontmatter valid: `name` (letters/numbers/hyphens), `description` starting "Use when...", third person, no workflow summary, under 1024 chars total
-- [ ] Searchable keywords throughout — errors, symptoms, tools
-- [ ] Addresses the specific baseline failures, nothing hypothetical
-- [ ] Guidance form matches the failure type
-- [ ] Behavior-shaping wording micro-tested against a no-guidance control (5+ reps, every flagged match read manually) — N/A for pure reference skills
-- [ ] One excellent example; heavy reference and tools in separate files
-- [ ] Run WITH the skill — agents now comply
-
-**REFACTOR:**
-- [ ] New rationalizations from testing identified and countered
-- [ ] Rationalization table and red flags list built from all iterations
-- [ ] Re-tested until bulletproof
-
-**Ship:**
-- [ ] Committed and pushed
+**One excellent example beats many mediocre ones.** Complete, runnable, from a real scenario, commented to explain WHY, in the language that fits the domain — no fill-in templates. One is enough.

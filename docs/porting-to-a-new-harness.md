@@ -27,7 +27,7 @@ from your human partner. There are exactly two ways that happens:
   description ("Use when starting any conversation…") is then what triggers the
   model to load it. This is Codex's path.
 
-Native discovery is weaker: nothing wraps the content in `<EXTREMELY_IMPORTANT>`,
+Native discovery is weaker: nothing wraps the content in `<TOOLBELT>`,
 nothing re-injects after compaction, and firing depends on the model acting on a
 description. It works, but the acceptance test matters more there, not less.
 
@@ -58,10 +58,10 @@ invent a tool name the harness doesn't have.
 1. Derives the plugin root from its own path (`dirname`), so it does not depend on
    any harness-provided root variable.
 2. Reads `skills/using-toolbelt/SKILL.md` verbatim — frontmatter included.
-3. Wraps it: `<EXTREMELY_IMPORTANT>`, the line "You have a toolbelt.", a preamble
+3. Wraps it: `<TOOLBELT>`, the line "You have a toolbelt.", a preamble
    saying this is the full content of the `toolbelt:using-toolbelt` skill and that
    all other skills load via the `Skill` tool, then the skill body, then
-   `</EXTREMELY_IMPORTANT>`.
+   `</TOOLBELT>`.
 4. JSON-escapes the whole thing and prints one of two shapes, branching on
    `CLAUDE_PLUGIN_ROOT`.
 
@@ -104,7 +104,7 @@ Without this, long sessions silently lose skill triggering partway through.
 
 A harness with no compaction event needs an equivalent: re-inject on whatever
 event follows summarization, or inject per turn with a dedup guard that checks for
-the `EXTREMELY_IMPORTANT` marker already in context. Per-turn injection without a
+the `TOOLBELT` marker already in context. Per-turn injection without a
 guard bloats context; injection without re-injection dies at the first compact.
 
 If you inject a message rather than hook output, inject it as a **user** message,

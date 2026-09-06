@@ -4,6 +4,7 @@ set -euo pipefail
 repo_root=$(git rev-parse --show-toplevel)
 skill="$repo_root/skills/interactive-design/SKILL.md"
 metadata="$repo_root/skills/interactive-design/agents/openai.yaml"
+iteration="$repo_root/skills/interactive-design/iteration-mode.md"
 
 assert_contains() {
   local file=$1 text=$2 description=$3
@@ -16,6 +17,7 @@ assert_contains() {
 }
 
 [ -f "$skill" ] || { echo "not ok - skill file missing: $skill" >&2; exit 1; }
+[ -f "$iteration" ] || { echo "not ok - iteration mode file missing: $iteration" >&2; exit 1; }
 
 assert_contains "$skill" "name: interactive-design" "frontmatter name"
 assert_contains "$skill" "accepts the frontend-first offer" "description trigger"
@@ -41,7 +43,7 @@ if [ "$short_description_len" -lt 25 ] || [ "$short_description_len" -gt 64 ]; t
 fi
 echo "ok - short_description within 25-64 characters"
 
-frontmatter=$(sed -n '1{/^---$/!q}; 1d; /^---$/q; p' "$skill")
+frontmatter=$(awk 'NR==1{if($0!="---")exit; next} /^---$/{exit} {print}' "$skill")
 frontmatter_keys=$(printf '%s\n' "$frontmatter" | sed -n 's/^\([a-zA-Z0-9_-]*\):.*/\1/p' | sort | tr '\n' ' ')
 if [ "$frontmatter_keys" != "description name " ]; then
   echo "not ok - frontmatter has exactly the keys name and description" >&2
@@ -62,9 +64,9 @@ assert_contains "$skill" "iterate directly on an existing feature's UI" "second 
 assert_contains "$skill" "the request itself is the entry" "ENTRY-GATE third way in"
 assert_contains "$skill" "[PENDING]" "pending status documented"
 assert_contains "$skill" "a placeholder without" "placeholder gate teeth"
-assert_contains "$skill" "before §4's reconciliation may run" "materialization is a gate"
-assert_contains "$skill" "toolbelt:quick-task" "small-delta route named"
-assert_contains "$skill" "the single route confirmed in §8" "exit step mode-scoped at source"
+assert_contains "$iteration" "before §4's reconciliation may run" "materialization is a gate"
+assert_contains "$iteration" "toolbelt:quick-task" "small-delta route named"
+assert_contains "$skill" "the route confirmed in iteration-mode.md" "exit step mode-scoped at source"
 
 hard_gate=$(sed -n '/<HARD-GATE>/,/<\/HARD-GATE>/p' "$skill")
 if ! printf '%s' "$hard_gate" | grep -Fq "[PENDING]"; then
@@ -78,7 +80,7 @@ writing_specs="$repo_root/skills/writing-specs/SKILL.md"
 
 assert_contains "$brainstorming" "inside that skill is authorized" "HARD-GATE exception present"
 assert_contains "$brainstorming" "we could go frontend-first" "offer text present"
-assert_contains "$brainstorming" "The offer MUST be its own message" "own-message rule"
+assert_contains "$brainstorming" "The offer is its own message" "own-message rule"
 assert_contains "$brainstorming" "invoke it and no other" "After-the-Design fork"
 assert_contains "$brainstorming" "or to interactive-design when they accepted" "checklist item 6 conditional"
 

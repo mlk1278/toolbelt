@@ -7,16 +7,13 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write the plan for a capable engineer with **zero context for our codebase**. Decide what they cannot see: the files each task touches, the contracts, each test's purpose, the verification. DRY. YAGNI. TDD. Frequent commits.
+Write the plan for a capable engineer with **zero context for our codebase**: the files each task touches, the contracts, each test's purpose, the verification.
 
 **The plan decides everything; the implementer writes the code.**
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated worktree, it should have been created via the `toolbelt:using-git-worktrees` skill at execution time.
-
-**Save plans to:** `docs/toolbelt/plans/YYYY-MM-DD-<feature-name>.md`
-- Use your human partner's location when they name one.
+**Save plans to:** `docs/toolbelt/plans/YYYY-MM-DD-<feature-name>.md`, or your human partner's location when they name one.
 
 ## Scope Check
 
@@ -26,9 +23,9 @@ If the spec covers independent subsystems, propose one plan each. Every plan pro
 
 Read the nearest instructions for the target files. Run 2–3 targeted inline `rg` searches for the named symbols, neighboring tests, and existing pattern.
 
-Dispatch through toolbelt:agent-routing's `explorer` role only for a completeness inventory, an invisible trap, or a plan-shaping existence question. Start with one explorer. More explorers require unfamiliar, independent subsystems whose answers do not depend on each other.
+Dispatch through toolbelt:agent-routing's `explorer` role only for a completeness inventory, an invisible trap, or a plan-shaping existence question. Start with one explorer; more require unfamiliar, independent subsystems whose answers do not depend on each other.
 
-Ask for checkable paths and pointers: paths with line ranges, one reference implementation to copy, contracts to match, prerequisites, gotchas. End every brief with: **"What would a competent implementer, working only from a written plan and unable to see this code, get wrong here?"**
+Ask for checkable paths and pointers: line ranges, a reference implementation to copy, contracts, prerequisites, gotchas. End every brief with: **"What would a competent implementer, working only from a written plan and unable to see this code, get wrong here?"**
 
 ### The Gotcha Hunt
 
@@ -36,32 +33,27 @@ Ask for checkable paths and pointers: paths with line ranges, one reference impl
 - **Checks that can't fail.** A guard whose setup never reaches its branch, or a precondition read from output the gated command itself produces. A gate is a separate command that exits first.
 - **Coverage that leaves with the code.** Name the kept surfaces losing assertions, relocate that coverage green, then delete.
 - **Tooling traps.** Inverted exit codes (`git grep` 0 = matched = FAIL), tools missing on CI.
-- **Order and prerequisites.** Codegen, migrations, or fixtures the tests need first.
-- **Shared contracts.** Who else consumes this signature, table, or event.
+- **Order.** Codegen, migrations, or fixtures the tests need first.
+- **Shared contracts.** Other consumers of a changed signature, table, or event.
 - **Environment drift.** Where local and CI disagree.
 
-Every gotcha leaves this pass **resolved** — the plan shows the code, exclusion, or ordering handling it — or **named**, with an instruction to escalate. A gotcha that is neither is a plan defect.
+Every gotcha ends this pass **resolved** — the plan shows the code, exclusion, or ordering that handles it — or **named**, with an instruction to escalate. A gotcha that is neither is a plan defect.
 
 ## File Structure
 
-Map the files the work creates or modifies and what each is responsible for.
-
-- One responsibility and a defined interface per file; prefer small files.
-- Files that change together live together. Split by responsibility, not by layer.
-- Follow the codebase's patterns. Split a file you already modify, not the rest.
+Map the files the work creates or modifies and what each is responsible for: one responsibility and a defined interface each, following the codebase's patterns. Files that change together live together — split by responsibility, not by layer, and split only a file you already modify.
 
 ## Task Right-Sizing
 
-A task is the smallest unit worth its own test cycle and a fresh reviewer's gate. Fold setup, configuration, scaffolding, and documentation into the task whose deliverable needs them. Split only where a reviewer could reject one task and approve its neighbor. Every task ends with an independently testable deliverable. Each step is one action (2-5 minutes).
+A task is the smallest unit worth its own test cycle and a fresh reviewer's gate, ending in an independently testable deliverable. Fold setup, configuration, and documentation into the task whose deliverable needs them. Split only where a reviewer could reject one task and approve its neighbor. Each step is one action (2-5 minutes).
 
-- A task's **Files:** block is closed. It lists every file the task creates or modifies. "Plus every caller", "compiler-led", and "wherever else it is referenced" are placeholders and fail No Placeholders.
-- A task lists at most 8 files, as a hard limit. As a guide its change reads in one sitting, around 400 lines; the plan reviewer flags tasks that look larger.
-- The one exception is a mechanical sweep: one uniform, behavior-neutral transformation (a rename, an import path change) with one verification command. The task says "Mechanical sweep:" and names that command.
-- A task that adds or changes a migration, shared schema, shared type, or shared contract owns the code that keeps that change correct. Fencing that code into a later task is a defect. If the result exceeds 8 files, split it into serial tasks that each leave the contract correct.
+- A task's **Files:** block is closed: every file it creates or modifies. "Plus every caller" and "wherever else it is referenced" fail No Placeholders.
+- A task lists at most 8 files, a hard limit; as a guide its change reads in one sitting, around 400 lines. The one exception is a mechanical sweep — one uniform, behavior-neutral transformation with one verification command. That task says "Mechanical sweep:" and names the command.
+- A task changing a migration, shared schema, shared type, or shared contract owns the code that keeps it correct; fencing that into a later task is a defect. Over 8 files, split into serial tasks that each leave the contract correct.
 
 ## Plan Document Header
 
-**Every plan MUST start with this header:**
+Every plan starts with this header:
 
 ```markdown
 # [Feature Name] Implementation Plan
@@ -104,57 +96,29 @@ Partition the plan into independently verifiable pull requests before writing ta
 |---|---|---|---|---|
 | 1 | [one reviewable outcome] | [exact task numbers] | [boundary numbers or none] | [command or observable result] |
 
-Every task number appears in exactly one boundary. Verification passes without later boundaries. A one-PR plan states why no smaller independently verifiable outcome exists. A boundary's `Depends on` names at most one predecessor whose PR may still be open when the boundary starts; every other dependency must be merged first.
+Every task number appears in exactly one boundary; each boundary's verification passes without later boundaries. A one-PR plan states why no smaller independently verifiable outcome exists. A boundary's `Depends on` names at most one predecessor whose PR may still be open when the boundary starts; every other dependency merges first.
 
-For shared substrate, put the core plus one representative consumer in the first boundary. Later consumers may share a PR only when they repeat the same reviewer judgment. Novel lifecycle, export, or rollout work stays separate.
+For shared substrate, take the core plus one representative consumer first. Later consumers share a PR only when they repeat the same reviewer judgment. Novel lifecycle, export, or rollout work stays separate.
 
 ## Execution Tracks
 
-Tracks are chains of tasks run concurrently, each in its own sub-worktree, merged at a declared integration point.
-
-**Required** for every plan with more than one PR boundary or more than three tasks. A plan whose tracks are all `serial-N` states in one sentence why no tasks can run concurrently. The section follows `## PR Boundaries`:
-
-```markdown
-## Execution Tracks
-
-| Track | Tasks | Depends on | Files touched (summary) | Why safe |
-|---|---|---|---|---|
-| serial-1 | 1–2 | — | shared types, API contract | mainline (contract freeze) |
-| backend | 3–6 | serial-1 | src/server/** | disjoint from frontend, e2e-specs |
-| frontend | 7–9 | serial-1 | src/app/settings/** | disjoint from backend, e2e-specs |
-| e2e-specs | 10 | serial-1 | e2e/** | disjoint from backend, frontend |
-| serial-2 | 11 | backend, frontend, e2e-specs | (integration) | merge point |
-```
-
-Structure rules:
-
-- Track ids are kebab-case slugs, used as branch and worktree directory names. `serial-N` tracks run in the primary worktree, named tracks in sub-worktrees.
-- Every task number appears in exactly one track, in numeric order within it.
-- `Depends on` names tracks, forming a DAG. Tracks with identical satisfied dependencies run concurrently.
-
-Declaration rules:
-
-- **Disjoint file sets.** No file is created or modified by two concurrent tracks. Test files, fixtures, and generated-file sources count.
-- **No contract-shaped work in tracks.** Migrations, shared schema, shared types, and shared API contracts belong in a mainline task before the fork — the **contract-freeze** pattern. A track consumes the frozen contract; it never changes it.
-- **No cross-track interfaces.** No track's task may list another concurrent track's `Produces:` in its `Consumes:`. Anything consumed across tracks comes from a mainline task before the fork.
-- **Threshold.** A track must beat roughly 2–5 minutes of per-worktree setup: at least 2 tasks, or one large task. Less stays in the mainline.
-- **Every fork closes with a mainline integration task.** The orchestrator merges; the task does not. It runs the integration scope — targeted cross-package checks and E2E over the merged tracks' seams, within SDD's Verification Scope policy, never workspace-wide — and fixes what breaks. Its text states that its brief carries each merged track's `Decisions & drift risks` entries.
+Required for every plan with more than one PR boundary or more than three tasks. A plan whose tracks are all `serial-N` states in one sentence why no tasks can run concurrently. The section follows `## PR Boundaries`; its table shape and declaration rules are in [execution-tracks.md](execution-tracks.md) — read it before declaring tracks.
 
 ## Plan Altitude: Contracts, Not Implementations
 
-Specify each artifact at the altitude where the decision lives:
+Specify each artifact at the altitude where its decision lives:
 
 | Artifact | The plan writes |
 |---|---|
-| Data model — schema, migrations, shared types | Complete code, once, in the `## Data Model` section at the top. Every task derives from it |
-| Constants, config values, fixtures | Complete — exact values |
-| Functions and services | Signature stubs: exact name, parameters, return type, error behavior. Add the load-bearing lines (a lock order, a tricky query, a non-obvious algorithm) only when those lines are themselves the decision |
-| Endpoints | Method, path, request/response shape, status codes, capability — exact |
-| Tests | One line per test: name — setup — assertion. Full test code only when the harness itself is a trap with no in-repo precedent |
-| UI components | Name, props contract, states, which existing primitives to compose |
+| Data model — schema, migrations, shared types | Complete code, once, in `## Data Model`; tasks derive from it |
+| Constants, config, fixtures | Exact values |
+| Functions and services | Signature stubs: name, parameters, return type, error behavior. A load-bearing line only when it is itself the decision |
+| Endpoints | Method, path, request/response shape, status codes, capability |
+| Tests | One line per test: name — setup — assertion. Full code only where the harness is a trap with no in-repo precedent |
+| UI components | Name, props contract, states, primitives to compose |
 | Anything with in-repo precedent | The decision plus the reference to copy: `path:line` |
 
-**The altitude test:** a step is fully specified when two capable implementers working independently from it produce behaviorally interchangeable code.
+**The altitude test:** a step is fully specified when two capable implementers working from it independently produce behaviorally interchangeable code.
 
 ## Task Structure
 
@@ -217,28 +181,22 @@ git commit -m "feat: add specific feature"
 
 ## No Placeholders
 
-A placeholder is an **undecided decision**, not unwritten code. These are **plan failures** — never write them:
+A placeholder is an **undecided decision**, not unwritten code. Never write:
 - "TBD", "TODO", "implement later", "fill in details"
-- "Add appropriate error handling" / "add validation" / "handle edge cases" — name the exact behavior instead
+- "Add error handling" / "add validation" / "handle edge cases" — name the exact behavior
 - "Write tests for the above" — enumerate each test: name — setup — assertion
 - "Similar to Task N" — restate this task's contract in full
-- References to types, functions, or methods not defined in any task
+- References to types, functions, or methods no task defines
 
 ## Self-Review
 
-Check the plan against the spec yourself, not with a subagent. Fix findings inline; add a task for any spec requirement with none.
-
-Run every Plan Review Gate judgment below against your own plan. A plan with no `## Execution Tracks` section, one PR boundary, and three or fewer tasks is valid.
+Check the plan against the spec yourself, not with a subagent. Fix findings inline; add a task for any spec requirement with none. Run every Plan Review Gate judgment below against your own plan. A plan with no `## Execution Tracks` section, one PR boundary, and three or fewer tasks is valid.
 
 ## Plan Review Gate
 
 **Required.** After self-review, save the plan and have a different harness review it.
 
-Invoke toolbelt:agent-routing and resolve the reviewer with role `reviewer`,
-specialty `plan`, and the harness that wrote the plan as `author-harness`. Follow
-that skill's resolver-path contract; the resolver is not relative to the project.
-
-`--author-harness` drops same-harness routes case-insensitively and fails closed if none remain. If resolution fails, stop and tell your human partner. Never review the plan through the harness that wrote it, and never pick a reviewer yourself.
+Resolve the reviewer through toolbelt:agent-routing with role `reviewer`, specialty `plan`, and the writing harness as `author-harness`, following that skill's resolver-path contract. `--author-harness` drops same-harness routes case-insensitively and fails closed if none remain; if resolution fails, stop and tell your human partner. Never pick a reviewer yourself.
 
 Dispatch the reviewer with the plan and spec paths. It may fan out its own explorers. Ask it to judge:
 
@@ -246,20 +204,18 @@ Dispatch the reviewer with the plan and spec paths. It may fan out its own explo
 - **Task decomposition** — independently testable, within the 8-file limit, workable order
 - **Interface consistency** — types, signatures, and names agree across tasks
 - **Placeholders** — any step that defers a decision
-- **Altitude** — implementation code where a contract belongs; a Data Model section missing or repeated
-- **Unflagged gotchas** — traps in the touched code the plan does not warn about
+- **Altitude** — implementation code where a contract belongs; a Data Model missing or repeated
+- **Unflagged gotchas** — traps the plan does not warn about
 - **Global Constraints** — present, with exact values from the spec
-- **PR boundaries** — missing, horizontal, overlapping, or unjustified boundaries are plan defects; every task appears once, each PR independently verifiable
-- **Execution tracks** — the declaration rules, accepting a plan whose tracks pass them; a plan with no concurrent tracks and no one-sentence justification is a defect
+- **PR boundaries** — missing, horizontal, overlapping, or unjustified boundaries are defects; every task appears once, each independently verifiable
+- **Execution tracks** — the declaration rules; a plan with no concurrent tracks and no one-sentence justification is a defect
 
-Handle what comes back the way writing-specs does: small technical gaps — fix and proceed. A rework large enough to change the approach — bring it to your human partner. Unsure — ask.
+Handle findings the way writing-specs does: small technical gaps — fix and proceed; a rework large enough to change the approach — bring it to your human partner; unsure — ask.
 
 ## Execution Handoff
 
-After the plan review is clean, hand your human partner the whole plan. Delivery owns boundary order.
+After the review is clean, hand your human partner the whole plan; delivery owns boundary order.
 
 > "Plan complete and saved to `docs/toolbelt/plans/<filename>.md`, reviewed through <reviewer harness>. Handing the plan to delivery."
 
-Delivery runs toolbelt:subagent-driven-development per boundary: fresh
-subagent per task, task review after each, broad whole-branch review at
-the end.
+Delivery runs toolbelt:subagent-driven-development per boundary: fresh subagent per task, task review after each, broad whole-branch review at the end.

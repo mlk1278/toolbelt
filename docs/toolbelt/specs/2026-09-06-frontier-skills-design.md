@@ -201,9 +201,15 @@ Word ceilings, enforced by `tests/toolbelt/test-word-counts.sh`:
 | `skills/agent-routing/SKILL.md` | 834 | 800 |
 | `skills/quick-task/SKILL.md` | 194 | 200 |
 | `docs/WORKFLOW.md` | 290 | 320 |
+| `skills/writing-plans/execution-tracks.md` | new | 360 |
+| `skills/subagent-driven-development/parallel-tracks.md` | new | 420 |
+| `skills/interactive-design/iteration-mode.md` | new | 500 |
+| `skills/writing-skills/testing-skills-with-subagents.md` | 2447 | 1800 |
 
 Ceilings above today's count are files that gain rules from Components 3
-and 4. The pass is a rewrite for those files, not an exemption.
+and 4. The pass is a rewrite for those files, not an exemption. The four
+disclosed side files carry ceilings so disclosure cannot become an escape
+hatch from the table; a later disclosure adds a row in the same commit.
 
 ### Per-file keep lists
 

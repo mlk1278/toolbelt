@@ -16,8 +16,8 @@ Two harnesses: Claude Code and Codex. The rest were removed. `docs/porting-to-a-
 
 Skills are code, not prose. They shape agent behavior, so edit them like code.
 
-- **Keep them short.** Most of this content was written for models that needed the process restated three times. They don't anymore. Cut restatement; keep gates.
-- **Preserve forceful blocks verbatim.** `<HARD-GATE>`, `<ENTRY-GATE>`, Red Flags tables, and rationalization lists are written the way they are because that phrasing survives compaction. Don't smooth them out.
+- **Keep them short.** Most of this content was written for models that needed the process restated three times. They don't anymore. Cut restatement; keep gates. Claude Code re-injects a skill after compaction, up to 5,000 tokens per skill; length, not phrasing, decides what survives.
+- **Forceful blocks are gates, not decoration.** `<HARD-GATE>` and `<ENTRY-GATE>` mark a step whose failure is expensive or irreversible. Keep them to two or three sentences: the condition, who owns the exception, and why. Rationalization tables exist only where a brief instruction measurably failed under pressure; today that is test-driven-development alone. Re-test them when the model changes.
 - **One skill names exactly one next skill** and says "Do NOT invoke any other skill." Handoff chains leak otherwise.
 - **"Your human partner" is deliberate.** Don't normalize it to "the user."
 - **Split by trigger, not by size.** A distinct entry condition earns its own skill and its own `description`, however short the body is. One description straddling two entry conditions degrades both.

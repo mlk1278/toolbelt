@@ -9,15 +9,15 @@ Own one chain: one PR, or PRs each targeting the one below it. This skill is the
 
 ## Project policy
 
-Read `.toolbelt/pr-policy.md` at the repository root if present. It names the review providers to await, how to request them, complexity lanes, and timeouts. It overrides this skill. Without it, the required conditions are exact-head green CI, zero unresolved review threads, and no requested-changes review. Never hard-code a provider this file does not name.
+Read `.toolbelt/pr-policy.md` at the repository root if present. It names the review providers to await, how to request them, complexity lanes, and timeouts, and it overrides this skill. Without it, the required conditions are exact-head green CI, zero unresolved review threads, and no requested-changes review. Never hard-code a provider this file does not name.
 
 ## Preflight
 
-Record every layer's **layer record**: PR number, branch, full head SHA, base branch, and local-gate SHA. The local final gate must have approved this exact head before monitoring begins. A resume carrying a new layer appends its record to the chain. Bind all evidence to the current head; any push starts a new evidence cycle. Exception: a push touching only Markdown under `docs/**` or the repository root, or `.toolbelt/**` scratch, carries local-gate and completed-review evidence forward — record the range. CI never carries forward. A file the application builds, renders, or serves, or that CI executes, never qualifies.
+Record every layer's **layer record**: PR number, branch, full head SHA, base branch, and local-gate SHA. The local final gate must have approved this exact head before monitoring begins. A resume carrying a new layer appends its record to the chain. Bind all evidence to the current head; any push starts a new evidence cycle. Exception — the docs-only rule in toolbelt:finishing-a-development-branch Step 1 applies: such a push carries local-gate and completed-review evidence forward — record the range. CI never carries forward.
 
 ## Chain rules
 
-**Lowest first.** The lowest unmerged PR gets all attention until it merges. Read and batch review threads on higher layers. Never fix them while the bottom is not merge-ready.
+**Lowest first.** The lowest unmerged PR gets all attention until it merges. Read and batch review threads on higher layers, but fix none while the bottom is not merge-ready.
 
 **Fix in the owner.** A finding lands in the lowest PR whose diff contains the code. After pushing the owner, rebase the layers above one at a time, working upward. Record each layer's old head before rebasing it. Run `git rebase --onto <parent-new-head> <parent-old-head> <layer-branch>`, where the parent is the layer directly below. Push each with `--force-with-lease`. Every rebased head starts a new evidence cycle: exact-head CI, provider review, mergeability, threads. Local review repeats only when a layer's `git patch-id --stable` changed.
 
@@ -41,6 +41,6 @@ A provider that reaches the policy timeout on one head (default 20 minutes), or 
 
 ## Merge and return
 
-Immediately before merging a layer, re-verify on the expected head (or a recorded docs-only carry-forward head): policy-named providers or the recorded fallback, exact-head green CI, mergeability, and zero unresolved threads. Merge when all pass, and confirm the remote PR is `MERGED`.
+Immediately before merging a layer, re-verify on the expected head (or a recorded docs-only carry-forward head): policy-named providers or the recorded fallback, exact-head green CI, mergeability, and zero unresolved threads. Merge when all pass, then confirm the remote PR is `MERGED`.
 
 Return one entry per layer: PR number, final head SHA, remote state (`MERGED`, `OPEN`, `CLOSED`), merge commit OID when merged, target branch, and blocker reason when not merged. A bottom PR closed without merging returns `CLOSED` for it and a durable blocker for every layer above. The caller owns post-merge reconciliation.

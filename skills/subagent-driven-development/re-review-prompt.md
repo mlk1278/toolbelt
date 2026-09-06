@@ -1,12 +1,11 @@
 # Scoped Re-Review Prompt Template
 
-Use this when dispatching the re-review after the fix round.
+Use when dispatching the re-review after the fix round.
 
 ```
 Subagent (role: reviewer):
   description: "Re-review Task N fixes"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model inherits the session's most expensive one]
+  model: [MODEL — REQUIRED: per SKILL.md Model Selection]
   prompt: |
     Verdict each finding and inspect the fix diff — nothing else.
 
@@ -16,9 +15,9 @@ Subagent (role: reviewer):
 
     ## Project Review Guidance
 
-    If `docs/REVIEW-GUIDANCE.md` exists at the repository root, read it.
-    It is reviewer-only. Apply its project-wide review guidance and report
-    any conflict with the task requirements instead of guessing.
+    Read `docs/REVIEW-GUIDANCE.md` if it exists at the repository root.
+    It is reviewer-only. Report conflicts with the task requirements
+    instead of guessing.
 
     ## The Findings Under Verification
 
@@ -32,31 +31,29 @@ Subagent (role: reviewer):
     **Diff file:** [DIFF_FILE]
 
     Your evidence is the findings list, the report's fix results, and the
-    diff file — read each once. Leave the working tree untouched and
-    dispatch no subagents. If the diff file is missing, fetch it with
-    `git diff --stat [FIX_BASE_SHA]..[HEAD_SHA]` and
+    diff file, each read once. Leave the working tree untouched; dispatch
+    no subagents. If the diff file is missing, rebuild it with
     `git diff [FIX_BASE_SHA]..[HEAD_SHA]`.
 
     Findings outside the fix diff go to the ledger and never extend the loop.
     Report them under Out-of-Scope Observations.
 
     The report's fix results are the test evidence: confirm each row names
-    the covering test command and its output, and verify the claims
-    against the diff. Take at most one focused test run, on a specific
-    doubt no reported run answers.
+    the covering test command and its output, and check the claims against
+    the diff. Take at most one focused run, on a doubt they leave open.
 
     ## Output Format
 
-    Your final message is the report itself, beginning with the first
-    finding's verdict. Every line is a verdict, a finding with file:line,
-    or a check you ran.
+    Your final message is the report, beginning with the first finding's
+    verdict. Every line is a verdict, a finding with file:line, or a check
+    you ran.
 
     ### Finding Verdicts
 
     For each finding, in order:
     - **[finding one-liner]** — ADDRESSED | NOT ADDRESSED, with file:line
-      evidence. "Attempted" is not addressed: the specific defect must no
-      longer exist.
+      evidence. "Attempted" is not addressed: the defect must no longer
+      exist.
 
     ### New Breakage in the Fix Diff
 

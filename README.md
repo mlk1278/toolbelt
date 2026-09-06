@@ -83,7 +83,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
+- **verification-before-completion** - Audit every claim against a tool result before reporting
 
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
@@ -92,7 +92,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 - **writing-plans** - Detailed implementation plans
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
+- **receiving-code-review** - Verify feedback against the code before acting on it
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)

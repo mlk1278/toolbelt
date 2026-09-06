@@ -42,7 +42,7 @@
 - `tests/toolbelt/test-word-counts.sh` is red at HEAD today (`task-reviewer-prompt.md` 851/850). Task 9 clears it; tracks that run the full loop before Task 9 lands see that one failure and nothing else.
 - `tests/toolbelt/test-interactive-design.sh:44` uses `sed -n '1{/^---$/!q}; 1d; /^---$/q; p'`, which BSD sed on macOS rejects ("extra characters at the end of q command"), so the test exits non-zero before any needle on this machine. Task 4 (track `design`, which owns the file) replaces it with the portable `awk 'NR==1{if($0!="---")exit; next} /^---$/{exit} {print}'`. Until Task 4 lands, every "Expected: PASS" for that test holds only on GNU sed.
 - `sed -n '/<HARD-GATE>/,/<\/HARD-GATE>/p'` prints to end of file when a later line mentions the tag inline without a closing tag (writing-for-agents does today). Task 11's gate-length check anchors to whole-line tags: `/^<HARD-GATE>$/,/^<\/HARD-GATE>$/`. Skills may mention the tags inline only as backticked text on a single line.
-- New `*.sh` test files are linted by `scripts/lint-shell.sh`; Tasks 11, 12, and 18 run `scripts/lint-shell.sh <new file>` in their Verify step so shellcheck findings surface there, not at Task 21.
+- New `*.sh` test files are linted by `scripts/lint-shell.sh`; Tasks 11, 12, and 18 run `scripts/lint-shell.sh <new file>` in their Verify step so shellcheck findings surface there, not at Task 21. `shellcheck` is not on PATH on this machine: when `command -v shellcheck` fails, write "lint skipped: shellcheck not installed" in the report and continue; run `bash -n <file>` instead.
 - `tests/toolbelt/test-quick-task.sh:52` fails if quick-task mentions `pr-monitor`, `ux-gate`, `## Global Constraints`, `toolbelt:subagent-driven-development`, or `toolbelt:finishing-a-development-branch`; `test-delivery.sh` has two `assert_before` orderings ("Fetch the predecessor's remote head" before `toolbelt:using-git-worktrees`; `ux-gate` before "broad final review is the slice gate"). Task 10 keeps both.
 - `tests/toolbelt/test-workflow-summary.sh:28` requires exactly two lines matching `^- \`[a-z-]+\`:` in `docs/AGENTS-SNIPPET.md`; Task 20's new sentence must not be formatted as such a bullet.
 
@@ -102,27 +102,27 @@ An array, one entry per capture:
 | Check | Severity | Rule |
 |---|---|---|
 | `page-overflow` | blocker | `documentElement.scrollWidth > documentElement.clientWidth + 1` |
-| `element-overflow` | should | a visible leaf element's `right` or `bottom` exceeds, by more than 1px, the rect of its nearest ancestor whose computed `overflow-x` or `overflow-y` is `hidden` or `clip`, or the viewport (`clientWidth`/`clientHeight`) when no such ancestor exists; skipped when the element or an ancestor matches an `allowOverflow` selector |
+| `element-overflow` | should | a visible leaf element's `right` or `bottom` exceeds, by more than 1px, the rect of its nearest ancestor whose computed `overflow-x` (for `right`) or `overflow-y` (for `bottom`) is `hidden` or `clip`; when no such ancestor exists, only `right` is compared, against the viewport's `clientWidth` (never `bottom` against `clientHeight`, since normal pages scroll); skipped when the element or an ancestor matches an `allowOverflow` selector |
 | `clipped-text` | should | a leaf with non-empty `textContent`, `scrollWidth > clientWidth + 1`, computed `overflow-x` not `visible`, and `text-overflow` not `ellipsis` |
-| `overlap` | should | two visible leaves, neither an ancestor of the other, neither `position: absolute` or `fixed`, whose rects intersect by more than 4px on both axes, unless either matches an `allowOverlap` selector |
+| `overlap` | should | two visible leaves, neither an ancestor of the other, neither `position: absolute` or `fixed`, neither with computed `display` `inline` (wrapped inline boxes have misleading union rects), whose `getBoundingClientRect()` rects intersect by more than 4px on both axes, unless either matches an `allowOverlap` selector |
 | `unclickable` | blocker | for each visible `button, a[href], [role=button], input, select, textarea` whose centre `(cx, cy)` lies inside the viewport, `document.elementFromPoint(cx, cy)` is neither the control, nor inside it, nor an ancestor of it; controls outside the viewport are not checked |
-| `tap-target` | nit | `viewport.width < 500` and an interactive control's rect is under 44×44 CSS px |
+| `tap-target` | nit | `viewport.width < 500` and a control from the `unclickable` selector list has a rect under 44×44 CSS px |
 | `layout-shift` | should | the per-step delta of the running sum of `layout-shift` entries with `hadRecentInput === false` (observer installed before navigation, sum read at each capture, `cls` = this step's delta) exceeds 0.1; `clsSources` lists each source node's selector |
 | `console-error` | should | a `console` message of type `error` during the step |
 | `failed-request` | should | a response with status ≥ 400 or a `requestfailed` event during the step |
 | `broken-image` | should | `img.complete && img.naturalWidth === 0` |
 | `font-fallback` | should | `document.fonts.status !== 'loaded'` after 3 s, or `document.fonts.check('16px "<family>"')` is false for a family in `matrix.fonts` |
-| `theme-leak` | should | theme is `dark`, a visible element's computed background has alpha ≥ 0.99 and relative luminance > 0.9, its rect area exceeds 2000 CSS px², and neither it nor an ancestor matches an `allowLight` selector |
+| `theme-leak` | should | theme is `dark`, a visible element's computed `background-color` (gradients and images ignored) has alpha ≥ 0.99 and relative luminance > 0.9, its rect area exceeds 2000 CSS px², and neither it nor an ancestor matches an `allowLight` selector |
 | `step-failed` | blocker | `waitFor` or the action timed out; entry carries `error` |
 | `axe` | as reported | `@axe-core/playwright` violations when the module resolves from the project root |
 
-"Visible" means `getBoundingClientRect()` has width and height > 0, computed `visibility` is not `hidden`, and `display` is not `none`. "Leaf" means no element children. `checks[].selector` is `TAG#id.class1.class2` (tag upper-case; `#id` and classes only when present, classes in DOM order) and every check entry also carries `text`: the element's `textContent` trimmed to 40 characters. `clsSources` uses the same selector format.
+"Visible" means `getBoundingClientRect()` has width and height > 0, computed `visibility` is not `hidden`, and `display` is not `none`. "Leaf" means no element children. `checks[].selector` is `TAG#id.class1.class2` (tag upper-case; `#id` and classes only when present, classes in DOM order) and every check entry also carries `text`: the element's `textContent` trimmed to 40 characters. Document-level checks (`page-overflow`, `font-fallback`, `step-failed`, `console-error`, `failed-request`) carry `selector: null` and `text: null`, plus `message` for `step-failed`, `console-error`, and `failed-request`. `clsSources` uses the same selector format. `console[]` entries are the message strings; `failedRequests[]` entries are `"<status> <url>"` or `"failed <url>"`; `fonts` is `document.fonts.status` (`loaded` | `loading` | `error`). `axe` is `"skipped"` under `--smoke`, `"unavailable"` when the module does not resolve, else the violations array. Reference-screen entries have `tag: reference-<n>-<width>-<theme>`, `state: "default"`. Paths: `storageState` resolves relative to `--project-root`; `--out` and `--baseline` resolve relative to the working directory.
 
 Theme application: `media` sets `colorScheme` on the context; `class`, `attribute`, and `localStorage` apply in a `context.addInitScript` that runs before any page script — for `class` and `attribute`, patch `document.documentElement` as soon as it exists (immediately when present, else from a `MutationObserver` on `document`), so the first paint is already themed.
 
 Actions: `click`, `hover`, `focus` call the Playwright locator method of that name; `scroll` calls `locator.scrollIntoViewIfNeeded()` then `element.scrollIntoView({block: 'start'})`. Each step performs its action once. Order per step: action → filmstrip frames (motion steps only, animations enabled, at 0, 150, 400 ms after the action returns) → `waitFor` (15 s) → two animation frames → still (`animations: 'disabled'`, `caret: 'hide'`) → crops → mechanical checks. A `motion` step's reduced-motion frame comes from a second context with `reducedMotion: 'reduce'` that repeats the navigation and every earlier step's action on that pathway, then this step's action, and captures one frame 400 ms after it.
 
-Crops: each `crops` selector and each `-diff-crop.png` is captured in a dedicated DPR-2 context (same viewport width and height, same theme, same navigation and step actions replayed) with `page.screenshot({clip})` after `scrollIntoView({block: 'start'})` on the element; never by upscaling the still.
+Crops: captured in a dedicated DPR-2 context (same viewport width and height, same theme, same navigation and step actions replayed), never by upscaling the still. A `crops` selector uses `locator.screenshot()` (Playwright scrolls it into view). A `-diff-crop.png` uses `page.screenshot({clip})` with the page scrolled to the top and `clip = {x: box[0]/dpr, y: box[1]/dpr, width: box[2]/dpr, height: box[3]/dpr}` where `dpr` is the head still's device scale factor and the 24px padding is applied in CSS px.
 
 Diff: `ratio` = changed pixels ÷ (max(widthA, widthB) × max(heightA, heightB)); `box` = `[x, y, w, h]` in image pixels of the head still; images of different dimensions are `changed` with `box` covering the head still.
 
@@ -209,7 +209,7 @@ Acceptance after the chain merges is the orchestrator's step, not a task: reinst
 |---|---|---|---|---|
 | serial-1 | 1 | — | CLAUDE.md, writing-for-agents, writing-skills (+ testing reference) | mainline: doctrine every rewrite follows |
 | discipline | 2–3 | serial-1 | using-toolbelt, hooks/session-start, docs/porting-to-a-new-harness.md, verification-before-completion, receiving-code-review, systematic-debugging, test-driven-development | disjoint from design, delivery-chain, orchestration; owns no test file |
-| design | 4–5 | serial-1 | brainstorming, writing-specs, interactive-design (+ iteration-mode.md), the spec, tests/toolbelt/test-interactive-design.sh | disjoint from the others; owns test-interactive-design.sh |
+| design | 4–5 | serial-1 | brainstorming, writing-specs, interactive-design (+ iteration-mode.md), tests/toolbelt/test-interactive-design.sh | disjoint from the others; owns test-interactive-design.sh |
 | delivery-chain | 6–7 | serial-1 | finishing-a-development-branch, dispatching-parallel-agents, using-git-worktrees, requesting-code-review (+ code-reviewer.md), tests/toolbelt/test-worktree-baseline.sh | disjoint from the others; keeps test-reviewer-context.sh and test-execution-tracks.sh needles verbatim |
 | orchestration | 8–10 | serial-1 | writing-plans (+ execution-tracks.md, − plan-document-reviewer-prompt.md), SDD (+ parallel-tracks.md, three prompts), delivery, pr-monitor, agent-routing, quick-task, tests/toolbelt/test-execution-tracks.sh | disjoint from the others; owns the one test file it edits |
 | serial-2 | 11 | discipline, design, delivery-chain, orchestration | test-word-counts.sh, test-doctrine.sh, README.md | integration: enforces ceilings over the merged rewrite |
@@ -393,7 +393,7 @@ git commit -m "Unslop: receiving-code-review, systematic-debugging, test-driven-
 **Files:**
 - Modify: `skills/brainstorming/SKILL.md`
 - Modify: `skills/writing-specs/SKILL.md`
-- Modify: `tests/toolbelt/test-interactive-design.sh:80-87`
+- Modify: `tests/toolbelt/test-interactive-design.sh:44,80-87`
 
 **Interfaces:**
 - Consumes: Task 1 doctrine
@@ -639,7 +639,7 @@ Expected: 2138 (over 1500); the assertion count.
 
 - [ ] **Step 3: Light pass on the three prompts**
 
-Within the rewrite rules, keep every placeholder, section heading, and needle string. `task-reviewer-prompt.md` at most 650 words: collapse the three "does not override requirements, suppress findings, or set severity" restatements to one (the `[REVIEW_NUANCE]` section keeps `does not override requirements,`); keep Calibration as is (Task 18 replaces it). `implementer-prompt.md` at most 340 words here (Tasks 15 and 18 add about 210; the ceiling is 550): keep every placeholder, the seen-red paragraph, the fix-report table, and the report contract, and tighten the rest. `re-review-prompt.md` at most 420 words.
+Within the rewrite rules, keep every placeholder, section heading, and needle string. `task-reviewer-prompt.md` at most 650 words: collapse the three "does not override requirements, suppress findings, or set severity" restatements to one (the `[REVIEW_NUANCE]` section keeps `does not override requirements,`); keep Calibration as is (Task 18 replaces it). `implementer-prompt.md` at most 320 words here (Tasks 15 and 18 add about 230; the ceiling is 550): keep every placeholder, the seen-red paragraph, the fix-report table, and the report contract, and tighten the rest. `re-review-prompt.md` at most 420 words.
 
 - [ ] **Step 4: Update tests**
 
@@ -647,7 +647,7 @@ In `test-execution-tracks.sh`, add `sdd_tracks="$repo_root/skills/subagent-drive
 
 - [ ] **Step 5: Verify**
 
-Run: `test "$(wc -w < skills/subagent-driven-development/SKILL.md)" -le 1500 && test "$(wc -w < skills/subagent-driven-development/task-reviewer-prompt.md)" -le 650 && test "$(wc -w < skills/subagent-driven-development/implementer-prompt.md)" -le 340 && for t in test-execution-tracks test-final-review-gate test-fix-loop test-reviewer-context; do bash tests/toolbelt/$t.sh || exit 1; done`
+Run: `test "$(wc -w < skills/subagent-driven-development/SKILL.md)" -le 1500 && test "$(wc -w < skills/subagent-driven-development/task-reviewer-prompt.md)" -le 650 && test "$(wc -w < skills/subagent-driven-development/implementer-prompt.md)" -le 320 && for t in test-execution-tracks test-final-review-gate test-fix-loop test-reviewer-context; do bash tests/toolbelt/$t.sh || exit 1; done`
 Expected: four `PASS` lines.
 
 - [ ] **Step 6: Commit**
@@ -701,6 +701,7 @@ git commit -m "Unslop: delivery, pr-monitor, agent-routing, quick-task light pas
 - Modify: `tests/toolbelt/test-word-counts.sh`
 - Create: `tests/toolbelt/test-doctrine.sh`
 - Modify: `README.md:86-104`
+- Modify: `skills/writing-skills/testing-skills-with-subagents.md`
 
 **Interfaces:**
 - Consumes: every Boundary 1 rewrite; the merged tracks' `Decisions & drift risks` entries are carried in this task's brief
@@ -713,7 +714,7 @@ git commit -m "Unslop: delivery, pr-monitor, agent-routing, quick-task light pas
 
 - [ ] **Step 1: Write the tests**
 
-`tests/toolbelt/test-word-counts.sh`: replace the `ceilings` array with the spec's Component 2 table (27 entries; `docs/WORKFLOW.md:320`; gate-reviewer-prompt.md:700 added by Task 18 — include it now guarded by `[ -f "$file" ] || continue` so Boundary 1 passes without it).
+`tests/toolbelt/test-word-counts.sh`: replace the `ceilings` array with the spec's Component 2 table (31 entries including the four disclosed side files; `docs/WORKFLOW.md:320`; gate-reviewer-prompt.md:700 added by Task 18 — that one entry alone is optional, marked so a missing file is skipped with a printed `skip` line; every other absent file is `not ok`).
 
 `tests/toolbelt/test-doctrine.sh`, one assertion per line — name — check:
 - `no_extremely_important` — `git grep -q -e "EXTREMELY-IMPORTANT" -e "EXTREMELY_IMPORTANT" -- skills hooks` exits 1
@@ -721,14 +722,17 @@ git commit -m "Unslop: delivery, pr-monitor, agent-routing, quick-task light pas
 - `no_threats` — `git grep -q -e "you'll be replaced" -e "you will be replaced" -- skills` exits 1
 - `iron_law_only_tdd` — `git grep -l "Iron Law" -- skills` prints only `skills/test-driven-development/SKILL.md` or nothing
 - `one_rationalization_table` — `git grep -l -e "| Excuse | Reality |" -e "| Thought | Reality |" -- skills` prints only the two allowed paths
-- `gates_under_80_words` — for every `skills/*/SKILL.md`, each block extracted with `sed -n '/^<HARD-GATE>$/,/^<\/HARD-GATE>$/p'` and the `ENTRY-GATE` equivalent has `wc -w` ≤ 80 (whole-line anchors; an inline mention never opens a range)
+- `gates_under_80_words` — for every `skills/*/SKILL.md`, each block extracted with `sed -n '/^<HARD-GATE>$/,/^<\/HARD-GATE>$/p' | grep -v '^<'` and the `ENTRY-GATE` equivalent has `wc -w` ≤ 80 (whole-line anchors; the tag lines are excluded from the count; an inline mention never opens a range)
 
 - [ ] **Step 2: Run them to see the state**
 
 Run: `bash tests/toolbelt/test-word-counts.sh; bash tests/toolbelt/test-doctrine.sh`
 Expected: both pass if Tasks 1–10 landed as specified; any failure names the file to cut, and this task cuts it (its brief carries the drift entries naming any file a track left over its ceiling).
 
-- [ ] **Step 3: README**
+- [ ] **Step 3: README and the testing reference**
+
+`skills/writing-skills/testing-skills-with-subagents.md` (Task 1 moved content into it; both its reviews flagged the rest): apply the rewrite rules. Remove `## Red Flags - STOP`, `## Common Mistakes`, `## Quick Reference`, `## The Bottom Line`, and `## Real-World Impact`; keep `## TDD Mapping for Skill Testing`, the three phase sections, `## Testing Checklist (TDD for Skills)`, `## Micro-Testing Wording`, `## Testing by Skill Type`, and `## Common Rationalizations for Skipping Testing` with its table; in `## REFACTOR Phase`, any advice to add rationalization-table rows or red-flag entries carries the gate "only where a brief instruction measurably failed under pressure". Target at most 1,800 words; the doctrine test's allow-list for the excuse table already names this file.
+
 
 Line 86: `- **verification-before-completion** - Audit every claim against a tool result before reporting`. Line 95: `- **receiving-code-review** - Verify feedback against the code before acting on it`. Line 104 is changed in Task 14.
 
@@ -740,7 +744,7 @@ Expected: every script prints `PASS` (or its own pass lines) and the loop exits 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tests/toolbelt/test-word-counts.sh tests/toolbelt/test-doctrine.sh README.md
+git add tests/toolbelt/test-word-counts.sh tests/toolbelt/test-doctrine.sh README.md skills/writing-skills/testing-skills-with-subagents.md
 git commit -m "Enforce word ceilings and doctrine across skills"
 ```
 
@@ -822,7 +826,7 @@ Add assertions:
 - `baseline_unchanged` — run again with `--baseline $tmp/full --out $tmp/again` — every entry has `diff.status == "unchanged"` and no `-diff-crop.png` exists
 - `baseline_changed` — edit a copy of the fixture to change the card's background colour, serve it, run with `--baseline $tmp/full` — the `home-open-default-375-light` entry has `diff.status == "changed"`, `ratio > 0.001`, and `home-open-default-375-light-diff-crop.png` exists
 - `video_flag_writes_webm` — run with `--video --smoke` — `$out/video/` contains at least one `.webm`
-- `axe_unavailable_recorded` — in the fixture run, every entry's `axe` is `"unavailable"` or an array
+- `axe_unavailable_recorded` — in the full run (`$tmp/full`), every entry's `axe` is `"unavailable"` or an array; in Task 12's `--smoke` output every entry's `axe` is `"skipped"`
 
 - [ ] **Step 2: Run the test to verify the new assertions fail**
 
@@ -976,7 +980,7 @@ git commit -m "Per-task UI smoke by the implementer; prototype captures as basel
 - Produces: none (SDD reads the field by the name fixed in the Data Model)
 
 **Gotchas:**
-- Ceiling 1900. Task 8 left it at or under 1600.
+- Ceiling 1900. Task 8 landed the file at 1,804 (its 1,600 interim target was unreachable without cutting keep-listed rules; ruled: the spec ceiling governs). This task's additions are about 115 words, so it must cut elsewhere or disclose: if the file cannot fit under 1,900 with every keep-list rule intact, move the Task Structure worked example (the fenced block) to `skills/writing-plans/task-structure.md` behind a pointer in the Task Structure section, and repoint the needles that block carries (`**Gotchas:**`, `Expected, per test:`, `Produces: none`, and any other needle `grep -n` shows in that block) at the new file in `test-writing-plans.sh`, which this task owns. Add the new file to Files when you do.
 - `scripts/task-brief` carries the field; no script change.
 
 - [ ] **Step 1: Write the failing tests**
@@ -1061,7 +1065,7 @@ git commit -m "One approval for small designs; machine spec review before the hu
 
 **Gotchas:**
 - `test-reviewer-context.sh` requires in task-reviewer-prompt `docs/REVIEW-GUIDANCE.md`, `This file is reviewer-only.`, `[REVIEW_NUANCE]`, `does not override requirements,`, `[SMELLS_FILE]`, `This read is an explicit exception to the limits on`; and forbids `docs/REVIEW-GUIDANCE.md` and `smell-baseline` in implementer-prompt. The gate prompt carries the same reviewer-only line.
-- Ceilings: gate prompt 700, task-reviewer 650, code-reviewer 500, implementer 550.
+- Ceilings: gate prompt 700, task-reviewer 650, code-reviewer 450 after Task 7, implementer 550. After Task 9, task-reviewer-prompt is at exactly 650 and implementer-prompt at 316 (+ Task 15's additions): the severity rule replaces the Calibration paragraph word-for-word in budget, so cut the old Calibration entirely and add nothing else to task-reviewer-prompt; the self-check table (about 75 words) and the UI-smoke sentence must fit implementer-prompt's remaining headroom — tighten the Report Format bullets if they do not.
 - The severity rule replaces Calibration in task-reviewer (keep the plan-mandated sentence) and code-reviewer (keep "If you find significant deviations from the plan, flag them").
 
 - [ ] **Step 1: Write the failing test**
@@ -1113,7 +1117,7 @@ git commit -m "Gate reviewer prompt, failing-input severity rule, implementer se
 **Gotchas:**
 - `test-final-review-gate.sh` needle `If the caller supplies a pre-final gate, run it after all task reviews and before the broad final review.` is replaced by `dispatch ux-gate's capture at the final gate's head in parallel with the gate reviewer`. Every other needle there stays, including `scripts/review-package --plan PLAN_FILE MERGE_BASE HEAD\` for the final review`, `**Final-review findings get ONE fix subagent**`, `Then run exactly one scoped re-review of the fix wave`, `There is no second fix wave`, `**One fix round per task.**`, `Adjudicate **only** after the re-review`.
 - `test-fix-loop.sh` needles all stay; add the three Data Model ledger lines.
-- SDD ceiling 1900; Task 9 left it at or under 1500; Task 15 added two sentences.
+- SDD ceiling 1900. Task 9 landed the file at 1,680 (its 1,500 interim target was unreachable: 28 sentences are pinned verbatim by tests; ruled: the spec ceiling governs) and Task 15 adds two sentences. This task's two sections are about 300 words, so the file will not fit: move `## Constructing Reviewer Prompts` (about 177 words) to `skills/subagent-driven-development/reviewer-prompts.md` behind a one-sentence pointer in SKILL.md, and repoint its needles in `tests/toolbelt/test-reviewer-context.sh` (`Do not read it`, `while orchestrating or pass it to implementers, fixers, explorers, planners,`, `Use \`None\` when there is none.`) at the new file. Add both files to Files (seven total). If the file still exceeds 1,900, move `## File Handoffs` the same way; never cut a contract sentence.
 - Remove the `SDD_READY` guard in `test-review-classes.sh` and add the SDD needles: `**Review:**`, `## Self-check close`, `## Gates`, `four \`gate\` tasks`, `1,500 changed lines`, `four or fewer tasks and no \`immediate\` task`, `Gate <G>: tasks`, `in parallel with the gate reviewer`, `presented to your human partner once, at the gate`.
 
 - [ ] **Step 1: Write the failing tests**

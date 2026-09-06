@@ -1,15 +1,10 @@
 # Code Reviewer Prompt Template
 
-Use this template when dispatching a code reviewer subagent.
-
-**Purpose:** Review completed work against requirements and code quality standards before it cascades into more work.
-
 ```
 Subagent (role: reviewer):
   description: "Review code changes"
   prompt: |
-    Review completed work against its plan or requirements and identify
-    issues before they cascade.
+    Review completed work against its plan or requirements.
 
     ## What Was Implemented
 
@@ -22,31 +17,29 @@ Subagent (role: reviewer):
     ## Project Review Guidance
 
     If `docs/REVIEW-GUIDANCE.md` exists at the repository root, read it now.
-    This file is reviewer-only. Apply its project-wide review guidance and
-    report any conflict with the requirements instead of guessing.
+    This file is reviewer-only. Apply it and report any conflict with the
+    requirements instead of guessing.
 
     ## Review-Specific Nuance
 
     [REVIEW_NUANCE]
 
-    The orchestrator supplies only concrete context or risks for this review.
-    This nuance does not override requirements, suppress findings, or set severity.
+    The orchestrator supplies only concrete context or risks. This nuance
+    does not override requirements, suppress findings, or set severity.
 
     ## Diff Under Review
 
     **Base:** [BASE_SHA]  **Head:** [HEAD_SHA]  **Diff file:** [DIFF_FILE]
 
     The diff file holds the commit list, stat summary, and full diff with
-    surrounding context — it is your view of the change; read all of it
-    before judging any part. Read a changed file separately only when a
-    hunk you must judge is cut off mid-function, and say so in your report.
-    You are read-only on this checkout and you are the review: leave the
-    working tree, index, HEAD, and branch state untouched and dispatch no
-    subagents. Inspect history with `git show`, `git diff`, and `git log`;
-    a working copy of another revision goes in a temporary worktree, never
-    a checkout here.
+    surrounding context — read all of it before judging any part. Open a
+    changed file only when a hunk is cut off mid-function, and say so. You
+    are read-only on this checkout and you are the review: leave the working
+    tree, index, HEAD, and branch state untouched, and dispatch no subagents.
+    Inspect history with `git show`, `git diff`, and `git log`; a working copy
+    of another revision goes in a temporary worktree.
 
-    If no diff file was supplied, or it is missing, fetch the range yourself:
+    With no diff file, or a missing one, fetch the range:
 
     ```bash
     git diff --stat [BASE_SHA]..[HEAD_SHA]
@@ -55,72 +48,55 @@ Subagent (role: reviewer):
 
     ## What to Check
 
-    Judge the branch on: plan alignment (all planned functionality present;
-    deviations justified improvements or problematic departures), code
-    quality, architecture and security, tests (verify real behavior rather
-    than mocks, cover the edge cases, all passing), and production
-    readiness (migrations, backward compatibility). For code quality, read
-    the smell baseline at [SMELLS_FILE] and name any smell the branch
-    matches, quoting the hunk. Depth comes from your judgment of this
-    diff, not from working a checklist.
+    Judge the branch on plan alignment (all planned functionality present),
+    code quality, architecture and security, tests (real behavior rather
+    than mocks, edge cases covered, all passing), and production readiness
+    (migrations, backward compatibility). Read the smell baseline at
+    [SMELLS_FILE] and name any smell the branch matches, quoting the hunk.
+    Depth comes from your judgment of this diff, not from a checklist.
+
+    Flag each deviation from the plan, so the implementer can confirm it
+    was intentional. Say so when the problem is in the plan itself.
 
     ## Calibration
 
     Categorize issues by actual severity. Not everything is Critical.
-    Acknowledge what was done well before listing issues — accurate praise
-    helps the implementer trust the rest of the feedback.
-
-    If you find significant deviations from the plan, flag them specifically
-    so the implementer can confirm whether the deviation was intentional.
-    If you find issues with the plan itself rather than the implementation,
-    say so.
 
     ## Output Format
 
     ### Strengths
-    [What's well done? Be specific.]
 
     ### Issues
 
     #### Critical (Must Fix)
-    [Bugs, security issues, data loss risks, broken functionality]
+    [Bugs, security, data loss, broken functionality]
 
     #### Important (Should Fix)
-    [Architecture problems, missing features, poor error handling, test gaps]
+    [Architecture, missing features, error handling, test gaps]
 
     #### Minor (Nice to Have)
-    [Code style, optimization opportunities, documentation polish]
+    [Style, optimization, documentation polish]
 
-    For each issue:
-    - File:line reference
-    - What's wrong
-    - Why it matters
-    - How to fix (if not obvious)
+    Each issue: file:line, what's wrong, why it matters, how to fix if not
+    obvious.
 
     ### Recommendations
-    [Improvements for code quality, architecture, or process]
 
     ### Assessment
 
     **Ready to merge?** [Yes | No | With fixes]
 
-    **Reasoning:** [1-2 sentence technical assessment]
+    **Reasoning:** [1-2 sentences]
 ```
 
 **Placeholders:**
-- `[DESCRIPTION]` — brief summary of what was built
-- `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
-- `[REVIEW_NUANCE]` — concise review-specific context or concrete risks from
-  the orchestrator; use `None` when there is no useful nuance
+- `[DESCRIPTION]` — what was built
+- `[PLAN_OR_REQUIREMENTS]` — what it should do (plan path or task text)
+- `[REVIEW_NUANCE]` — concise context or risks; `None` when none
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
-- `[SMELLS_FILE]` — the resolved path to [smell-baseline.md](smell-baseline.md)
-  in this skill's directory
+- `[SMELLS_FILE]` — resolved path to [smell-baseline.md](smell-baseline.md)
 - `[DIFF_FILE]` — the review package path from
   `../subagent-driven-development/scripts/review-package BASE HEAD`. Required
-  when a dispatcher has that script available (subagent-driven-development
-  always does); the package never enters the dispatcher's context. Write
-  `None` only when you genuinely cannot produce one — the reviewer then
-  falls back to the git commands above.
-
-**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
+  when the dispatcher has that script; `None` only when you cannot produce
+  one, and the reviewer falls back to the git commands above.

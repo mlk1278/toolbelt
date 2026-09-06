@@ -24,7 +24,7 @@ escape_for_json() {
 }
 
 using_toolbelt_escaped=$(escape_for_json "$using_toolbelt_content")
-session_context="<EXTREMELY_IMPORTANT>\nYou have a toolbelt.\n\n**Below is the full content of your 'toolbelt:using-toolbelt' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_toolbelt_escaped}\n</EXTREMELY_IMPORTANT>"
+session_context="<TOOLBELT>\nYou have a toolbelt.\n\n**Below is the full content of your 'toolbelt:using-toolbelt' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_toolbelt_escaped}\n</TOOLBELT>"
 
 # Output context injection as JSON.
 # Claude Code hooks expect hookSpecificOutput.additionalContext (nested).

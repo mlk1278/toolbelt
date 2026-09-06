@@ -5,7 +5,9 @@ set -euo pipefail
 
 repo_root=$(git rev-parse --show-toplevel)
 plans="$repo_root/skills/writing-plans/SKILL.md"
+tracks="$repo_root/skills/writing-plans/execution-tracks.md"
 sdd="$repo_root/skills/subagent-driven-development/SKILL.md"
+sdd_tracks="$repo_root/skills/subagent-driven-development/parallel-tracks.md"
 worktrees="$repo_root/skills/using-git-worktrees/SKILL.md"
 
 assert_contains() {
@@ -31,11 +33,11 @@ assert_not_contains() {
 # writing-plans: declaring tracks.
 assert_contains "$plans" '## Execution Tracks' \
   "plans may declare execution tracks"
-assert_contains "$plans" 'No file is created or modified by two concurrent tracks' \
+assert_contains "$tracks" 'No file is created or modified by two concurrent tracks' \
   "concurrent tracks require disjoint file sets"
-assert_contains "$plans" 'contract-freeze' \
+assert_contains "$tracks" 'contract-freeze' \
   "shared contracts freeze on the mainline before the fork"
-assert_contains "$plans" 'Every fork closes with a mainline integration task' \
+assert_contains "$tracks" 'Every fork closes with a mainline integration task' \
   "every merge point gets an integration task"
 assert_contains "$plans" \
   'a plan with no concurrent tracks and no one-sentence justification is a defect' \
@@ -44,11 +46,11 @@ assert_contains "$plans" \
 # subagent-driven-development: executing tracks.
 assert_contains "$sdd" '## Parallel Tracks' \
   "sdd carries the parallel-tracks section"
-assert_contains "$sdd" 'At most 3 tracks run concurrently' \
+assert_contains "$sdd_tracks" 'At most 3 tracks run concurrently' \
   "concurrency cap is 3"
-assert_contains "$sdd" '## Decisions & drift risks' \
+assert_contains "$sdd_tracks" '## Decisions & drift risks' \
   "track reports carry a drift log"
-assert_contains "$sdd" 'A textual conflict is a plan defect' \
+assert_contains "$sdd_tracks" 'A textual conflict is a plan defect' \
   "track merge conflicts stop, never hand-resolved"
 assert_contains "$sdd" 'Dispatch multiple implementation subagents into the same worktree' \
   "red flag scopes concurrency to one implementer per track worktree"
