@@ -62,7 +62,8 @@ assert_failure() {
 }
 
 mkdir -p "$tmp/empty" "$tmp/project/.toolbelt" "$tmp/reviewer/.toolbelt" \
-  "$tmp/dependent/.toolbelt" "$tmp/filtered/.toolbelt" "$tmp/invalid/.toolbelt"
+  "$tmp/dependent/.toolbelt" "$tmp/filtered/.toolbelt" "$tmp/invalid/.toolbelt" \
+  "$tmp/retired/.toolbelt"
 
 cat >"$tmp/project/.toolbelt/agents.json" <<'JSON'
 {
@@ -76,16 +77,6 @@ cat >"$tmp/project/.toolbelt/agents.json" <<'JSON'
         {"harness": "fallback-a", "model": "fallback-one", "effort": "medium"},
         {"harness": "fallback-b", "model": "fallback-two", "effort": "high"}
       ]
-    }
-  },
-  "harnesses": {
-    "selected-harness": {
-      "implementer": {"harness": "selected-harness", "model": "harness-route", "effort": "medium"}
-    }
-  },
-  "workflows": {
-    "delivery": {
-      "implementer": {"harness": "workflow-harness", "model": "workflow-route", "effort": "high"}
     }
   },
   "reviewer_specialties": {
@@ -158,6 +149,17 @@ JSON
 
 printf '{invalid json\n' >"$tmp/invalid/.toolbelt/agents.json"
 
+cat >"$tmp/retired/.toolbelt/agents.json" <<'JSON'
+{
+  "version": 1,
+  "workflows": {
+    "delivery": {
+      "implementer": {"harness": "workflow-harness", "model": "workflow-route", "effort": "high"}
+    }
+  }
+}
+JSON
+
 while IFS='|' read -r role effort fallback_effort; do
   assert_route "bundled $role" \
     "{\"role\":\"$role\",\"harness\":\"claude\",\"model\":\"opus-5\",\"effort\":\"$effort\",\"fallbacks\":[{\"harness\":\"codex\",\"model\":\"gpt-5.6-sol\",\"effort\":\"$fallback_effort\"}],\"source\":\"bundled:role\",\"fallback_reason\":null}" \
@@ -178,17 +180,9 @@ assert_route "project role" \
   '{"role":"implementer","harness":"project-harness","model":"project-role","effort":"low","fallbacks":[{"harness":"fallback-a","model":"fallback-one","effort":"medium"},{"harness":"fallback-b","model":"fallback-two","effort":"high"}],"source":"project:role","fallback_reason":null}' \
   --project-root "$tmp/project" --role implementer
 
-assert_route "harness override" \
-  '{"role":"implementer","harness":"selected-harness","model":"harness-route","effort":"medium","fallbacks":[],"source":"project:harness","fallback_reason":null}' \
-  --project-root "$tmp/project" --role implementer --harness selected-harness
-
-assert_route "workflow override" \
-  '{"role":"implementer","harness":"workflow-harness","model":"workflow-route","effort":"high","fallbacks":[],"source":"project:workflow","fallback_reason":null}' \
-  --project-root "$tmp/project" --role implementer --workflow delivery
-
-assert_route "workflow beats harness" \
-  '{"role":"implementer","harness":"workflow-harness","model":"workflow-route","effort":"high","fallbacks":[],"source":"project:workflow","fallback_reason":null}' \
-  --project-root "$tmp/project" --role implementer --workflow delivery --harness selected-harness
+assert_route "calling harness does not change the route" \
+  '{"role":"implementer","harness":"project-harness","model":"project-role","effort":"low","fallbacks":[{"harness":"fallback-a","model":"fallback-one","effort":"medium"},{"harness":"fallback-b","model":"fallback-two","effort":"high"}],"source":"project:role","fallback_reason":null}' \
+  --project-root "$tmp/project" --role implementer --harness codex
 
 assert_route "reviewer specialty" \
   '{"role":"reviewer","harness":"specialty-harness","model":"specialty-route","effort":"high","fallbacks":[{"harness":"specialty-fallback","model":"specialty-fallback-route","effort":"high"}],"source":"project:reviewer-specialty","fallback_reason":null}' \
@@ -259,6 +253,8 @@ assert_failure "specialty requires reviewer" \
   --project-root "$tmp/empty" --role implementer --reviewer-specialty security
 assert_failure "invalid project JSON" "invalid JSON" \
   --project-root "$tmp/invalid" --role implementer
+assert_failure "retired routing layers fail closed" "retired key(s) workflows" \
+  --project-root "$tmp/retired" --role implementer
 
 assert_failure "brief rejects a role" "do not also pass --role" \
   --project-root "$tmp/empty" --brief --role implementer

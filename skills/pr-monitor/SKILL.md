@@ -5,11 +5,11 @@ description: Own one pull request, or a chain of dependent pull requests, from c
 
 # PR Monitor
 
-Own one chain: one PR, or PRs each targeting the one below it. This skill is the sole source of PR review, CI, fix-loop, and merge mechanics. Fix and merge yourself; dispatch no fixers.
+Own one chain: one PR, or PRs each targeting the one below it. This skill is the sole source of PR review, CI, fix-loop, and merge mechanics. The project policy decides who fixes and how you wait; without one, fix inline and wait one bounded interval.
 
 ## Project policy
 
-Read `.toolbelt/pr-policy.md` at the repository root if present. It names the review providers to await, how to request them, complexity lanes, and timeouts, and it overrides this skill. Without it, the required conditions are exact-head green CI, zero unresolved review threads, and no requested-changes review. Never hard-code a provider this file does not name.
+Read `.toolbelt/pr-policy.md` at the repository root if present. It names the review providers to await, how to request them, the wait command, who fixes findings, complexity lanes, and timeouts, and it overrides this skill. Without it, the required conditions are exact-head green CI, zero unresolved review threads, and no requested-changes review. Never hard-code a provider this file does not name.
 
 ## Preflight
 
@@ -30,10 +30,10 @@ A rebase conflict stops the operation. Run `git rebase --abort`. Return that lay
 ## Monitor loop
 
 1. Refresh the PR head, merge state, and unresolved threads. A conflicting PR schedules no CI; resolve the conflict first.
-2. Refresh exact-head CI (`gh pr checks` or the policy file's command). Distinguish failed from pending from unavailable, and fail closed on unavailable.
+2. Refresh exact-head CI with the policy file's command, or `gh pr checks` without a policy. Distinguish failed from pending from unavailable, and fail closed on unavailable.
 3. Await, and at most once per head request each policy-named provider. Only a current-head review object or an authenticated completion naming the current commit counts as completion. Exception: a review object naming the recorded docs-only predecessor head counts as current-head completion.
-4. Once every awaited provider has completed on the current head, verify each finding against the code and judge it yourself: fix what is real inline, rebut what is not on the thread with the code evidence. Each fix carries fresh passing covering-test evidence; never rerun a local workspace suite. Push all fixes as one batch. The awaited providers' next round on the new head is the re-review. A genuinely entangled finding — colliding with the plan, another in-flight lane, or a decision above this PR — goes to the caller with the code evidence.
-5. If no action is ready, wait one bounded interval (default 180 seconds; policy may override) and refresh. Do not nest another watcher.
+4. Once every awaited provider has completed on the current head, verify each finding against the code and judge it yourself: fix what is real, inline or through the fixer route the policy names, and rebut what is not on the thread with the code evidence. Each fix carries fresh passing covering-test evidence; never rerun a local workspace suite. Push all fixes as one batch. The awaited providers' next round on the new head is the re-review. A genuinely entangled finding — colliding with the plan, another in-flight lane, or a decision above this PR — goes to the caller with the code evidence.
+5. If no action is ready, wait with one call: the policy's wait command (foreground, timeout above its ceiling) or one bounded interval (default 180 seconds). A refresh re-sends your whole context: never poll, sleep-loop, tail logs, or emit keep-alive commands between waits. Do not nest another watcher.
 
 ## Fallback
 

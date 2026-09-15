@@ -2,6 +2,15 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v7.11.0 (2026-09-15)
+
+Cuts the usage cost of long-running sessions, measured across 115K Claude Code requests.
+
+- **No polling.** Implementer prompts, the SDD orchestrator, delivery, and pr-monitor all say the same thing: wait with one blocking call, never poll, sleep-loop, tail logs, or run keep-alive commands. A subagent cannot end its turn while background work runs, and every extra turn re-sends its whole context.
+- **Compaction injects a pointer.** The SessionStart hook injects the full using-toolbelt skill on startup and clear only; after a compaction it injects three lines, since the harness re-injects invoked skills itself.
+- **pr-monitor defers to the project policy** on who fixes findings and how to wait. Without a policy it fixes inline and waits one bounded interval.
+- **Routing has three layers, not five.** `agents.json` keeps `roles` and `reviewer_specialties`; the `harnesses` and `workflows` layers are retired and fail resolution with a message. Workflow-specific routes live in the plan.
+
 ## v7.10.0 (2026-09-07)
 
 Shortens skill instructions and adds portable browser evidence capture for frontend verification.

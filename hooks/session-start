@@ -7,8 +7,22 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Read using-toolbelt content
-using_toolbelt_content=$(cat "${PLUGIN_ROOT}/skills/using-toolbelt/SKILL.md" 2>&1 || echo "Error reading using-toolbelt skill")
+# Claude Code passes the trigger on stdin as {"source": "startup|resume|clear|compact"}.
+# After a compaction the harness re-injects the invoked skills itself, so the
+# full using-toolbelt text would be paid twice; inject a pointer instead.
+source=""
+hook_input=""
+if [ ! -t 0 ]; then
+  IFS= read -r -t 2 -d '' hook_input || true
+  source=$(printf '%s' "$hook_input" | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p' | head -n 1)
+fi
+
+if [ "$source" = "compact" ]; then
+  using_toolbelt_content="Context was just compacted. Your toolbelt rules still apply: invoke a relevant skill before acting, route subagents by role from the session brief (re-run the resolver once only if the brief is gone), and continue from the ledger or handoff you were keeping rather than re-reading whole plans or specs. Re-invoke a skill only when its instructions are no longer in your context."
+else
+  # Read using-toolbelt content
+  using_toolbelt_content=$(cat "${PLUGIN_ROOT}/skills/using-toolbelt/SKILL.md" 2>&1 || echo "Error reading using-toolbelt skill")
+fi
 
 # Escape string for JSON embedding using bash parameter substitution.
 # Each ${s//old/new} is a single C-level pass - orders of magnitude

@@ -15,14 +15,14 @@ project contains no `scripts/resolve-agent` of its own.
 
 ## The session brief
 
-Once per session, before dispatching anything:
+Once per session, before any dispatch:
 
 ```bash
 "$ROUTING_SKILL_DIR/scripts/resolve-agent" \
   --project-root <root> --brief --harness <your harness>
 ```
 
-It returns every role at once — harness, model, effort, and per-role instructions — plus reviewer specialties and the project's custom instructions. Keep it for the session and route from it.
+It returns every role — harness, model, effort, per-role instructions — plus reviewer specialties and the project's custom instructions. Keep it for the session and route from it.
 
 **If the script fails, stop and tell your human partner.** Never guess a route or dispatch an agent of your own choosing. The one exception is a brief that fell out of context after compaction: re-run the script once, and escalate only if that fails too.
 
@@ -34,10 +34,10 @@ It returns every role at once — harness, model, effort, and per-role instructi
 | `planner` | All planning work, however small it looks. |
 | `implementer` | All code operations. Every repository edit. |
 | `errand` | Tracker tickets, notifications, status checks, scripted browser capture. Never edits repository files. |
-| `monitor` | A pull request through CI, review providers, inline review-finding fixes, and merge. |
+| `monitor` | A pull request through CI, review providers, review-finding fixes per project policy, and merge. |
 | `reviewer` | Review, with optional specialty `code`, `spec`, `plan`, `ux`, or `gate`. |
 
-The boundary that matters: **planning goes to the planner, always; code goes to the implementer — except review findings on the monitor's own PR, which it fixes inline.** `errand` is cheap because its work is small, not because it is a shortcut for real work.
+The boundary that matters: **planning goes to the planner, always; code goes to the implementer — except review findings on the monitor's own PR, which it fixes inline unless project policy names a fixer route.** `errand` is cheap because its work is small, never a shortcut for real work.
 
 ## Resolving a single route
 
@@ -48,7 +48,7 @@ When you need one route and not the whole table — most often a reviewer, whose
   --project-root <root> --role <role> --author-harness <harness>
 ```
 
-Add `--harness`, `--workflow`, `--reviewer-specialty`, or explicit `--override-*` arguments only when you have that context. `--author-harness` is required for a reviewer. Harness comparison is case-insensitive; same-harness fallbacks are removed, and resolution fails closed when no different-harness route remains.
+Add `--reviewer-specialty` or explicit `--override-*` arguments (a plan's routes) only when you have that context. `--author-harness` is required for a reviewer. Harness comparison is case-insensitive; same-harness fallbacks are removed, and resolution fails closed when no different-harness route remains.
 
 Record the normalized JSON in the work log before dispatch. Dispatch the returned primary route and retain `fallbacks` in their returned order. Never reconstruct a route when resolution fails.
 
@@ -67,7 +67,7 @@ Reviewer independence has exactly one exception. The trigger is **dispatch-time 
 
 ## Precedence
 
-Plan-supplied routes are explicit run overrides. For public workflow decisions, precedence is plan, project, bundled. Within project configuration, reviewer specialty, workflow, harness, and project role retain their existing resolver precedence. A plan may route implementer, task-reviewer, and final-reviewer work, but never the session orchestrator.
+Plan-supplied routes are explicit run overrides; precedence is plan, project, bundled. Within a layer a reviewer specialty beats the plain reviewer role. Workflow-specific routes belong in the plan. A plan may route implementer, task-reviewer, and final-reviewer work, but never the session orchestrator.
 
 ## Project configuration
 
@@ -75,9 +75,9 @@ Read optional overrides from `<project-root>/.toolbelt/agents.json`. It accepts 
 
 - `version`: integer `1`.
 - `instructions`: a string of project-wide dispatch guidance, surfaced in the brief.
-- `roles`: default role-to-route overrides.
-- `harnesses`: harness names containing role-to-route overrides.
-- `workflows`: workflow names containing role-to-route overrides.
+- `roles`: the project's route per role.
 - `reviewer_specialties`: specialty-to-route overrides.
+
+`harnesses` and `workflows` keys are retired and fail resolution; put those routes in the plan.
 
 Each route requires string `harness`, `model`, and `effort` values. It may carry `instructions` describing what that role is for, and `fallbacks`, an ordered array of routes. Treat invalid JSON or an incomplete selected route as a configuration error; never guess its meaning.

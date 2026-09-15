@@ -161,6 +161,24 @@ assert_command_output \
     "$codex_home" \
     bash "$HOOK_UNDER_TEST"
 
+compact_home="$(make_home compact)"
+assert_command_output \
+    "SessionStart on compact injects a pointer, not the full skill" \
+    "nested" \
+    "Context was just compacted" \
+    "## The Rule" \
+    "$compact_home" \
+    bash -c 'printf "%s" "{\"source\":\"compact\",\"session_id\":\"x\"}" | CLAUDE_PLUGIN_ROOT="$0" bash "$1"' "$REPO_ROOT" "$HOOK_UNDER_TEST"
+
+startup_home="$(make_home startup)"
+assert_command_output \
+    "SessionStart on startup injects the full skill" \
+    "nested" \
+    "## The Rule" \
+    "Context was just compacted" \
+    "$startup_home" \
+    bash -c 'printf "%s" "{\"source\":\"startup\"}" | CLAUDE_PLUGIN_ROOT="$0" bash "$1"' "$REPO_ROOT" "$HOOK_UNDER_TEST"
+
 # The "superpowers" literals below are deliberately legacy: they are the
 # pre-rename custom-skill directory and the warning text the hook used to emit
 # for it. This asserts that warning never comes back.

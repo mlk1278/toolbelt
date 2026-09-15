@@ -59,7 +59,7 @@ Record per boundary in the delivery ledger, with its SDD workspace path: `Bounda
 
 Once the boundary's broad final review is clean and its PR is open, start the next boundary; any number may be open.
 
-Each chain has exactly one pr-monitor. Start it when its bottom PR opens, passing that layer's record — PR number, branch, full head SHA, base branch, and local-gate SHA. Always run it in the background. Resume it with the new layer's record when a dependent boundary's PR opens; an independent boundary starts its own chain.
+Each chain has exactly one pr-monitor. Start it when its bottom PR opens, passing that layer's record — PR number, branch, full head SHA, base branch, and local-gate SHA. Always run it in the background. While independent boundaries remain, keep delivering them; once none remain, block on its return with one wait. Never poll it. Resume it with the new layer's record when a dependent boundary's PR opens; an independent boundary starts its own chain.
 
 Process each monitor's return: merged, run step 6; blocked, surface it to your human partner. Never report the slice complete or end the session while the monitor runs. A completion notification is not that return.
 

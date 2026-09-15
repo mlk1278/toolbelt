@@ -30,6 +30,12 @@ def read_config(path: Path, *, optional: bool = False) -> dict[str, Any]:
     version = value.get("version", 1)
     if type(version) is not int or version != 1:
         raise RoutingError(f"{path} version must be integer 1")
+    retired = sorted({"harnesses", "workflows"} & set(value))
+    if retired:
+        raise RoutingError(
+            f"{path} uses retired key(s) {', '.join(retired)}: routing has one default "
+            "table per role plus per-plan overrides; move these routes into the plan"
+        )
     return value
 
 
@@ -88,8 +94,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="emit every role at once for the session-start briefing",
     )
-    parser.add_argument("--harness")
-    parser.add_argument("--workflow")
+    parser.add_argument("--harness", help="the calling harness; informational")
     parser.add_argument("--reviewer-specialty")
     parser.add_argument("--author-harness")
     parser.add_argument("--override-harness")
@@ -129,32 +134,6 @@ def select_route(
                     args.reviewer_specialty,
                 ),
                 "project:reviewer-specialty",
-            )
-        )
-    if args.workflow:
-        candidates.append(
-            (
-                configured_route(
-                    project,
-                    "project.workflows",
-                    "workflows",
-                    args.workflow,
-                    args.role,
-                ),
-                "project:workflow",
-            )
-        )
-    if args.harness:
-        candidates.append(
-            (
-                configured_route(
-                    project,
-                    "project.harnesses",
-                    "harnesses",
-                    args.harness,
-                    args.role,
-                ),
-                "project:harness",
             )
         )
     candidates.append(

@@ -58,7 +58,7 @@
       "harness": "claude",
       "model": "opus-5",
       "effort": "medium",
-      "instructions": "Owns one PR end to end: monitors CI and review providers, judges ordinary findings, fixes them inline, pushes, and merges. Escalates only genuinely entangled findings.",
+      "instructions": "Owns one PR end to end: waits through the project's wait command, judges findings, fixes them the way the project policy directs, pushes, and merges. Escalates only genuinely entangled findings.",
       "fallbacks": [
         {
           "harness": "codex",

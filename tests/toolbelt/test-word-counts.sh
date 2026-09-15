@@ -37,7 +37,7 @@ ceilings=(
   "skills/writing-specs/SKILL.md:550"
   "skills/delivery/SKILL.md:900"
   "skills/delivery/branch-lifecycle.md:450"
-  "skills/pr-monitor/SKILL.md:850"
+  "skills/pr-monitor/SKILL.md:900"
   "skills/agent-routing/SKILL.md:800"
   "skills/quick-task/SKILL.md:200"
   "docs/WORKFLOW.md:320"

@@ -24,7 +24,7 @@ Caller routing takes precedence: plan route, then project route, then the sessio
 
 ## Handling Implementer Status
 
-Only the final answer carrying the Status token is the report; on an intermediate message or an interrupted wait, resume waiting on the same agent.
+Only the final answer carrying the Status token is the report; on an intermediate message or an interrupted wait, resume waiting on the same agent with one blocking wait. A dispatched agent or background task notifies you when it finishes: never poll it, and never schedule a wakeup under 20 minutes while one is running.
 
 - **DONE:** run `scripts/review-package --plan PLAN_FILE BASE HEAD` (from this skill's directory; it prints the path it wrote) and dispatch the task reviewer with that path. BASE is the commit you recorded before dispatching, never `HEAD~1`.
 - **DONE_WITH_CONCERNS:** address correctness and scope concerns before review; note observations and proceed.
