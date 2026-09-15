@@ -27,9 +27,9 @@ Subagent (role: implementer):
 
     Wait for a background command with one blocking call (Monitor with an
     until-loop on its output file, or a foreground command with a timeout).
-    You cannot end your turn while it runs, and every extra turn re-sends
-    your whole context: never poll, sleep-loop, tail logs, or run keep-alive
-    commands while waiting.
+    Every extra turn re-sends your whole context: between waits, never poll,
+    sleep-loop, tail logs, or run keep-alive commands. After a wait times
+    out, inspect the task once and decide whether to wait again or stop it.
 
     Fix a trivial bug outside your task inline when tightly coupled to
     your change; otherwise report it as a concern. Never expand your diff

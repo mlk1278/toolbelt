@@ -2,6 +2,10 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v7.11.1 (2026-09-15)
+
+- The no-polling rule in subagent-driven-development now applies between waits only: after a wait times out, the agent inspects the task once and decides whether to wait again or stop it.
+
 ## v7.11.0 (2026-09-15)
 
 Cuts the usage cost of long-running sessions, measured across 115K Claude Code requests.
