@@ -37,7 +37,7 @@ assert_contains 'scripts/review-package --plan PLAN_FILE MERGE_BASE HEAD` for th
   "broad final review still receives a review package"
 assert_contains '**Final-review findings get ONE fix subagent**' \
   "final findings are fixed together"
-assert_contains 'with the complete list — not one fixer per finding.' \
+assert_contains 'with the review-file path holding the complete list, not one fixer per finding.' \
   "one fixer receives the complete finding set"
 assert_contains 'contains the covering tests, the command, and the output' \
   "fix verification carries evidence"

@@ -13,15 +13,15 @@ description: Use when an approved implementation plan is ready to be implemented
 
 ## 1. Read and loop
 
-Read the plan. Do not redesign approved requirements; return any unresolved product decision to your human partner.
+Invoke toolbelt:orchestrating first; its read list holds throughout. Read the plan. Do not redesign approved requirements; return any unresolved product decision to your human partner.
 
-Follow `## PR Boundaries` in order, running steps 2–5 for each. Read [branch-lifecycle.md](branch-lifecycle.md) for ledger location, prepublication evidence, rebases, and cleanup; establish its delivery ledger before creating worktrees.
+Follow `## PR Boundaries` in order through steps 2–5. Read [branch-lifecycle.md](branch-lifecycle.md) for ledger location, prepublication evidence, rebases, and cleanup; establish its delivery ledger before creating worktrees.
 
 Each boundary is one coherent delivery slice, sized by the independent judgments a reviewer must make. Two slices you would run concurrently and that edit the same files are one PR. Sequential slices may revisit the same file once the first has merged.
 
 ## 2. Resolve routes
 
-The optional `## Agent Routing` section may route the implementer, task reviewer, and final reviewer; the session agent remains the orchestrator and is never plan-routed. Resolve the final reviewer with specialty `gate`. Resolve each role with agent-routing; precedence is plan route, then project route, then bundled default. Resolve the monitor and, for a boundary that runs ux-gate, an `errand` gate operator from project routing or the bundled default. Fail closed when either reviewer lacks an independent route; agent-routing's outage override is the only exception.
+The optional `## Agent Routing` section may route the implementer, task reviewer, and final reviewer; the session agent remains the orchestrator, never plan-routed. Resolve the final reviewer with specialty `gate`. Resolve each role with agent-routing; precedence is plan route, then project route, then bundled default. Resolve the monitor and, for a boundary that runs ux-gate, an `errand` gate runner from project routing or the bundled default. Fail closed when either reviewer lacks an independent route, barring agent-routing's outage override.
 
 ## Role ownership
 
@@ -30,45 +30,43 @@ Task briefs and dispatch prompts must not reassign these roles.
 | Work | Owner |
 |---|---|
 | Implementation, tests, commits, task report | Implementer subagent (fresh per task) |
-| Task briefs, review packages, dispatch context, verdicts | Orchestrator (session agent) — dispatch and synthesis only; never implements or captures |
+| Task briefs, review packages, dispatch context, rulings | Orchestrator: dispatch and rulings only; never implements or captures; reads returned summaries, never artifacts |
+| Review findings, fix requests, rebuttals, re-gates | Reviewer writes a file, implementer fixes or rebuts from it; the orchestrator routes the path and rules on rebuttals |
 | UI smoke per task (mechanical checks and stills of the touched pathway) | Implementer, inside its task, before reporting DONE |
-| UX capture at the boundary (full matrix, diff, filmstrips) | Gate operator (role `errand`) dispatched by the orchestrator |
-| UX judgment | Vision-capable reviewer routed with specialty `ux` |
+| UX capture at the boundary, reviewer dispatch, and verdict | Gate runner (role `errand`) dispatched with toolbelt:ux-gate |
+| UX judgment | Vision-capable reviewer with specialty `ux`, dispatched by the gate runner |
 | Task reviews and the broad final review | Reviewer subagents |
-| PR publication | finishing-a-development-branch (step 5) |
-| Review, exact-head CI, fix loops, rebases, retargets, and merge for one published chain | pr-monitor |
+| Workspace suite, PR publication, review, exact-head CI, fix loops, rebases, retargets, and merge for one chain | pr-monitor, dispatched with toolbelt:pr-monitor; it reads that skill, finishing-a-development-branch, and the project PR policy |
 | Issue-tracker reconciliation and cleanup | This skill, after the monitor returns |
 
 ## 3. Prepare and execute
 
-A dependent boundary's `Depends on` may name one still-open predecessor; every other dependency must be merged first. Fetch the predecessor's remote head and branch the worktree from that SHA. If the predecessor merged, fetch and use the updated base branch. An independent boundary branches from the base branch. For an approved prototype, reuse its branch/worktree and recorded baseline; the single-PR prototype contract governs.
+A dependent boundary's `Depends on` may name one still-open predecessor; every other dependency must already be merged. Fetch the predecessor's remote head and branch the worktree from that SHA. If the predecessor merged, fetch and use the updated base branch. An independent boundary branches from the base branch. For an approved prototype, reuse its branch, worktree, and recorded baseline under the single-PR prototype contract.
 
-For a new boundary worktree use toolbelt:using-git-worktrees, branch `<plan-slug>/pr-<N>` — `<plan-slug>` is the plan file's basename without date and extension, `<N>` the boundary number.
+For a new boundary worktree use toolbelt:using-git-worktrees, branch `<plan-slug>/pr-<N>`: the plan file's basename without date and extension, and the boundary number.
 
-Execute the boundary with toolbelt:subagent-driven-development, supplying its boundary number, exact task set, starting SHA, and resolved routes. Tracks cannot span boundaries; earlier-boundary dependencies must be present in that SHA.
+Execute the boundary with toolbelt:subagent-driven-development, supplying its boundary number, exact task set, starting SHA, and resolved routes. Tracks cannot span boundaries.
 
 ## 4. Gate the boundary
 
-When the boundary meets ux-gate's entry condition — new user flows, material interaction/layout/responsive changes, or explicit UX-review requests — supply it as SDD's optional pre-final gate. Routine cosmetic changes need no model review. That broad final review is the slice gate; add no other whole-slice review.
+When the boundary meets ux-gate's entry condition (new user flows, material interaction, layout, or responsive changes, or an explicit UX-review request), supply the gate runner as SDD's optional pre-final gate, with the changed routes, base..head, acceptance criteria, and environment. Routine cosmetic changes need no model review. That broad final review is the slice gate; add no other whole-slice review.
 
 ## 5. Ship
 
-After approval, invoke toolbelt:finishing-a-development-branch with the pull-request completion route and the target base branch declared: the predecessor's branch for a dependent boundary, the base branch otherwise.
+After the final review is clean, hand the branch to the chain's pr-monitor with the worktree path, the target base (the predecessor's branch for a dependent boundary, the base branch otherwise), the final-review SHA, and the ledger path. It runs toolbelt:finishing-a-development-branch on the pull-request route, records `Boundary <N>: branch <name>, PR #<num>, base <branch>, state open` in the ledger, and owns the PR to merge.
 
-Record per boundary in the delivery ledger, with its SDD workspace path: `Boundary <N>: branch <name>, PR #<num>, base <branch>, state <prepared|open|merged|blocked>`.
+Record per boundary in the ledger, with its SDD workspace path: `Boundary <N>: branch <name>, base <branch>, state <prepared|open|merged|blocked>`.
 
-Once the boundary's broad final review is clean and its PR is open, start the next boundary; any number may be open.
+Once the boundary's monitor is running, start the next; any number may be open. A dependent boundary waits for its predecessor's ledger PR record.
 
-Each chain has exactly one pr-monitor. Start it when its bottom PR opens, passing that layer's record — PR number, branch, full head SHA, base branch, and local-gate SHA. Always run it in the background. While independent boundaries remain, keep delivering them; once none remain, block on its return with one wait. Never poll it. Resume it with the new layer's record when a dependent boundary's PR opens; an independent boundary starts its own chain.
+Each chain has exactly one pr-monitor. Always run it in the background. While independent boundaries remain, keep delivering them; then block on its return with one wait. Never poll it. Resume it with a dependent boundary's branch when that boundary's final review is clean; an independent boundary starts its own chain.
 
-Process each monitor's return: merged, run step 6; blocked, surface it to your human partner. Never report the slice complete or end the session while the monitor runs. A completion notification is not that return.
+Process each monitor's return: merged, run step 6; blocked or escalated, surface it to your human partner. Never report the slice complete or end the session while the monitor runs. A completion notification is not that return. A monitor that looks dead is not grounds to start a second one: check that state directly first.
 
-A monitor that looks dead is not grounds to start a second one: before re-dispatching any agent that owns external state, check that state directly.
-
-A chain whose bottom PR closed without merging returns `CLOSED` and a durable blocker for every layer above: surface it and open no further boundaries in that chain.
+A chain whose bottom PR closed without merging returns `CLOSED` and a durable blocker for every layer above: surface it and open no more boundaries in that chain.
 
 ## 6. Reconcile and clean up
 
-Run when the monitor returns a layer merged. Reconcile the issue tracker only when the plan is linked to one. Confirm the remote PR state the monitor returned — never commit ancestry — then follow branch-lifecycle.md cleanup.
+Run when a layer merges. Reconcile the issue tracker only when the plan is linked to one. Confirm the remote PR state the monitor returned, never commit ancestry, then follow branch-lifecycle.md cleanup.
 
-After interruption, recover from the approved plan, Git and worktree state, recorded evidence, and current PR state before dispatching again.
+After interruption, recover from the plan, Git and worktree state, the ledger, and current PR state before dispatching again.

@@ -52,9 +52,9 @@ assert_contains "$sdd_tracks" '## Decisions & drift risks' \
   "track reports carry a drift log"
 assert_contains "$sdd_tracks" 'A textual conflict is a plan defect' \
   "track merge conflicts stop, never hand-resolved"
-assert_contains "$sdd" 'Dispatch multiple implementation subagents into the same worktree' \
+assert_contains "$sdd" 'one implementer per track worktree, never two in one worktree' \
   "red flag scopes concurrency to one implementer per track worktree"
-assert_contains "$sdd" 'Parallelize tracks the plan did not declare' \
+assert_contains "$sdd" 'however independent two tasks look' \
   "undeclared parallelism is a red flag"
 assert_not_contains "$sdd" 'Dispatch multiple implementation subagents in parallel (conflicts)' \
   "old unconditional parallel-dispatch flag is gone"

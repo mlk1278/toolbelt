@@ -2,6 +2,18 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v7.12.0 (2026-09-16)
+
+Reduces what the orchestrator reads after an audited delivery whose root session carried 764K characters of unnecessary reports, reviews, and skills.
+
+- **Reviews are files.** Task reviewers, re-reviewers, the final code reviewer, and the UX reviewer write their report to a review file and return a short verdict: counts, one line per Critical, Important, or ⚠️ item, and the path. The implementer fixes from that file; fix dispatches and re-reviews carry the path, never pasted findings.
+- **The orchestrator reads return messages only.** Briefs, reports, reviews, diffs, logs, and capture evidence move between agents by path, and the orchestrator asks the owning agent for an excerpt rather than opening the file.
+- **pr-monitor publishes and owns the PR through merge.** Delivery hands it the branch once the final review is clean; it runs finishing-a-development-branch, opens the PR, fixes findings inline in its own session, and lets the awaited providers' next round re-review, with no local review of fix rounds and no fixer dispatch. It returns on merge, a durable blocker, or a design decision requiring escalation, never on a round count. Project policies no longer decide who fixes.
+- **New `orchestrating` skill.** The session agent's complete read list: the plan, delivery and branch-lifecycle.md, SDD and its prompt templates, parallel-tracks.md when needed, code-reviewer.md, agent-routing and its brief, using-git-worktrees, ledgers, and script-returned paths. Every other skill is a dispatch target, so the orchestrator never opens pr-monitor, ux-gate, finishing-a-development-branch, or project policies those agents read. Delivery and SDD enter through it.
+- **`scripts/token-audit`.** Reads one Codex rollout or Claude Code transcript, follows its child sessions, and prints per-agent token totals, the largest tool outputs classified by what was read, wait and repeat-read counts, and the biggest context jumps with the call that caused each. No more hand-parsing session logs to find waste.
+- **ux-gate runs in a dispatched gate runner.** The runner captures, dispatches the UX reviewer, and returns the verdict and review-file path; the orchestrator routes the file to the owning implementer and resumes the runner. Implementers author their own smoke matrix from the ux-gate reference and project policy instead of receiving one built by the orchestrator.
+- **Implementers can rebut.** A finding that is wrong for the codebase gets a `REBUTTED:` row with the reasoning and evidence instead of a code change; the re-review judges whether the reasoning holds, and the orchestrator adjudicates rather than re-dispatching.
+
 ## v7.11.1 (2026-09-15)
 
 - The no-polling rule in subagent-driven-development now applies between waits only: after a wait times out, the agent inspects the task once and decides whether to wait again or stop it.

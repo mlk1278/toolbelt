@@ -1,0 +1,5 @@
+{"type":"assistant","uuid":"a1","requestId":"r1","message":{"role":"assistant","usage":{"input_tokens":100,"cache_creation_input_tokens":900,"cache_read_input_tokens":0,"output_tokens":40},"content":[{"type":"tool_use","id":"t1","name":"Read","input":{"file_path":"/w/docs/review.md"}}]}}
+{"type":"user","uuid":"u1","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"REVIEW TEXT REVIEW TEXT"}]}}
+{"type":"assistant","uuid":"a2","requestId":"r2","message":{"role":"assistant","usage":{"input_tokens":50,"cache_creation_input_tokens":0,"cache_read_input_tokens":3000,"output_tokens":60},"content":[{"type":"tool_use","id":"t2","name":"Bash","input":{"command":"sleep 30 && tail -n 5 out.log"}}]}}
+{"type":"user","uuid":"u2","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t2","content":[{"type":"text","text":"log line"}]}]}}
+{"type":"assistant","uuid":"a3","requestId":"r2","message":{"role":"assistant","usage":{"input_tokens":50,"cache_creation_input_tokens":0,"cache_read_input_tokens":3000,"output_tokens":60},"content":[{"type":"text","text":"same request, second record"}]}}

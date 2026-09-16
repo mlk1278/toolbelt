@@ -40,10 +40,9 @@ Subagent (role: reviewer):
 
     **Base:** [BASE_SHA]  **Head:** [HEAD_SHA]  **Diff file:** [DIFF_FILE]
 
-    Your evidence: the brief, the report, the review guidance, the smell
-    baseline, and the diff file, each read once, plus one targeted read per
-    suspected finding, named with the finding it served. A judgment needing
-    wider context is a ⚠️ item for the controller. Leave the working tree
+    Read the brief, report, review guidance, smell baseline, and diff file
+    once each, plus one targeted read per suspected finding, named with the
+    finding it served. A judgment needing wider context is a ⚠️ item. Leave the working tree
     untouched; dispatch no subagents. If the diff file is missing,
     reconstruct it with `git diff [BASE_SHA]..[HEAD_SHA]`.
 
@@ -67,11 +66,11 @@ Subagent (role: reviewer):
     - **Tests:** every guard, absence, or negative assertion must be **seen
       red** in the report — its TDD RED, or a recorded mutate-and-revert; a
       guard without that evidence is Important whatever the report claims.
-      Do new and changed tests verify real behavior, not mocks? Are the
-      task's edge cases covered? When the diff deletes tests, name the
-      surfaces that lose assertions and where that coverage moved.
-    - **Structure:** does it follow the plan's file structure? judge what
-      this change added, not pre-existing file sizes.
+      Do new and changed tests verify real behavior, not mocks, and cover
+      the task's edge cases? When the diff deletes tests, name the surfaces
+      that lose assertions and where that coverage moved.
+    - **Structure:** the plan's file structure; judge what this change
+      added, not pre-existing file sizes.
 
     ## Calibration
 
@@ -86,7 +85,7 @@ Subagent (role: reviewer):
 
     ## Output Format
 
-    Your final message is the report, beginning with the spec-compliance
+    Write your report to [REVIEW_FILE], beginning with the spec-compliance
     verdict. Every line is a verdict, a finding with file:line, or a check
     you ran — never a bare "yes."
 
@@ -94,8 +93,7 @@ Subagent (role: reviewer):
 
     - ✅ Spec compliant | ❌ Issues found: [missing/extra/misunderstood, with
       file:line]
-    - ⚠️ Cannot verify from diff: [what you could not verify and what the
-      controller should check — alongside the verdict]
+    - ⚠️ Cannot verify from diff: [what, and what the controller should check]
 
     ### Strengths
     [What's well done?]
@@ -113,16 +111,19 @@ Subagent (role: reviewer):
     **Task quality:** [Approved | Needs fixes]
 
     **Reasoning:** [1-2 sentences]
+
+    Reply with the head, both verdicts, counts per severity, one line per
+    Critical, Important, and ⚠️ item, and the review file path. Use under
+    12 lines unless required findings need more.
 ```
 
 **Placeholders**, all required:
-- `[MODEL]` — reviewer model per SKILL.md Model Selection
 - `[BRIEF_FILE]` — the task brief, from `scripts/task-brief PLAN N`
 - `[GLOBAL_CONSTRAINTS]` — requirements copied verbatim from the plan or spec
 - `[REVIEW_NUANCE]` — task-specific context or risks; `None` if none
 - `[REPORT_FILE]` — the implementer's report
 - `[BASE_SHA]` / `[HEAD_SHA]` — commit before this task / current commit
-- `[DIFF_FILE]` — the `scripts/review-package BASE HEAD` path; the package
-  never enters the controller's context
+- `[DIFF_FILE]` — the `scripts/review-package BASE HEAD` path
+- `[REVIEW_FILE]` — where the review is written (`…/task-N-review.md`)
 - `[SMELLS_FILE]` — resolved path to
   `../requesting-code-review/smell-baseline.md`

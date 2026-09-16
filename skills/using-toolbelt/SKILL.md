@@ -9,7 +9,7 @@ If you were dispatched as a subagent to execute a specific task, ignore this ski
 
 ## The Rule
 
-Invoke a relevant or requested skill before any response or action, including clarifying questions and exploring the codebase; the skill sets the approach. If it turns out not to fit, you need not use it.
+Invoke a relevant or requested skill before any response or action, including clarifying questions and exploring the codebase; the skill sets the approach. If it does not fit, drop it. When orchestrating, that skill's read list decides which skills you open.
 
 Before entering plan mode, brainstorm first if you have not.
 

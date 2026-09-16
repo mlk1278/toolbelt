@@ -99,10 +99,11 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 
 **Delivery**
 - **quick-task** - Small decision-complete changes, straight to one merged PR
+- **orchestrating** - What the session agent reads, dispatches, and rules on; nothing else enters its context
 - **delivery** - An approved plan through one coherent slice to a merged PR
 - **agent-routing** - Resolves logical roles to concrete agent routes
 - **ux-gate** - UX review for new flows, material UI changes, or explicit requests; scripted smoke checks for rendering tasks
-- **pr-monitor** - CI, review providers, fix loops, and merge
+- **pr-monitor** - PR publication, CI, review providers, fix loops, and merge
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
@@ -119,6 +120,8 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 ## Working on this
 
 See [CLAUDE.md](CLAUDE.md) for how skills are structured and what not to break, and `skills/writing-skills/SKILL.md` for the full guide to writing them.
+
+`scripts/token-audit <session.jsonl>` reports where a session and its subagents spent their tokens; it reads Codex rollouts and Claude Code transcripts.
 
 Plugin-infrastructure tests live in `tests/` and run via the relevant `run-*.sh`. Skill-behavior evals use an external drill harness cloned into `evals/`, which is gitignored and not included here.
 

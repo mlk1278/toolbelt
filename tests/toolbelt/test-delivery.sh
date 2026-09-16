@@ -97,7 +97,7 @@ assert_contains "$workflow" '`brainstorming` and `writing-plans`' "planning poli
 assert_contains "$workflow" "one coherent delivery slice" "slice policy"
 assert_contains "$workflow" '## Agent Routing' "optional plan-routing policy"
 assert_contains "$workflow" "implementation report and review-package path" "controller context discipline"
-assert_contains "$workflow" "without independently rereading the implementation or verification output" "controller avoids duplicate review context"
+assert_contains "$workflow" "never reports, reviews, diffs, or logs" "controller avoids duplicate review context"
 assert_contains "$workflow" "No separate resume state machine" "recovery avoids resume machinery"
 assert_contains "$workflow" "one pr-monitor per chain" "workflow documents one monitor per chain"
 assert_not_contains "$workflow" "workstack-resume" "workflow does not revive resume skill"

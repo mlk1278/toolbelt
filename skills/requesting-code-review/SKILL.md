@@ -5,7 +5,7 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
-Dispatch a code reviewer subagent after each task in subagent-driven development, after a major feature, before merging to main, or whenever your human partner asks. The reviewer gets crafted context, never your session's history: that keeps it on the work product rather than your thought process.
+Dispatch a code reviewer subagent after each task in subagent-driven development, after a major feature, before merging to main, or whenever your human partner asks. The reviewer gets crafted context, never your session's history.
 
 ## How to Request
 
@@ -24,7 +24,7 @@ BASE is the recorded commit before the work, never `HEAD~1`, which drops every c
 ../subagent-driven-development/scripts/review-package $BASE_SHA $HEAD_SHA
 ```
 
-It writes the commit list, stat summary, and the diff with extended context to one file and prints the path. Pass that path as `{DIFF_FILE}` — the reviewer reads one file instead of re-deriving the diff, and the diff never enters your context. Skip this step only if the script isn't reachable; pass `None` and the reviewer falls back to git commands.
+It writes the commit list, stat summary, and the diff with extended context to one file and prints the path. Pass that path as `{DIFF_FILE}`; the diff never enters your context. If the script isn't reachable, pass `None` and the reviewer falls back to git commands.
 
 **3. Dispatch the reviewer** on the `reviewer` route (specialty `code`) from the session routing brief, filling the template at [code-reviewer.md](code-reviewer.md). Pass the author's model for reviewer independence.
 
@@ -37,6 +37,7 @@ Do not read `docs/REVIEW-GUIDANCE.md` yourself. The reviewer template loads it w
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 - `{DIFF_FILE}` - Review package path from step 2 (`None` if unavailable)
+- `{REVIEW_FILE}` - Where the reviewer writes its report, beside the review package
 - `{SMELLS_FILE}` - Resolved path of `smell-baseline.md`
 
-**4. Act on feedback:** fix Critical and Important issues before proceeding, note Minor ones for later, and push back with technical reasoning where the reviewer is wrong.
+**4. Act on feedback:** the agent that fixes reads the review file; a dispatcher reads only the returned verdict. Fix Critical and Important issues before proceeding, note Minor ones for later, and push back with technical reasoning where the reviewer is wrong.

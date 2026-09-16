@@ -1,4 +1,4 @@
 interface:
   display_name: "PR Monitor"
-  short_description: "Own a PR chain through CI, review, fixes, and merge"
+  short_description: "Publish and own a PR chain through CI, review, fixes, and merge"
   default_prompt: "Use $pr-monitor to shepherd this pull request through merge."

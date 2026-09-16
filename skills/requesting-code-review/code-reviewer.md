@@ -64,6 +64,8 @@ Subagent (role: reviewer):
 
     ## Output Format
 
+    Write to [REVIEW_FILE] for the fixer.
+
     ### Strengths
 
     ### Issues
@@ -87,6 +89,10 @@ Subagent (role: reviewer):
     **Ready to merge?** [Yes | No | With fixes]
 
     **Reasoning:** [1-2 sentences]
+
+    Reply with the head, merge verdict, counts per severity, one line per
+    Critical and Important issue, and the review file path. Use under
+    12 lines unless required findings need more.
 ```
 
 **Placeholders:**
@@ -100,3 +106,5 @@ Subagent (role: reviewer):
   `../subagent-driven-development/scripts/review-package BASE HEAD`. Required
   when the dispatcher has that script; `None` only when you cannot produce
   one, and the reviewer falls back to the git commands above.
+- `[REVIEW_FILE]` — path the review is written to, beside the review package
+  (`review-<base7>..<head7>.md`)

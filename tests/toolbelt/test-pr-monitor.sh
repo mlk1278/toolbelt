@@ -38,7 +38,9 @@ assert_contains "$skill" "at most once per head request each policy-named provid
 assert_contains "$skill" "fail closed on unavailable" "CI unavailable fails closed"
 assert_contains "$skill" "Once every awaited provider has completed on the current head" "fix round waits for all awaited providers"
 assert_contains "$skill" "judge it yourself" "monitor judges findings itself"
-assert_contains "$skill" "fix what is real, inline or through the fixer route the policy names" "policy decides who fixes"
+assert_contains "$skill" "fix what is real, inline in your own session" "monitor fixes inline"
+assert_contains "$skill" "request no local review of a fix round and dispatch no fixer" "providers re-review fixes; no local gate"
+assert_contains "$skill" "never on a round count or elapsed time" "no round-count handback"
 assert_contains "$skill" "wait with one call" "one wait call per cycle"
 assert_contains "$skill" "never poll, sleep-loop, tail logs, or emit keep-alive commands" "no polling between waits"
 assert_contains "$skill" "Push all fixes as one batch" "one push per fix round"
@@ -50,7 +52,7 @@ assert_contains "$skill" "The caller owns post-merge reconciliation." "reconcili
 assert_contains "$skill" "Do not nest another watcher." "no nested watchers"
 assert_no_model_names "$skill"
 
-assert_contains "$skill" "genuinely entangled" \
+assert_contains "$skill" "substantially change the design or the PR has diverged from its plan" \
   "only entangled findings escalate to the caller"
 assert_contains "$skill" "the policy file decides whether a recorded fallback blocks" \
   "fallback adjudication belongs to the policy file"

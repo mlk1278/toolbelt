@@ -1,0 +1,10 @@
+{"timestamp":"t","type":"session_meta","payload":{"id":"root-1","thread_source":"user","agent_path":"/root","cwd":"/w"}}
+{"timestamp":"t","type":"response_item","payload":{"type":"custom_tool_call","name":"exec","call_id":"c1","input":"text(await tools.exec_command({cmd:\"cat skills/pr-monitor/SKILL.md\",max_output_tokens:7000}))"}}
+{"timestamp":"t","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"c1","output":[{"type":"input_text","text":"SKILL BODY SKILL BODY SKILL BODY SKILL BODY"}]}}
+{"timestamp":"t","type":"token_usage_record","payload":{"usage":{"input_tokens":1000,"cached_input_tokens":400,"output_tokens":50,"reasoning_output_tokens":10}}}
+{"timestamp":"t","type":"response_item","payload":{"type":"function_call","name":"wait_agent","call_id":"c2","arguments":"{\"ids\":[\"x\"]}"}}
+{"timestamp":"t","type":"response_item","payload":{"type":"function_call_output","call_id":"c2","output":"{}"}}
+{"timestamp":"t","type":"token_usage_record","payload":{"usage":{"input_tokens":1100,"cached_input_tokens":1000,"output_tokens":20,"reasoning_output_tokens":0}}}
+{"timestamp":"t","type":"response_item","payload":{"type":"custom_tool_call","name":"exec","call_id":"c3","input":"text(await tools.exec_command({cmd:\"cat skills/pr-monitor/SKILL.md\"}))"}}
+{"timestamp":"t","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"c3","output":[{"type":"input_text","text":"SKILL BODY"}]}}
+{"timestamp":"t","type":"token_usage_record","payload":{"usage":{"input_tokens":5000,"cached_input_tokens":1000,"output_tokens":30,"reasoning_output_tokens":0}}}

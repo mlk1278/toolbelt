@@ -9,6 +9,7 @@ repo_root=$(git rev-parse --show-toplevel)
 
 ceilings=(
   "skills/using-toolbelt/SKILL.md:300"
+  "skills/orchestrating/SKILL.md:400"
   "skills/verification-before-completion/SKILL.md:300"
   "skills/receiving-code-review/SKILL.md:300"
   "skills/writing-skills/SKILL.md:1000"

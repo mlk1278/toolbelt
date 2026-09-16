@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+"""Token usage breakdown for one agent session and the agents it spawned.
+
+Reads a Codex rollout (~/.codex/sessions/.../rollout-*.jsonl) or a Claude Code
+transcript (~/.claude/projects/<project>/<session>.jsonl), follows child
+sessions, and prints one report:
+
+  - per agent: requests, uncached input, cached input, output, input:output ratio
+  - the largest tool outputs, classified by what was read
+  - wasted turns: waits, sleeps, tails, polls, and repeat reads of one path
+  - the biggest context jumps between consecutive requests and their cause
+
+Usage: token-audit SESSION_FILE [--top N] [--json]
+
+Standard library only. Nothing here calls a model.
+"""
+import argparse
+import glob
+import json
+import os
+import re
+import sys
+from collections import Counter, defaultdict
+
+CODEX_SESSIONS = os.path.expanduser("~/.codex/sessions")
+
+CLASSES = [
+    ("skill/policy", re.compile(r"/skills/|SKILL\.md|\.toolbelt/(pr-policy|ux-policy|agents\.json)|AGENTS\.md|CLAUDE\.md|REVIEW-GUIDANCE")),
+    ("review/report", re.compile(r"review|report|gate|ux/|findings|verdict", re.I)),
+    ("plan/ledger", re.compile(r"plans?/|ledger|handoff|specs?/|brief", re.I)),
+    ("test/log", re.compile(r"\b(pytest|vitest|jest|npm test|pnpm test|go test|cargo test)\b|\.log\b|tail ", re.I)),
+    ("git/diff", re.compile(r"\bgit (diff|log|show|status)\b|\bgh pr\b", re.I)),
+]
+WAIT_TOOLS = {"wait", "wait_agent", "list_agents", "TaskOutput", "Monitor"}
+WAIT_CMD = re.compile(r"\bsleep\b|\btail\b|\bwatch\b|poll", re.I)
+READ_CMD = re.compile(r"\b(?:cat|sed -n [0-9,p]+|head|less|Read)\s+(?:-[a-z]+\s+)*['\"]?(/[^\s'\";|&]+|[\w./-]+\.\w+)")
+
+
+def classify(text):
+    for name, rx in CLASSES:
+        if rx.search(text):
+            return name
+    return "other"
+
+
+def jsonl(path):
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                yield json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+
+def text_of(content):
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict):
+                parts.append(block.get("text") or block.get("output") or "")
+            else:
+                parts.append(str(block))
+        return "".join(parts)
+    if content is None:
+        return ""
+    return json.dumps(content)
+
+
+class Agent:
+    def __init__(self, name, path):
+        self.name = name
+        self.path = path
+        self.requests = []  # dicts: uncached, cached, output, reasoning
+        self.outputs = []  # dicts: seq, size, tool, what, cls
+        self.calls = Counter()
+        self.reads = Counter()
+        self.children = []
+
+    def totals(self):
+        t = Counter()
+        for r in self.requests:
+            for k, v in r.items():
+                t[k] += v
+        t["requests"] = len(self.requests)
+        return t
+
+
+# ---------------------------------------------------------------- Codex
+
+def codex_meta(path):
+    for rec in jsonl(path):
+        if rec.get("type") == "session_meta":
+            return rec.get("payload") or {}
+        break
+    return {}
+
+
+def codex_children(root_path):
+    """Map parent thread id -> child rollouts, scanning the sessions dir and the root's own dir."""
+    kids = defaultdict(list)
+    paths = set(glob.glob(os.path.join(CODEX_SESSIONS, "**", "rollout-*.jsonl"), recursive=True))
+    paths.update(glob.glob(os.path.join(os.path.dirname(root_path), "rollout-*.jsonl")))
+    for path in sorted(paths):
+        if path == root_path:
+            continue
+        meta = codex_meta(path)
+        parent = meta.get("parent_thread_id")
+        if parent:
+            kids[parent].append((meta.get("agent_path") or meta.get("id"), path, meta.get("id")))
+    return kids
+
+
+def parse_codex(path, name, kids):
+    agent = Agent(name, path)
+    pending = {}  # call_id -> (tool, what)
+    seq = 0
+    for rec in jsonl(path):
+        p = rec.get("payload") or {}
+        t = rec.get("type")
+        if t == "token_usage_record":
+            u = p.get("usage") or {}
+            agent.requests.append({
+                "uncached": u.get("input_tokens", 0) - u.get("cached_input_tokens", 0),
+                "cached": u.get("cached_input_tokens", 0),
+                "output": u.get("output_tokens", 0),
+                "reasoning": u.get("reasoning_output_tokens", 0),
+                "seq": seq,
+            })
+        elif t == "response_item":
+            kind = p.get("type")
+            if kind in ("function_call", "custom_tool_call"):
+                tool = p.get("name", "?")
+                what = p.get("arguments") if kind == "function_call" else p.get("input", "")
+                what = text_of(what)
+                m = re.search(r'cmd:\s*"((?:[^"\\]|\\.)*)"', what)
+                if m:
+                    what = m.group(1).encode().decode("unicode_escape", errors="ignore")
+                pending[p.get("call_id")] = (tool, what)
+                agent.calls[tool] += 1
+                if tool in WAIT_TOOLS or (tool == "exec" and WAIT_CMD.search(what)):
+                    agent.calls["__wait__"] += 1
+                for rm in READ_CMD.finditer(what):
+                    agent.reads[rm.group(1)] += 1
+            elif kind in ("function_call_output", "custom_tool_call_output"):
+                tool, what = pending.pop(p.get("call_id"), ("?", ""))
+                size = len(text_of(p.get("output")))
+                seq += 1
+                agent.outputs.append({"seq": seq, "size": size, "tool": tool, "what": what, "cls": classify(what)})
+    for child_name, child_path, child_id in kids.get(codex_meta(path).get("id"), []):
+        agent.children.append(parse_codex(child_path, child_name, kids))
+    return agent
+
+
+# ---------------------------------------------------------------- Claude
+
+def parse_claude(path, name):
+    agent = Agent(name, path)
+    pending = {}
+    seen_requests = set()
+    seq = 0
+    for rec in jsonl(path):
+        m = rec.get("message") or {}
+        content = m.get("content")
+        if rec.get("type") == "assistant":
+            u = m.get("usage")
+            rid = rec.get("requestId") or rec.get("uuid")
+            if u and rid not in seen_requests:
+                seen_requests.add(rid)
+                agent.requests.append({
+                    "uncached": u.get("input_tokens", 0) + u.get("cache_creation_input_tokens", 0),
+                    "cached": u.get("cache_read_input_tokens", 0),
+                    "output": u.get("output_tokens", 0),
+                    "reasoning": (u.get("output_tokens_details") or {}).get("thinking_tokens", 0),
+                    "seq": seq,
+                })
+            if isinstance(content, list):
+                for b in content:
+                    if isinstance(b, dict) and b.get("type") == "tool_use":
+                        tool = b.get("name", "?")
+                        inp = b.get("input") or {}
+                        what = inp.get("command") or inp.get("file_path") or inp.get("pattern") or inp.get("description") or json.dumps(inp)[:200]
+                        pending[b.get("id")] = (tool, what)
+                        agent.calls[tool] += 1
+                        if tool in WAIT_TOOLS or (tool == "Bash" and WAIT_CMD.search(what)):
+                            agent.calls["__wait__"] += 1
+                        if tool == "Read":
+                            agent.reads[what] += 1
+                        else:
+                            for rm in READ_CMD.finditer(what):
+                                agent.reads[rm.group(1)] += 1
+        elif rec.get("type") == "user" and isinstance(content, list):
+            for b in content:
+                if isinstance(b, dict) and b.get("type") == "tool_result":
+                    tool, what = pending.pop(b.get("tool_use_id"), ("?", ""))
+                    seq += 1
+                    agent.outputs.append({"seq": seq, "size": len(text_of(b.get("content"))), "tool": tool, "what": what, "cls": classify(what)})
+    session_dir = os.path.splitext(path)[0]
+    for child in sorted(glob.glob(os.path.join(session_dir, "subagents", "agent-*.jsonl"))):
+        child_name = os.path.basename(child)[len("agent-"):-len(".jsonl")]
+        meta = child.replace(".jsonl", ".meta.json")
+        if os.path.exists(meta):
+            try:
+                with open(meta) as fh:
+                    child_name = json.load(fh).get("description") or child_name
+            except (OSError, ValueError):
+                pass
+        agent.children.append(parse_claude(child, child_name))
+    return agent
+
+
+# ---------------------------------------------------------------- report
+
+def flatten(agent, depth=0):
+    yield agent, depth
+    for c in agent.children:
+        yield from flatten(c, depth + 1)
+
+
+def fmt(n):
+    return f"{n:,}"
+
+
+def ratio(t):
+    out = t["output"] or 1
+    return (t["uncached"] + t["cached"]) / out
+
+
+def context_jumps(agent, top):
+    jumps = []
+    reqs = agent.requests
+    for prev, cur in zip(reqs, reqs[1:]):
+        prev_in = prev["uncached"] + prev["cached"]
+        cur_in = cur["uncached"] + cur["cached"]
+        growth = cur_in - prev_in
+        if growth <= 0:
+            continue
+        causes = [o for o in agent.outputs if prev["seq"] < o["seq"] <= cur["seq"]]
+        causes.sort(key=lambda o: -o["size"])
+        jumps.append((growth, causes[:2]))
+    jumps.sort(key=lambda j: -j[0])
+    return jumps[:top]
+
+
+def report(root, top):
+    lines = []
+    agents = list(flatten(root))
+    grand = Counter()
+    lines.append("## Agents")
+    lines.append(f"{'agent':<34} {'req':>5} {'uncached in':>12} {'cached in':>13} {'output':>9} {'in:out':>7}")
+    for a, depth in agents:
+        t = a.totals()
+        grand.update(t)
+        name = ("  " * depth + a.name)[:34]
+        lines.append(f"{name:<34} {t['requests']:>5} {fmt(t['uncached']):>12} {fmt(t['cached']):>13} {fmt(t['output']):>9} {ratio(t):>6.0f}:1")
+    lines.append(f"{'TOTAL':<34} {grand['requests']:>5} {fmt(grand['uncached']):>12} {fmt(grand['cached']):>13} {fmt(grand['output']):>9} {ratio(grand):>6.0f}:1")
+
+    lines.append("")
+    lines.append(f"## Root: largest tool outputs (top {top})")
+    by_cls = Counter()
+    for o in root.outputs:
+        by_cls[o["cls"]] += o["size"]
+    total_chars = sum(by_cls.values()) or 1
+    for cls, size in by_cls.most_common():
+        lines.append(f"  {cls:<14} {fmt(size):>12} chars  {100 * size / total_chars:3.0f}%")
+    lines.append("")
+    for o in sorted(root.outputs, key=lambda o: -o["size"])[:top]:
+        lines.append(f"  {fmt(o['size']):>9}  {o['cls']:<14} {o['tool']:<12} {o['what'][:90]}")
+
+    lines.append("")
+    lines.append("## Root: wasted turns")
+    lines.append(f"  wait/poll calls: {root.calls['__wait__']} of {sum(v for k, v in root.calls.items() if k != '__wait__')} tool calls")
+    for tool, n in root.calls.most_common(8):
+        if tool != "__wait__":
+            lines.append(f"    {tool:<20} {n}")
+    repeats = [(p, n) for p, n in root.reads.items() if n > 1]
+    repeats.sort(key=lambda x: -x[1])
+    if repeats:
+        lines.append("  paths read more than once:")
+        for p, n in repeats[:top]:
+            lines.append(f"    {n}x  {p}")
+
+    lines.append("")
+    lines.append(f"## Root: biggest context jumps between requests (top {min(top, 5)})")
+    for growth, causes in context_jumps(root, min(top, 5)):
+        cause = "; ".join(f"{c['tool']} {c['what'][:60]} ({fmt(c['size'])} chars)" for c in causes) or "no tool output in between"
+        lines.append(f"  +{fmt(growth):>9} tokens  {cause}")
+    return "\n".join(lines)
+
+
+def as_json(root):
+    def node(a):
+        return {"name": a.name, "path": a.path, "totals": dict(a.totals()), "calls": dict(a.calls),
+                "outputs": a.outputs, "children": [node(c) for c in a.children]}
+    return node(root)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("session")
+    ap.add_argument("--top", type=int, default=20)
+    ap.add_argument("--json", action="store_true")
+    args = ap.parse_args()
+    path = os.path.abspath(args.session)
+    if not os.path.isfile(path):
+        sys.exit(f"no such file: {path}")
+    meta = codex_meta(path)
+    if meta:
+        kids = codex_children(path)
+        root = parse_codex(path, meta.get("agent_path") or "root", kids)
+    else:
+        root = parse_claude(path, "root")
+    if not root.requests:
+        sys.exit("no usage records found; is this a Codex rollout or a Claude Code transcript?")
+    if args.json:
+        print(json.dumps(as_json(root), indent=1))
+    else:
+        print(report(root, args.top))
+
+
+if __name__ == "__main__":
+    main()

@@ -9,8 +9,8 @@ Subagent (role: implementer):
   prompt: |
     ## Task Description
 
-    Read your task brief first: [BRIEF_FILE]
-    It is your requirements, with the exact values to use verbatim.
+    Read your task brief first: [BRIEF_FILE]. It holds your requirements
+    and the exact values to use verbatim.
 
     ## Context
 
@@ -20,40 +20,38 @@ Subagent (role: implementer):
 
     Work from: [directory]
 
-    A guard or negative assertion counts only when you have seen it fail
+    A guard or negative assertion counts only after you have seen it fail
     against code that lacks the guard, not against a missing module.
 
     Dispatch no subagents of your own.
 
     Wait for a background command with one blocking call (Monitor with an
-    until-loop on its output file, or a foreground command with a timeout).
-    Every extra turn re-sends your whole context: between waits, never poll,
-    sleep-loop, tail logs, or run keep-alive commands. After a wait times
-    out, inspect the task once and decide whether to wait again or stop it.
+    until-loop on its output file, or a foreground command with a timeout);
+    never poll, sleep-loop, or tail logs between waits.
 
-    Fix a trivial bug outside your task inline when tightly coupled to
-    your change; otherwise report it as a concern. Never expand your diff
-    chasing it.
+    Fix a trivial bug outside your task inline only when tightly coupled
+    to your change; otherwise report it.
 
     ## Verification
 
     Run the focused test while iterating. Before committing, run the
     packages your diff touches and direct consumers of any changed shared
-    contract — once each, never the whole workspace, through the project's
-    quiet-run wrapper when it exists. Read back exit status, pass count,
-    and any failure tail only.
+    contract once each, never the whole workspace, through the project's
+    quiet-run wrapper when it exists, reading back only exit status, pass
+    count, and any failure tail.
 
-    Report BLOCKED or NEEDS_CONTEXT in your final message when you need a
-    decision or information you lack: what you're stuck on, what you tried,
-    what you need.
+    Report BLOCKED or NEEDS_CONTEXT when you need a decision or
+    information: what you're stuck on, what you tried, and what you need.
 
     ## UI smoke
 
-    This scripted check does not invoke a UX reviewer.
-
     If your diff touches a file the app renders — a component, template,
     style, route, or copy shown on screen — run the smoke pass before
-    reporting DONE: [UX_SMOKE_COMMAND] for the pathway your task changes.
+    reporting DONE: [UX_SMOKE]. Read `matrix.md` there and the policy,
+    write the matrix for your task's pathway, start the server, and run
+    `scripts/ux-capture <matrix> --smoke --pathway <name>
+    --out .toolbelt/ux/smoke/task-N --project-root <repo root>`. No UX
+    reviewer is involved.
     Fix every finding it reports at `should` or above inside this task.
     Report the run's `mechanical.json` path and the still paths under
     **UI smoke** in your report; write `UI smoke: not applicable` when your
@@ -62,13 +60,17 @@ Subagent (role: implementer):
 
     ## After Review Findings
 
-    Fix the findings, re-run the tests covering the amended code, and
-    append to your report file:
+    Fix the Critical and Important findings and spec gaps in the review
+    file named in the fix request, re-run the tests covering the amended
+    code, and append to your report file:
 
     | Finding | Commit | Covering test command | Result |
     |---|---|---|---|
 
-    `Result` is the command's last passing line, pasted.
+    `Result` is the command's last passing line, pasted. A finding that is
+    wrong for this codebase gets no code change: its Result is `REBUTTED:`
+    plus technical reasoning and code/test evidence. Return rebuttals;
+    never rebut for convenience.
 
     ## Report Format
 
@@ -88,9 +90,8 @@ Subagent (role: implementer):
 ```
 
 **Placeholders:**
-- `[UX_SMOKE_COMMAND]` — the absolute ux-capture invocation and task matrix, plus Launch command, working directory, and isolated server URL supplied by the orchestrator
-  (`<ux-gate skill dir>/scripts/ux-capture <matrix> --smoke --pathway <name>
-  --out .toolbelt/ux/smoke/task-N --project-root <repo root>`), or
-  `not applicable` for a task that renders nothing.
+- `[UX_SMOKE]` — the ux-gate skill's absolute directory and the
+  `.toolbelt/ux-policy.md` path when it exists, or `not applicable` for a
+  task that renders nothing.
 - `[BRIEF_FILE]` — path to this task's brief.
 - `[REPORT_FILE]` — path the task report is written to.
