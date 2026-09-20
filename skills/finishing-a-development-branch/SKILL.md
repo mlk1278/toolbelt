@@ -126,11 +126,11 @@ If confirmed, clean up the worktree (Step 6) from the main repo root, then `git 
 
 ## Step 6: Cleanup Workspace
 
-Runs for Options 1 and 4 only.
+Options 1 and 4 only.
 
 Reuse Step 2's `GIT_DIR` and `GIT_COMMON`; equal means a normal repo, nothing to clean up. Otherwise `WORKTREE_PATH=$(git rev-parse --show-toplevel)`.
 
-If `.toolbelt/worktree-policy.md` defines teardown — sidecar containers, allocated ports, per-worktree data — release those first.
+If `.toolbelt/worktree-policy.md` defines teardown — sidecar containers, allocated ports, running processes, per-worktree data — release those first.
 
 **Squash-merge guard:** after a squash merge, `git log <base>..HEAD` lists every branch commit as unmerged — none is an ancestor of the squash commit. Never conclude from ancestry alone that work did or didn't land. Before removing anything, compare the branch's files against the base for content equality and check `git rev-list --left-right --count <base>...HEAD`.
 

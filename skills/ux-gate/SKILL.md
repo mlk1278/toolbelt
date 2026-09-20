@@ -44,7 +44,7 @@ Read [matrix.md](matrix.md) for the input schema and actions. Write `.toolbelt/u
   --baseline .toolbelt/ux/baseline/
 ```
 
-Use the prototype ledger’s absolute baseline path when present; otherwise serve the base branch in isolation and capture the same matrix first. If no baseline can be served, omit `--baseline`, review all stills as `new`, and record the limitation. An inaccessible prototype baseline is missing evidence to resolve. Stills are `<pathway>-<step>-<state>-<width>-<theme>.png`. An incomplete step is a finding, not a skip. Exit 2 means capture did not run; resolve it before review.
+Use the prototype ledger’s absolute baseline path when present; otherwise serve the base branch in isolation and capture the same matrix first, then stop that server. If no baseline can be served, omit `--baseline`, review all stills as `new`, and record the limitation. An inaccessible prototype baseline is missing evidence to resolve. Stills are `<pathway>-<step>-<state>-<width>-<theme>.png`. An incomplete step is a finding, not a skip. Exit 2 means capture did not run; resolve it before review.
 
 ## 3. Mechanical findings first
 

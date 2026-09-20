@@ -2,6 +2,10 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v7.12.1 (2026-09-20)
+
+- Agents stop the long-running processes they started — dev servers, watchers, browsers — before their final report, or name what they left running and who stops it. The rule lives in verification-before-completion; interactive-design, ux-gate, and finishing-a-development-branch each stop what they start.
+
 ## v7.12.0 (2026-09-16)
 
 Reduces what the orchestrator reads after an audited delivery whose root session carried 764K characters of unnecessary reports, reviews, and skills.
