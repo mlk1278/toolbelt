@@ -160,20 +160,20 @@ cat >"$tmp/retired/.toolbelt/agents.json" <<'JSON'
 }
 JSON
 
-while IFS='|' read -r role effort fallback_effort; do
+while IFS='|' read -r role effort fallback_model fallback_effort; do
   assert_route "bundled $role" \
-    "{\"role\":\"$role\",\"harness\":\"claude\",\"model\":\"opus-5-5\",\"effort\":\"$effort\",\"fallbacks\":[{\"harness\":\"codex\",\"model\":\"gpt-5.6-sol\",\"effort\":\"$fallback_effort\"}],\"source\":\"bundled:role\",\"fallback_reason\":null}" \
+    "{\"role\":\"$role\",\"harness\":\"claude\",\"model\":\"opus-5-5\",\"effort\":\"$effort\",\"fallbacks\":[{\"harness\":\"codex\",\"model\":\"$fallback_model\",\"effort\":\"$fallback_effort\"}],\"source\":\"bundled:role\",\"fallback_reason\":null}" \
     --project-root "$tmp/empty" --role "$role"
 done <<'CASES'
-explorer|medium|medium
-planner|high|high
-implementer|medium|high
-errand|low|low
-monitor|medium|medium
+explorer|medium|gpt-6-astra|medium
+planner|high|gpt-6-astra|high
+implementer|medium|gpt-6-sol|high
+errand|low|gpt-6-luna|low
+monitor|medium|gpt-6-sol|medium
 CASES
 
 assert_route "bundled reviewer" \
-  '{"role":"reviewer","harness":"codex","model":"gpt-5.6-sol","effort":"high","fallbacks":[],"source":"bundled:role","fallback_reason":null}' \
+  '{"role":"reviewer","harness":"codex","model":"gpt-6-astra","effort":"high","fallbacks":[],"source":"bundled:role","fallback_reason":null}' \
   --project-root "$tmp/empty" --role reviewer --author-harness claude
 
 assert_route "project role" \
@@ -193,15 +193,15 @@ assert_route "project specialty beats bundled specialty" \
   --project-root "$tmp/project" --role reviewer --reviewer-specialty plan --author-harness author-harness
 
 assert_route "missing bundled specialty falls through to role" \
-  '{"role":"reviewer","harness":"codex","model":"gpt-5.6-sol","effort":"high","fallbacks":[],"source":"bundled:role","fallback_reason":null}' \
+  '{"role":"reviewer","harness":"codex","model":"gpt-6-astra","effort":"high","fallbacks":[],"source":"bundled:role","fallback_reason":null}' \
   --project-root "$tmp/empty" --role reviewer --reviewer-specialty plan --author-harness claude
 
 assert_route "unknown specialty falls through to role" \
-  '{"role":"reviewer","harness":"codex","model":"gpt-5.6-sol","effort":"high","fallbacks":[],"source":"bundled:role","fallback_reason":null}' \
+  '{"role":"reviewer","harness":"codex","model":"gpt-6-astra","effort":"high","fallbacks":[],"source":"bundled:role","fallback_reason":null}' \
   --project-root "$tmp/empty" --role reviewer --reviewer-specialty nonesuch --author-harness claude
 
 assert_route "bundled gate specialty, author claude" \
-  '{"role":"reviewer","harness":"codex","model":"gpt-5.6-sol","effort":"high","fallbacks":[],"source":"bundled:reviewer-specialty","fallback_reason":null}' \
+  '{"role":"reviewer","harness":"codex","model":"gpt-6-astra","effort":"high","fallbacks":[],"source":"bundled:reviewer-specialty","fallback_reason":null}' \
   --project-root "$tmp/empty" --role reviewer --reviewer-specialty gate --author-harness claude
 
 assert_route "bundled gate specialty, author codex" \
@@ -209,7 +209,7 @@ assert_route "bundled gate specialty, author codex" \
   --project-root "$tmp/empty" --role reviewer --reviewer-specialty gate --author-harness codex
 
 assert_route "bundled ux specialty, author claude" \
-  '{"role":"reviewer","harness":"codex","model":"gpt-5.6-sol","effort":"high","fallbacks":[],"source":"bundled:reviewer-specialty","fallback_reason":null}' \
+  '{"role":"reviewer","harness":"codex","model":"gpt-6-astra","effort":"high","fallbacks":[],"source":"bundled:reviewer-specialty","fallback_reason":null}' \
   --project-root "$tmp/empty" --role reviewer --reviewer-specialty ux --author-harness claude
 
 assert_route "bundled ux specialty, author codex" \

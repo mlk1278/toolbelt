@@ -10,7 +10,7 @@
       "fallbacks": [
         {
           "harness": "codex",
-          "model": "gpt-5.6-sol",
+          "model": "gpt-6-sol",
           "effort": "high"
         }
       ]
@@ -23,7 +23,7 @@
       "fallbacks": [
         {
           "harness": "codex",
-          "model": "gpt-5.6-sol",
+          "model": "gpt-6-astra",
           "effort": "medium"
         }
       ]
@@ -36,7 +36,7 @@
       "fallbacks": [
         {
           "harness": "codex",
-          "model": "gpt-5.6-sol",
+          "model": "gpt-6-luna",
           "effort": "low"
         }
       ]
@@ -49,7 +49,7 @@
       "fallbacks": [
         {
           "harness": "codex",
-          "model": "gpt-5.6-sol",
+          "model": "gpt-6-astra",
           "effort": "high"
         }
       ]
@@ -62,16 +62,16 @@
       "fallbacks": [
         {
           "harness": "codex",
-          "model": "gpt-5.6-sol",
+          "model": "gpt-6-sol",
           "effort": "medium"
         }
       ]
     },
     "reviewer": {
       "harness": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-astra",
       "effort": "high",
-      "instructions": "Never the author's harness. This is a preference order, not a caller mapping: the resolver drops any entry whose harness equals --author-harness case-insensitively and takes the first survivor. Sol leads because the implementer is opus-5-5, so most work is Claude-authored; Codex-authored work falls through to fable-5-1 high.",
+      "instructions": "Never the author's harness. The resolver drops routes whose harness matches --author-harness, then takes the first remaining route. Astra reviews Claude-authored work; Codex-authored work falls through to fable-5-1 high.",
       "fallbacks": [
         {
           "harness": "claude",
@@ -84,7 +84,7 @@
   "reviewer_specialties": {
     "ux": {
       "harness": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-astra",
       "effort": "high",
       "instructions": "Vision review of UX captures. Must be a vision-capable route.",
       "fallbacks": [
@@ -97,7 +97,7 @@
     },
     "gate": {
       "harness": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-astra",
       "effort": "high",
       "instructions": "The boundary's final review. The most capable route on each harness.",
       "fallbacks": [
