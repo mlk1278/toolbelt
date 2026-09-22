@@ -10,9 +10,9 @@ import sys
 
 root = Path(sys.argv[1])
 expected = {
-    "opus-5-low": ("Claude Opus 5 on low effort.", "claude-opus-5", "low"),
-    "opus-5-medium": ("Claude Opus 5 on medium effort.", "claude-opus-5", "medium"),
-    "opus-5-high": ("Claude Opus 5 on high effort.", "claude-opus-5", "high"),
+    "opus-5-5-low": ("Claude Opus 5.5 on low effort.", "claude-opus-5-5", "low"),
+    "opus-5-5-medium": ("Claude Opus 5.5 on medium effort.", "claude-opus-5-5", "medium"),
+    "opus-5-5-high": ("Claude Opus 5.5 on high effort.", "claude-opus-5-5", "high"),
     "fable-5-1-low": ("Claude Fable 5.1 on low effort.", "claude-fable-5-1", "low"),
     "fable-5-1-medium": ("Claude Fable 5.1 on medium effort.", "claude-fable-5-1", "medium"),
     "fable-5-1-high": ("Claude Fable 5.1 on high effort.", "claude-fable-5-1", "high"),

@@ -2,6 +2,10 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v7.12.2 (2026-09-22)
+
+- Claude routes and bundled agents move from Opus 5 to Opus 5.5 (`opus-5-5`, `claude-opus-5-5`).
+
 ## v7.12.1 (2026-09-20)
 
 - Agents stop the long-running processes they started — dev servers, watchers, browsers — before their final report, or name what they left running and who stops it. The rule lives in verification-before-completion; interactive-design, ux-gate, and finishing-a-development-branch each stop what they start.

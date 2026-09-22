@@ -162,7 +162,7 @@ JSON
 
 while IFS='|' read -r role effort fallback_effort; do
   assert_route "bundled $role" \
-    "{\"role\":\"$role\",\"harness\":\"claude\",\"model\":\"opus-5\",\"effort\":\"$effort\",\"fallbacks\":[{\"harness\":\"codex\",\"model\":\"gpt-5.6-sol\",\"effort\":\"$fallback_effort\"}],\"source\":\"bundled:role\",\"fallback_reason\":null}" \
+    "{\"role\":\"$role\",\"harness\":\"claude\",\"model\":\"opus-5-5\",\"effort\":\"$effort\",\"fallbacks\":[{\"harness\":\"codex\",\"model\":\"gpt-5.6-sol\",\"effort\":\"$fallback_effort\"}],\"source\":\"bundled:role\",\"fallback_reason\":null}" \
     --project-root "$tmp/empty" --role "$role"
 done <<'CASES'
 explorer|medium|medium

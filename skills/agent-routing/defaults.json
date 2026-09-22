@@ -4,7 +4,7 @@
   "roles": {
     "implementer": {
       "harness": "claude",
-      "model": "opus-5",
+      "model": "opus-5-5",
       "effort": "medium",
       "instructions": "The daily driver. Implementation and bug fixing; every repository edit.",
       "fallbacks": [
@@ -17,7 +17,7 @@
     },
     "explorer": {
       "harness": "claude",
-      "model": "opus-5",
+      "model": "opus-5-5",
       "effort": "medium",
       "instructions": "Exploration, discovery, and research sweeps.",
       "fallbacks": [
@@ -30,7 +30,7 @@
     },
     "errand": {
       "harness": "claude",
-      "model": "opus-5",
+      "model": "opus-5-5",
       "effort": "low",
       "instructions": "Small bounded edits and chores.",
       "fallbacks": [
@@ -43,7 +43,7 @@
     },
     "planner": {
       "harness": "claude",
-      "model": "opus-5",
+      "model": "opus-5-5",
       "effort": "high",
       "instructions": "Planning and specs, usually user-invoked. Plans and specs get reviewed through a different harness from the author.",
       "fallbacks": [
@@ -56,7 +56,7 @@
     },
     "monitor": {
       "harness": "claude",
-      "model": "opus-5",
+      "model": "opus-5-5",
       "effort": "medium",
       "instructions": "Owns one PR end to end: waits through the project's wait command, judges findings, fixes them the way the project policy directs, pushes, and merges. Escalates only genuinely entangled findings.",
       "fallbacks": [
@@ -71,7 +71,7 @@
       "harness": "codex",
       "model": "gpt-5.6-sol",
       "effort": "high",
-      "instructions": "Never the author's harness. This is a preference order, not a caller mapping: the resolver drops any entry whose harness equals --author-harness case-insensitively and takes the first survivor. Sol leads because the implementer is opus-5, so most work is Claude-authored; Codex-authored work falls through to fable-5-1 high.",
+      "instructions": "Never the author's harness. This is a preference order, not a caller mapping: the resolver drops any entry whose harness equals --author-harness case-insensitively and takes the first survivor. Sol leads because the implementer is opus-5-5, so most work is Claude-authored; Codex-authored work falls through to fable-5-1 high.",
       "fallbacks": [
         {
           "harness": "claude",
