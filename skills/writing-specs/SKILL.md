@@ -5,8 +5,6 @@ description: "Use after brainstorming reaches an approved design, or when your h
 
 # Writing Specs
 
-**Announce at start:** "I'm using the writing-specs skill to write the spec."
-
 <ENTRY-GATE>
 You normally arrive from brainstorming with a design your human partner approved section by section. Arriving from interactive-design with a reconciled contract ledger is an equivalent entry. Direct entry is allowed when your human partner asks for a spec or supplies written requirements; skipping brainstorming is their call, never yours.
 </ENTRY-GATE>
@@ -50,6 +48,6 @@ Use the elements-of-style:writing-clearly-and-concisely skill if available. Save
 
 Wait. If they request changes, make them and self-review again; proceed only once they approve.
 
-**Alternate-harness review.** After that approval, invoke toolbelt:agent-routing and resolve role `reviewer`, specialty `spec`, with the authoring harness as `author-harness`; follow that skill's resolver-path contract, which is not relative to the project. `--author-harness` drops same-harness routes case-insensitively and fails closed if no different-harness route remains. Dispatch the reviewer to check for gaps, ambiguity, or poor design. Small technical gaps — fix the spec and proceed. A rework large enough to change the idea — bring it to your human partner. Unsure — ask.
+**Alternate-harness review.** After that approval, resolve a `reviewer` with specialty `spec` through toolbelt:agent-routing, passing your harness as the author; if resolution fails, stop and tell your human partner. Dispatch the reviewer to check for gaps, ambiguity, or poor design. Small technical gaps — fix the spec and proceed. A rework large enough to change the idea — bring it to your human partner. Unsure — ask.
 
 **Then invoke the writing-plans skill.** Do NOT invoke any other skill.

@@ -49,28 +49,26 @@ Nothing is required. Each is optional and read only when present:
 | `.toolbelt/agents.json` | Agent routes — harness, model, effort, custom instructions per role |
 | `.toolbelt/pr-policy.md` | Which review providers to await, complexity lanes, timeouts |
 | `.toolbelt/worktree-policy.md` | Port ranges, sidecar containers, and per-worktree resources so parallel worktrees don't collide |
-| `docs/REVIEW-GUIDANCE.md` | Project review conventions, given to reviewer subagents |
+| `docs/REVIEW-GUIDANCE.md` | Project review conventions; implementers follow them and reviewers check against them |
 | `AGENTS.md` | Entry-point summary — copy from [docs/AGENTS-SNIPPET.md](docs/AGENTS-SNIPPET.md) |
 
 Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-PROJECT.md](docs/ADOPTING-IN-A-PROJECT.md) for the adoption checklist and how to verify a project resolves its routes.
 
 ## The Basic Workflow
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation.
+1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents the design in sections for approval.
 
-2. **writing-specs** - Activates with an approved design, or directly when you ask for a spec. Writes and commits the spec document, then gates it with your review and an alternate-family model review.
+2. **writing-specs** - Activates with an approved design, or directly when you ask for a spec. Writes and commits the spec, then gates it with your review and a review from a different harness.
 
-3. **using-git-worktrees** - Activates after spec approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+3. **writing-plans** - Activates with an approved spec. Splits the work into PR-sized boundaries and reviewable tasks with exact files, interfaces, tests, and verification; the implementer writes the code. Reviewed on a different harness, then waits for your approval.
 
-4. **writing-plans** - Activates with an approved spec. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+4. **delivery** - Activates with an approved plan. Per PR boundary: creates a worktree, runs subagent-driven-development, then hands the branch to a pr-monitor that owns CI, review, fixes, and merge.
 
-5. **subagent-driven-development** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality).
+5. **subagent-driven-development** - Run by delivery. A fresh implementer per task (test-first), a review after each task with up to two fix rounds, then a whole-branch review.
 
-6. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+6. **finishing-a-development-branch** - Run by the pr-monitor, or directly when you finish work by hand. Verifies tests, then merges, opens a PR, keeps, or discards the branch.
 
-7. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
-
-8. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+**quick-task** covers small, already-decided changes: a one-task plan straight into delivery.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -82,7 +80,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
 
 **Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
+- **systematic-debugging** - 4-phase root cause process (includes root-cause tracing and condition-based waiting)
 - **verification-before-completion** - Audit every claim against a tool result before reporting
 
 **Collaboration** 

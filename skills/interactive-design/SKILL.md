@@ -5,8 +5,6 @@ description: "Use when your human partner accepts the frontend-first offer or as
 
 # Interactive Design
 
-**Announce:** "I'm using interactive-design to prototype the frontend against fixture-backed contracts."
-
 Building the frontend is the design work. You and your human partner iterate on the real UI while every backend-owned datum arrives through a real API route returning fixture data. The output is working frontend code and a ledger of the API contracts to implement.
 
 <ENTRY-GATE>

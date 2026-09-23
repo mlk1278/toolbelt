@@ -1,97 +1,101 @@
-# Implementer Subagent Prompt Template
-
-Use when dispatching an implementer.
+# Implementer Prompt Template
 
 ```
 Subagent (role: implementer):
   description: "Implement Task N: [task name]"
-  model: [MODEL — REQUIRED: per SKILL.md Model Selection]
+  model: [MODEL — from the resolved route]
   prompt: |
-    ## Task Description
+    You are implementing Task N of a plan. [One line on where this task
+    fits.] [Paths to any ledger rulings that bind this task, or omit.]
 
-    Read your task brief first: [BRIEF_FILE]. It holds your requirements
-    and the exact values to use verbatim.
+    Your brief is [BRIEF_FILE]: the plan's global constraints, known
+    gotchas, and data model, then your task. Use its exact values
+    verbatim. Work in [DIRECTORY]. If `docs/REVIEW-GUIDANCE.md` exists at
+    the repository root, follow its conventions; your reviewer checks
+    against it.
 
-    ## Context
+    Your task's Proves list holds the behaviors the plan decided; each
+    needs a test or check that would fail if it broke. It is not the whole
+    test list: also test the happy path and every behavior the contract
+    implies, following test-driven-development's writing-good-tests.md in
+    every mode, and run its mutation check before you report. Your Verify
+    mode says how:
+    `test-first` is toolbelt:test-driven-development, `test-with` is tests
+    alongside the code, `checks-only` is the named commands. Treat every
+    permission check, tenant filter, or rejection path you write as a
+    guard, marked `(guard)` or not: it counts only once you have seen its
+    test fail against code that lacks the guard, not against a missing
+    module.
 
-    [Scene-setting: where this fits, dependencies, architecture]
+    You decide only how the code is written inside the brief's contract:
+    local names, internal structure, step order, test names, commit
+    messages. Everything else is the plan's: feature shape, exports and
+    public names, signatures, error codes and status codes, data shapes,
+    and which files change. If the brief leaves one of those open, or the
+    work needs a file outside your Files block, stop and report
+    NEEDS_CONTEXT rather than choosing.
 
-    ## Your Job
+    Run focused tests while iterating. Before committing, run the task's
+    Verify command, plus the suites of direct consumers if you changed a
+    shared contract; never the whole workspace. Use the project's
+    quiet-run wrapper when it has one.
 
-    Work from: [directory]
+    Report a bug you find outside your task; don't fix it. Do not dispatch
+    subagents. Wait on a
+    background command with one blocking call, not by polling, and stop
+    any server or watcher you started before you report.
 
-    A guard or negative assertion counts only after you have seen it fail
-    against code that lacks the guard, not against a missing module.
+    UI smoke: [UX_SMOKE]. Unless that says not applicable, and your diff
+    changes something the app renders: read `matrix.md` there and the
+    policy file, write `.toolbelt/ux/smoke/task-N/matrix.json` for your
+    task's pathway, and start the server. Then, from the project root,
+    with `UX_SKILL_DIR` set to that directory, run
+    `"$UX_SKILL_DIR/scripts/ux-capture" .toolbelt/ux/smoke/task-N/matrix.json
+    --smoke --pathway <name> --out .toolbelt/ux/smoke/task-N
+    --project-root "$PWD"`. Fix every finding at `should` or above inside
+    this task; one you cannot fix within your Files block makes your
+    status DONE_WITH_CONCERNS.
 
-    Dispatch no subagents of your own.
+    If you need a decision or information, report BLOCKED or
+    NEEDS_CONTEXT: what you are stuck on, what you tried, what you need.
 
-    Wait for a background command with one blocking call (Monitor with an
-    until-loop on its output file, or a foreground command with a timeout);
-    never poll, sleep-loop, or tail logs between waits.
+    Write your full report to [REPORT_FILE]:
+    - What you implemented, or attempted if blocked
+    - Each Proves item, the test or check that covers it, and the
+      production change that test would catch. For `test-first` items and
+      every guard: the failing run (command, output, why that failure was
+      expected) and the passing run.
+    - UI smoke: the run's `mechanical.json` path and still paths, or
+      `UI smoke: not applicable`
+    - When you work in a track worktree: `## Decisions & drift risks` —
+      assumptions about shared contracts and decisions a sibling track
+      might contradict, or `None`
 
-    Fix a trivial bug outside your task inline only when tightly coupled
-    to your change; otherwise report it.
-
-    ## Verification
-
-    Run the focused test while iterating. Before committing, run the
-    packages your diff touches and direct consumers of any changed shared
-    contract once each, never the whole workspace, through the project's
-    quiet-run wrapper when it exists, reading back only exit status, pass
-    count, and any failure tail.
-
-    Report BLOCKED or NEEDS_CONTEXT when you need a decision or
-    information: what you're stuck on, what you tried, and what you need.
-
-    ## UI smoke
-
-    If your diff touches a file the app renders — a component, template,
-    style, route, or copy shown on screen — run the smoke pass before
-    reporting DONE: [UX_SMOKE]. Read `matrix.md` there and the policy,
-    write the matrix for your task's pathway, start the server, and run
-    `scripts/ux-capture <matrix> --smoke --pathway <name>
-    --out .toolbelt/ux/smoke/task-N --project-root <repo root>`. No UX
-    reviewer is involved.
-    Fix every finding it reports at `should` or above inside this task.
-    Report the run's `mechanical.json` path and the still paths under
-    **UI smoke** in your report; write `UI smoke: not applicable` when your
-    diff renders nothing. A finding you cannot fix inside this task's Files
-    block means you report DONE_WITH_CONCERNS naming it.
-
-    ## After Review Findings
-
-    Fix the Critical and Important findings and spec gaps in the review
-    file named in the fix request, re-run the tests covering the amended
-    code, and append to your report file:
+    When your dispatch or resume names a review file, do only this: fix
+    each Critical and Important finding and spec gap in it, re-run the tests covering the
+    change, and append this table to your report:
 
     | Finding | Commit | Covering test command | Result |
     |---|---|---|---|
 
-    `Result` is the command's last passing line, pasted. A finding that is
-    wrong for this codebase gets no code change: its Result is `REBUTTED:`
-    plus technical reasoning and code/test evidence. Return rebuttals;
-    never rebut for convenience.
+    Result is the command's last passing line, pasted. A finding that is
+    wrong for this codebase gets no code change:
+    its Result is `REBUTTED:` plus the technical reasoning and code or test
+    evidence. A fix that needs a decision the brief doesn't make, or a
+    file outside your Files block, gets `REBUTTED: plan-gap` and what is
+    missing.
 
-    ## Report Format
-
-    Write your full report to [REPORT_FILE]:
-    - What you implemented (or attempted, if blocked)
-    - What you tested and the results
-    - **TDD Evidence** (when required): RED — command, failing output, why
-      that failure was expected; GREEN — command and passing output; per
-      guard, its seen-red command and output
-
-    Report back with ONLY (under 15 lines):
+    Reply with only, in under 15 lines:
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Commits (short SHA and subject)
     - One-line test summary
-    - Your concerns, if any
+    - Concerns, if any
     - The report file path
 ```
 
 **Placeholders:**
-- `[UX_SMOKE]` — the ux-gate skill's absolute directory and the
-  `.toolbelt/ux-policy.md` path when it exists, or `not applicable` for a
-  task that renders nothing.
-- `[BRIEF_FILE]` — path to this task's brief.
-- `[REPORT_FILE]` — path the task report is written to.
+- `[MODEL]` — the implementer route.
+- `[DIRECTORY]` — the worktree the task runs in.
+- `[BRIEF_FILE]` — the path `scripts/task-brief` printed; for final-review or UX fixes, the plan path.
+- `[REPORT_FILE]` — `task-N-report.md` beside the brief, or `final-fix-report.md` / `ux-fix-report.md`.
+- `[UX_SMOKE]` — the ux-gate skill's absolute directory and the `.toolbelt/ux-policy.md` path when it exists, or `not applicable` for a task that renders nothing.

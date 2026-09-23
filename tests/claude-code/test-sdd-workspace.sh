@@ -110,6 +110,14 @@ PLAN
 
     local expected_brief="$TEST_ROOT/expected-brief.md"
     cat > "$expected_brief" <<'BRIEF'
+## Global Constraints
+
+- Keep shared behavior unchanged.
+
+```text
+### Task 99: Fenced global example
+```
+
 ## Task 1: First thing
 
 Do the first thing.
@@ -122,9 +130,9 @@ Still part of Task 1.
 
 BRIEF
     if cmp -s "$brief_path" "$expected_brief"; then
-        pass "task-brief extracts only the selected task"
+        pass "task-brief carries the shared sections and only the selected task"
     else
-        fail "task-brief extracts only the selected task"
+        fail "task-brief carries the shared sections and only the selected task"
         diff -u "$expected_brief" "$brief_path" || true
     fi
 

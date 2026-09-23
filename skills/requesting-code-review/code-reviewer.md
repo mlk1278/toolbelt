@@ -16,9 +16,9 @@ Subagent (role: reviewer):
 
     ## Project Review Guidance
 
-    If `docs/REVIEW-GUIDANCE.md` exists at the repository root, read it now.
-    This file is reviewer-only. Apply it and report any conflict with the
-    requirements instead of guessing.
+    If `docs/REVIEW-GUIDANCE.md` exists at the repository root, read it and
+    apply it. Report any conflict with the requirements instead of
+    guessing.
 
     ## Review-Specific Nuance
 
@@ -32,12 +32,15 @@ Subagent (role: reviewer):
     **Base:** [BASE_SHA]  **Head:** [HEAD_SHA]  **Diff file:** [DIFF_FILE]
 
     The diff file holds the commit list, stat summary, and full diff with
-    surrounding context — read all of it before judging any part. Open a
-    changed file only when a hunk is cut off mid-function, and say so. You
-    are read-only on this checkout and you are the review: leave the working
-    tree, index, HEAD, and branch state untouched, and dispatch no subagents.
-    Inspect history with `git show`, `git diff`, and `git log`; a working copy
-    of another revision goes in a temporary worktree.
+    surrounding context; read all of it before judging any part. Then
+    trace beyond it: follow each user-facing flow the branch changes from
+    its entry point (an endpoint, a job, a UI action) through to storage
+    and back, and follow each changed function one hop to its callers and
+    what it calls. Go further only when a concrete finding leads you
+    there. You are read-only on this checkout: leave the
+    working tree, index, HEAD, and branch untouched, and dispatch no
+    subagents. A working copy of another revision goes in a temporary
+    worktree.
 
     With no diff file, or a missing one, fetch the range:
 
@@ -50,23 +53,38 @@ Subagent (role: reviewer):
 
     Judge the branch on plan alignment (all planned functionality present),
     code quality, architecture and security, tests (real behavior rather
-    than mocks, edge cases covered, all passing), and production readiness
+    than mocks, edge cases covered, all passing, and no realistic mutation
+    of changed contract behavior left uncaught), and production readiness
     (migrations, backward compatibility). Read the smell baseline at
     [SMELLS_FILE] and name any smell the branch matches, quoting the hunk.
-    Depth comes from your judgment of this diff, not from a checklist.
+
+    Meeting the plan is not the whole review. Look for what the code does
+    poorly or fails to anticipate, especially where separately built
+    pieces meet: inputs and states it doesn't handle (empty, duplicate,
+    concurrent, retried, partially failed, large); data handled wrong
+    (units, time zones, rounding, encoding, missing validation where input
+    enters, another tenant's rows); lifecycle gaps (something created and
+    never cleaned up, a state with no exit, existing data a migration
+    ignores, callers left behind by a removal); and mismatches between
+    what one part produces and what another expects.
 
     Flag each deviation from the plan, so the implementer can confirm it
     was intentional. Say so when the problem is in the plan itself.
 
     ## Calibration
 
-    Categorize issues by actual severity. Not everything is Critical.
+    Every finding names a concrete scenario the system can produce: the
+    caller, entry point, or existing data that triggers it, and what goes
+    wrong. A concern you cannot tie to a reachable trigger is Minor at
+    most. Report what this branch causes or exposes; a pre-existing
+    problem elsewhere gets one line under Out of scope. Label a finding
+    `plan-gap` when its fix needs a behavior or contract choice the plan
+    doesn't make. Categorize by actual severity; not everything is
+    Critical.
 
     ## Output Format
 
     Write to [REVIEW_FILE] for the fixer.
-
-    ### Strengths
 
     ### Issues
 
@@ -79,10 +97,12 @@ Subagent (role: reviewer):
     #### Minor (Nice to Have)
     [Style, optimization, documentation polish]
 
-    Each issue: file:line, what's wrong, why it matters, how to fix if not
+    Each issue: file:line, the scenario, why it matters, how to fix if not
     obvious.
 
-    ### Recommendations
+    ### Out of scope
+
+    One line each, or "None".
 
     ### Assessment
 
@@ -91,7 +111,8 @@ Subagent (role: reviewer):
     **Reasoning:** [1-2 sentences]
 
     Reply with the head, merge verdict, counts per severity, one line per
-    Critical and Important issue, and the review file path. Use under
+    Critical and Important issue with its label if any, the out-of-scope
+    count, and the review file path. Use under
     12 lines unless required findings need more.
 ```
 
@@ -103,8 +124,7 @@ Subagent (role: reviewer):
 - `[HEAD_SHA]` — ending commit
 - `[SMELLS_FILE]` — resolved path to [smell-baseline.md](smell-baseline.md)
 - `[DIFF_FILE]` — the review package path from
-  `../subagent-driven-development/scripts/review-package BASE HEAD`. Required
-  when the dispatcher has that script; `None` only when you cannot produce
-  one, and the reviewer falls back to the git commands above.
+  `../subagent-driven-development/scripts/review-package BASE HEAD`, or
+  `None` when the script isn't reachable; the reviewer then uses git.
 - `[REVIEW_FILE]` — path the review is written to, beside the review package
   (`review-<base7>..<head7>.md`)

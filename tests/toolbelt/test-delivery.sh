@@ -54,7 +54,6 @@ assert_no_model_names() {
 
 assert_contains "$skill" "name: delivery" "frontmatter name"
 assert_contains "$skill" "Use when an approved implementation plan is ready to be implemented and shipped" "approved-plan trigger"
-assert_contains "$skill" "I'm using delivery to deliver this approved plan." "announce line"
 assert_contains "$skill" "one coherent delivery slice" "single-slice scope"
 assert_contains "$skill" '## Agent Routing' "optional plan routing section"
 assert_contains "$skill" "plan route, then project route, then bundled default" "route precedence"
@@ -112,7 +111,7 @@ assert_contains "$skill" "check that state directly" \
   "external state is checked before re-dispatch"
 assert_contains "$skill" "never commit ancestry" \
   "squash merges are not confirmed from ancestry"
-assert_contains "$skill" "A completion notification is not that return" \
+assert_contains "$repo_root/skills/orchestrating/SKILL.md" "act on its final message, not a notice that it finished" \
   "terminality is verified, not inferred from a completion notification"
 
 echo "PASS"

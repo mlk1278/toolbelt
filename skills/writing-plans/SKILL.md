@@ -5,217 +5,167 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 # Writing Plans
 
-## Overview
+Write an implementation plan that fresh implementers execute one task at a time, often many in parallel and on cheaper models. Each implementer can read the codebase, but sees only the plan's shared sections and its own task: not the spec, the other tasks, or this conversation. So the plan does the hard thinking. It settles feature shape, exports and public names, signatures, error and status codes, data shapes, and which files change, and it bounds each task. The implementer decides only how the code is written inside that contract.
 
-Write the plan for a capable engineer with **zero context for our codebase**: the files each task touches, the contracts, each test's purpose, the verification.
+Save to `docs/toolbelt/plans/YYYY-MM-DD-<feature-name>.md`, or your human partner's location when they name one.
 
-**Resolve product and contract decisions in the plan; leave implementation details to the implementer.**
+If the spec covers independent subsystems, propose one plan each; every plan produces working, testable software on its own.
 
-**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+## Explore first
 
-**Save plans to:** `docs/toolbelt/plans/YYYY-MM-DD-<feature-name>.md`, or your human partner's location when they name one.
+Know the code before you plan it. Read the nearest instructions for the target files, the files you will change, their tests, and the existing pattern each task should copy. Keep searching until you can name exact paths, signatures, and precedents.
 
-## Scope Check
+Dispatch through toolbelt:agent-routing's `explorer` role when a question is wide — every call site of a changed contract, or several unfamiliar subsystems — and you need only the conclusion; most plans need one explorer or none. Ask for checkable answers: paths, line ranges, signatures, a reference implementation to copy. End every brief with: **"What would a competent implementer, working only from a written plan, get wrong here?"**
 
-If the spec covers independent subsystems, propose one plan each. Every plan produces working, testable software on its own.
+### Traps to look for
 
-## Exploration Before Drafting
-
-Read the nearest instructions for the target files. Run 2–3 targeted inline `rg` searches for the named symbols, neighboring tests, and existing pattern.
-
-Dispatch through toolbelt:agent-routing's `explorer` role only for a completeness inventory, an invisible trap, or a plan-shaping existence question. Start with one explorer; more require unfamiliar, independent subsystems whose answers do not depend on each other.
-
-Ask for checkable paths and pointers: line ranges, a reference implementation to copy, contracts, prerequisites, gotchas. End every brief with: **"What would a competent implementer, working only from a written plan and unable to see this code, get wrong here?"**
-
-### The Gotcha Hunt
-
-- **Assertions that can never pass.** An absence check must exclude its own evidence.
-- **Checks that can't fail.** A guard whose setup never reaches its branch, or a precondition read from output the gated command itself produces. A gate is a separate command that exits first.
-- **Coverage that leaves with the code.** Name the kept surfaces losing assertions, relocate that coverage green, then delete.
-- **Tooling traps.** Inverted exit codes (`git grep` 0 = matched = FAIL), tools missing on CI.
+- **Assertions that can never pass.** An absence check must exclude its own evidence: `grep -r oldName` finds `oldName` in the test that runs it.
+- **Checks that can't fail.** A guard test whose setup never reaches the guarded branch, or a precondition read from output the gated command itself produces. Make the check a separate command that runs first.
+- **Coverage that leaves with the code.** When deleting code and its tests, list the assertions that protect code you are keeping, move them somewhere that stays, see them pass, then delete.
+- **Tooling traps.** Inverted exit codes (`git grep` exits 0 on a match, a failure for an absence check); tools missing on CI.
 - **Order.** Codegen, migrations, or fixtures the tests need first.
 - **Shared contracts.** Other consumers of a changed signature, table, or event.
 - **Environment drift.** Where local and CI disagree.
 
-Every gotcha ends this pass **resolved** — the plan shows the code, exclusion, or ordering that handles it — or **named**, with an instruction to escalate. A gotcha that is neither is a plan defect.
+Every trap you find ends up either handled in the plan — the code, exclusion, or ordering that deals with it — or named with an instruction to escalate.
 
-## File Structure
+## Shape the work
 
-Map the files the work creates or modifies and what each is responsible for: one responsibility and a defined interface each, following the codebase's patterns. Files that change together live together — split by responsibility, not by layer, and split only a file you already modify.
+**Files.** Map the files the work creates or modifies, each with one responsibility, following the codebase's patterns. Files that change together live together: split by responsibility, not by layer.
 
-## Task Right-Sizing
+**Tasks.** A task is one coherent change a reviewer can judge in one pass, ending in something independently verifiable. Fold setup, configuration, and documentation into the task that needs them.
 
-A task is the smallest unit worth its own test cycle and a fresh reviewer's gate, ending in an independently testable deliverable. Fold setup, configuration, and documentation into the task whose deliverable needs them. Split only where a reviewer could reject one task and approve its neighbor. Each step is one action (2-5 minutes).
+- Size: up to roughly 15 files or 800 changed lines; past about 8 files, the task's Decisions name the build order. Go larger for a mechanical sweep — one uniform, behavior-neutral change with one verification command; mark it `Mechanical sweep:` and name the command.
+- Split when two parts could run in parallel on disjoint files, or when a reviewer could reject one part and approve the other. Don't split for size alone below the guideline.
+- A task's **Files:** block lists every file it creates or modifies. "Plus every caller" is not a list.
+- The task that changes a migration, shared schema, shared type, or shared contract also updates the code that keeps it correct.
+- Every task picks a **Verify** mode:
+  - `test-first` — business rules, calculations, state changes, bug fixes: the implementer writes the tests for the task's Proves list first and sees each fail.
+  - `test-with` — wiring, UI composition, refactors under existing coverage: tests are written alongside the code and must pass.
+  - `checks-only` — configuration, documentation, generated code, mechanical sweeps: the named commands are the evidence, and Proves may be `none`.
 
-- A task's **Files:** block is closed: every file it creates or modifies. "Plus every caller" and "wherever else it is referenced" fail No Placeholders.
-- A task lists at most 8 files, a hard limit; as a guide its change reads in one sitting, around 400 lines. The one exception is a mechanical sweep — one uniform, behavior-neutral transformation with one verification command. That task says "Mechanical sweep:" and names the command.
-- A task changing a migration, shared schema, shared type, or shared contract owns the code that keeps it correct; fencing that into a later task is a defect. Over 8 files, split into serial tasks that each leave the contract correct.
+  A guard (a permission check, a tenant filter, a rejection path) is marked `(guard)` in the Proves list and must be seen failing without the guard, whatever the task's mode.
 
-## Plan Document Header
+**PR boundaries.** Group tasks into pull requests, each one independently verifiable outcome a reviewer can judge on its own. Every task number appears in exactly one boundary, and each boundary's verification passes without later boundaries. A boundary's `Depends on` names at most one predecessor whose PR may still be open when the boundary starts; every other dependency merges first. For shared substrate, ship the core plus one representative consumer first; later consumers share a PR only when they repeat the same reviewer judgment. Novel lifecycle, export, or rollout work stays separate.
 
-Every plan starts with this header:
+**Execution tracks.** Design for parallel work: put shared contracts in an early task, then give independent tasks disjoint files so they can run at the same time. For any boundary with more than three tasks, look for tracks, and declare `## Execution Tracks` after `## PR Boundaries` when two or more can run concurrently; read [execution-tracks.md](execution-tracks.md) first. Without the section, tasks run in order.
 
-```markdown
-# [Feature Name] Implementation Plan
-
-> **For agentic workers:** REQUIRED SUB-SKILL: Use toolbelt:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
-**Goal:** [One sentence describing what this builds]
-
-**Architecture:** [2-3 sentences about approach]
-
-**Tech Stack:** [Key technologies/libraries]
-
-## Global Constraints
-
-[The spec's project-wide requirements — version floors, dependency limits,
-naming and copy rules, platform requirements — one line each, with exact
-values copied verbatim from the spec. Every task's requirements implicitly
-include this section.]
-
-## Known Gotchas
-
-[Cross-cutting traps exploration surfaced, one line each, with the decision
-that handles each. Task-specific traps belong on their task instead. Every
-task implicitly includes this section.]
-
-## Data Model
-
-[When the work adds or changes schema, migrations, shared types, or
-contracts: the complete code, here, once. Tasks reference it instead of
-repeating it. Omit the section when there is none.]
-
----
-```
-
-## PR Boundaries
-
-Partition the plan into independently verifiable pull requests before writing tasks.
-
-| PR | Outcome | Tasks | Depends on | Independent verification |
-|---|---|---|---|---|
-| 1 | [one reviewable outcome] | [exact task numbers] | [boundary numbers or none] | [command or observable result] |
-
-Every task number appears in exactly one boundary; each boundary's verification passes without later boundaries. A one-PR plan states why no smaller independently verifiable outcome exists. A boundary's `Depends on` names at most one predecessor whose PR may still be open when the boundary starts; every other dependency merges first.
-
-For shared substrate, take the core plus one representative consumer first. Later consumers share a PR only when they repeat the same reviewer judgment. Novel lifecycle, export, or rollout work stays separate.
-
-## Execution Tracks
-
-Required for every plan with more than one PR boundary or more than three tasks. A plan whose tracks are all `serial-N` states in one sentence why no tasks can run concurrently. The section follows `## PR Boundaries`; its table shape and declaration rules are in [execution-tracks.md](execution-tracks.md) — read it before declaring tracks.
-
-## Level of Detail
-
-Specify the information needed to implement each artifact:
+## Level of detail
 
 | Artifact | The plan writes |
 |---|---|
 | Data model — schema, migrations, shared types | Complete code, once, in `## Data Model`; tasks derive from it |
 | Constants, config, fixtures | Exact values |
-| Functions and services | Signature stubs: name, parameters, return type, error behavior. Exact implementation lines only when the requirement depends on them |
+| Functions and services | Signature stubs: name, parameters, return type, error behavior. Exact lines only when a requirement depends on them |
 | Endpoints | Method, path, request/response shape, status codes, capability |
-| Tests | One line per test: name — setup — assertion. Full code only where the harness is a trap with no in-repo precedent |
+| Tests | The task's Proves list: every behavior the plan decided — defaults, edge cases, error paths and their codes, limits — and every guard, one line each: setup — observable result. Leave out happy paths and what follows directly from the contract; the implementer tests those anyway. Full test code only where the harness is a trap with no in-repo precedent |
 | UI components | Name, props contract, states, primitives to compose |
 | Anything with in-repo precedent | The decision plus the reference to copy: `path:line` |
 
-**Completeness check:** a step is fully specified when two capable implementers working from it independently produce behaviorally interchangeable code.
+A task is specified enough when two capable implementers working from it would write behaviorally interchangeable code.
 
-## Task Structure
+A placeholder is an undecided decision, not unwritten code. These fail review:
 
-A guard or negative assertion (a permission check, a tenant filter, a rejection path) lists its red as the failure seen when the guard is absent, not when the module is absent.
+- "TBD", "TODO", "implement later", "fill in details"
+- "Add error handling", "add validation", "handle edge cases" — name the exact behavior
+- "Handle edge cases" or "write tests for the above" — name each decided behavior in Proves
+- "Similar to Task N" — the implementer cannot see Task N; restate the contract
+- A type, function, or method no task defines
+
+## Plan document
+
+`scripts/task-brief` copies `## Global Constraints`, `## Known Gotchas`, and `## Data Model` into every task's brief, so keep those headings exactly as written.
 
 ````markdown
-### Task N: [Component Name]
+# [Feature Name] Implementation Plan
+
+> Execute with toolbelt:delivery.
+
+**Goal:** [one sentence]
+
+**Architecture:** [2–3 sentences]
+
+**Tech Stack:** [key technologies and libraries]
+
+## Global Constraints
+
+[The spec's project-wide requirements — version floors, dependency limits,
+naming and copy rules, platform requirements — one line each, exact values
+copied verbatim.]
+
+## Known Gotchas
+
+[Cross-cutting traps, one line each, with the decision that handles each.
+Task-specific traps go on the task.]
+
+## Data Model
+
+[Only when the work adds or changes schema, migrations, shared types, or
+contracts: the complete code, once. Tasks reference it.]
+
+## Agent Routing
+
+[Optional: routes for the implementer, task reviewer, or final reviewer;
+see toolbelt:agent-routing.]
+
+## PR Boundaries
+
+| PR | Outcome | Tasks | Depends on | Independent verification |
+|---|---|---|---|---|
+| 1 | [one reviewable outcome] | [task numbers] | [boundary numbers or none] | [command or observable result] |
+
+### Task 1: [Component Name]
 
 **Files:**
-- Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
+- Modify: `src/definitions/service.py:40-72`
+- Modify: `src/definitions/errors.py` (map `DuplicateKeyError` to 409)
+- Test: `tests/definitions/test_service.py`
+- Test: `tests/definitions/test_routes.py`
 
 **Interfaces:**
-- Consumes: [what this task uses from earlier tasks — exact signatures]
-- Produces: [what later tasks rely on — exact function names, parameter
-  and return types. A task's implementer sees only their own task; this
-  block is how they learn the names and types neighboring tasks use.
-  Write `Produces: none` when nothing downstream depends on this task.]
+- Consumes: [exact signatures this task uses from earlier tasks]
+- Produces: [exact names, parameter and return types later tasks rely on,
+  or `Produces: none`]
 
-**Gotchas:**
-- [Traps in this task's code, each with the decision that handles it, or
-  the constraint and an instruction to escalate. Omit the field if none.]
-
-- [ ] **Step 1: Write the failing tests**
-
-In `tests/exact/path/to/test.py`, one line per test — name — setup — assertion:
-- `test_rejects_duplicate_key` — org already has a definition with key `size` — `create_definition` raises `DuplicateKeyError`
-- `test_defaults_type_to_text` — input omits `type` — created row has `type == "TEXT"`
-
-- [ ] **Step 2: Run tests to verify they fail**
-
-Run: `pytest tests/path/test.py -v`
-Expected, per test:
-- `test_rejects_duplicate_key` — FAIL: `create_definition` not defined
-- `test_defaults_type_to_text` — FAIL: `create_definition` not defined
-
-- [ ] **Step 3: Implement to the contract**
+**Contract:**
 
 ```python
 def create_definition(org_id: str, input: CreateDefinitionInput) -> Definition:
     """Raises DuplicateKeyError (-> 409 DUPLICATE_KEY) when org already has input.key."""
 ```
 
-Decisions the stub can't carry, one line each: [take the definition locks
-before the entity row; copy the tenancy filter from `definitions/service.py:88`]
+**Decisions:** [what the contract can't carry, one line each: take the
+definition locks before the entity row; copy the tenancy filter from
+`definitions/service.py:88`]
 
-- [ ] **Step 4: Run tests to verify they pass**
+**Proves:**
+- input omits `type` — created row has `type == "TEXT"`
+- (guard) org already has key `size` — `create_definition` raises `DuplicateKeyError`; the API returns 409 `DUPLICATE_KEY`
 
-Run: `pytest tests/path/test.py -v`
-Expected: PASS
+**Verify:** test-first — `pytest tests/definitions -q`
 
-- [ ] **Step 5: Commit**
-
-```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
-```
+**Gotchas:** [traps in this task, each with the decision that handles it,
+or the constraint and an instruction to escalate; omit if none]
 ````
 
-## No Placeholders
+## Review
 
-A placeholder is an **undecided decision**, not unwritten code. Never write:
-- "TBD", "TODO", "implement later", "fill in details"
-- "Add error handling" / "add validation" / "handle edge cases" — name the exact behavior
-- "Write tests for the above" — enumerate each test: name — setup — assertion
-- "Similar to Task N" — restate this task's contract in full
-- References to types, functions, or methods no task defines
+Check the plan against the spec yourself first: every requirement has a task, no task defers a decision, names and types agree across tasks, every trap is handled or flagged. Fix what you find.
 
-## Self-Review
+Then save the plan and have a different harness review it. Resolve a `reviewer` with specialty `plan` through toolbelt:agent-routing, passing your harness as the author; if resolution fails, stop and tell your human partner rather than choosing a reviewer yourself. Give it the plan and spec paths and ask it to judge:
 
-Check the plan against the spec yourself, not with a subagent. Fix findings inline; add a task for any spec requirement with none. Run every Plan Review Gate judgment below against your own plan. A plan with no `## Execution Tracks` section, one PR boundary, and three or fewer tasks is valid.
+- spec coverage, with nothing extra
+- whether each task is bounded tightly enough that an implementer on a cheaper model makes no product or contract decision
+- task size and order, and parallel work the plan missed
+- interface consistency across tasks, and placeholders
+- Verify modes: business rules, calculations, state changes, or bug fixes marked anything but `test-first` are defects, as are unmarked guards; each Proves list covers its task's requirements
+- what the plan fails to anticipate: failure paths, existing data, cleanup and other lifecycle, consumers of a changed contract, unflagged traps
+- Global Constraints and PR boundaries
 
-## Plan Review Gate
+It may dispatch its own explorers.
 
-**Required.** After self-review, save the plan and have a different harness review it.
+Small technical gaps: fix them and proceed. A rework large enough to change the approach: bring it to your human partner. Unsure: ask.
 
-Resolve the reviewer through toolbelt:agent-routing with role `reviewer`, specialty `plan`, and the writing harness as `author-harness`, following that skill's resolver-path contract. `--author-harness` drops same-harness routes case-insensitively and fails closed if none remain; if resolution fails, stop and tell your human partner. Never pick a reviewer yourself.
+## Handoff
 
-Dispatch the reviewer with the plan and spec paths. It may fan out its own explorers. Ask it to judge:
-
-- **Spec coverage** — every requirement traceable to a task, nothing extra
-- **Task decomposition** — independently testable, within the 8-file limit, workable order
-- **Interface consistency** — types, signatures, and names agree across tasks
-- **Placeholders** — any step that defers a decision
-- **Level of detail** — implementation code where a contract belongs; a Data Model missing or repeated
-- **Unflagged gotchas** — traps the plan does not warn about
-- **Global Constraints** — present, with exact values from the spec
-- **PR boundaries** — missing, horizontal, overlapping, or unjustified boundaries are defects; every task appears once, each independently verifiable
-- **Execution tracks** — the declaration rules; a plan with no concurrent tracks and no one-sentence justification is a defect
-
-Handle findings the way writing-specs does: small technical gaps — fix and proceed; a rework large enough to change the approach — bring it to your human partner; unsure — ask.
-
-## Execution Handoff
-
-After the review is clean, hand your human partner the whole plan; delivery owns boundary order.
-
-> "Plan complete and saved to `docs/toolbelt/plans/<filename>.md`, reviewed through <reviewer harness>. Handing the plan to delivery."
-
-Once the plan is approved, invoke toolbelt:delivery. Do NOT invoke any other skill. Delivery owns execution and review per boundary.
+Unless your human partner or the session's instructions say to proceed without approval, give them the plan path, the reviewer's harness, and a short summary, then wait for approval. Once approved, invoke toolbelt:delivery with the plan path. Do NOT invoke any other skill.

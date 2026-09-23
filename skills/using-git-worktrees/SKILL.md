@@ -5,8 +5,6 @@ description: Use when starting feature work that needs isolation from current wo
 
 # Using Git Worktrees
 
-**Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
-
 ## Step 0: Detect Existing Isolation
 
 ```bash

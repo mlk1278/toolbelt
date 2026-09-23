@@ -39,7 +39,6 @@ assert_before() {
 [ -f "$skill" ] || { echo "not ok - skill file missing: $skill" >&2; exit 1; }
 
 assert_contains "$skill" "name: quick-task" "frontmatter name"
-assert_contains "$skill" "I'm using quick-task to ship this." "announce line"
 assert_contains "$skill" "the ask itself is the spec" "entry condition"
 assert_contains "$skill" 'use `brainstorming` and `writing-plans`' "ambiguous work goes to planning"
 assert_contains "$skill" "never creates one to mirror a tiny local change" "no ticket mirroring"

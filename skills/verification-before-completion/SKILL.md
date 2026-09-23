@@ -5,7 +5,7 @@ description: Use before claiming work is complete, fixed, or passing, and before
 
 # Verification Before Completion
 
-Before reporting status, audit each claim against a tool result from this session. A claim with no run behind it is not made. Scope the claim to the evidence: if you ran one package, say that package passed, and do not run the whole workspace to earn a broader claim. A regression test counts once it has been seen red and then green. An agent's success report is a claim; read the diff.
+Before reporting status, check each claim against a tool result from this session, and drop any claim no run backs. Scope the claim to the evidence: if you ran one package, say that package passed, and do not run the whole workspace to earn a broader claim. A regression test counts once it has been seen red and then green. An agent's success report is a claim; read the diff.
 
 | Claim | Evidence |
 |---|---|

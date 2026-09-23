@@ -39,23 +39,22 @@ assert_contains "$tracks" 'contract-freeze' \
   "shared contracts freeze on the mainline before the fork"
 assert_contains "$tracks" 'Every fork closes with a mainline integration task' \
   "every merge point gets an integration task"
-assert_contains "$plans" \
-  'a plan with no concurrent tracks and no one-sentence justification is a defect' \
-  "plan review gate rejects an unjustified all-serial plan"
+assert_contains "$plans" 'Without the section, tasks run in order.' \
+  "tracks are declared only when parallelism pays"
 
 # subagent-driven-development: executing tracks.
-assert_contains "$sdd" '## Parallel Tracks' \
-  "sdd carries the parallel-tracks section"
+assert_contains "$sdd" '[parallel-tracks.md](parallel-tracks.md)' \
+  "sdd points to parallel tracks"
 assert_contains "$sdd_tracks" 'At most 3 tracks run concurrently' \
   "concurrency cap is 3"
 assert_contains "$sdd_tracks" '## Decisions & drift risks' \
   "track reports carry a drift log"
 assert_contains "$sdd_tracks" 'A textual conflict is a plan defect' \
   "track merge conflicts stop, never hand-resolved"
-assert_contains "$sdd" 'one implementer per track worktree, never two in one worktree' \
-  "red flag scopes concurrency to one implementer per track worktree"
-assert_contains "$sdd" 'however independent two tasks look' \
-  "undeclared parallelism is a red flag"
+assert_contains "$sdd" 'Never run two implementers in one worktree' \
+  "one implementer per worktree"
+assert_contains "$sdd" "more implementers at once than the plan's declared tracks" \
+  "undeclared parallelism is ruled out"
 assert_not_contains "$sdd" 'Dispatch multiple implementation subagents in parallel (conflicts)' \
   "old unconditional parallel-dispatch flag is gone"
 

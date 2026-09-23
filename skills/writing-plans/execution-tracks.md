@@ -1,7 +1,5 @@
 # Execution Tracks
 
-Read this before declaring task chains and their integration points.
-
 ```markdown
 ## Execution Tracks
 
@@ -22,4 +20,4 @@ Read this before declaring task chains and their integration points.
 - **No contract-shaped work in tracks.** Migrations, shared schema, shared types, and shared API contracts belong in a mainline task before the fork — the **contract-freeze** pattern. A track consumes the frozen contract; it never changes it.
 - **No cross-track interfaces.** Concurrent tracks cannot consume each other’s outputs. Shared inputs come from a mainline task before the fork.
 - **Threshold.** Use a separate worktree for at least two tasks or one substantial task when overlap saves enough time to justify setup and coordination.
-- **Every fork closes with a mainline integration task.** The orchestrator merges; the task does not. It runs the integration scope — targeted cross-package checks and E2E over the merged tracks' seams, within SDD's Verification Scope policy, never workspace-wide — and fixes what breaks. Its brief carries merged tracks’ `Decisions & drift risks`.
+- **Every fork closes with a mainline integration task.** The orchestrator merges; the task does not. It runs the integration scope — targeted cross-package checks and E2E over the merged tracks' seams, within SDD's verification scope, never workspace-wide — and fixes what breaks. Its dispatch carries the merged tracks' report paths, whose `Decisions & drift risks` sections it reconciles.

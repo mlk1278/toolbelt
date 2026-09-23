@@ -19,8 +19,9 @@ After three failed fixes, stop fixing. Repeated fixes that expose shared state, 
 
 If evidence identifies an environmental, timing-dependent, or external cause, record what you ruled out, implement handling (retry, timeout, a clear error), and add logging for next time. If the evidence is still inconclusive, say what remains unknown.
 
+After the fix, add a check only at the boundary where bad input enters or right before a destructive operation; don't add validation at every layer for a case the fix already made impossible.
+
 ## Supporting techniques
 
-- [root-cause-tracing.md](root-cause-tracing.md) — trace a bug backward through the call stack to its trigger
-- [defense-in-depth.md](defense-in-depth.md) — validate at several layers once the root cause is known
-- [condition-based-waiting.md](condition-based-waiting.md) — replace arbitrary timeouts with condition polling
+- [root-cause-tracing.md](root-cause-tracing.md) — when an error surfaces deep in a call chain, or a test leaves files or state behind
+- [condition-based-waiting.md](condition-based-waiting.md) — when a test is flaky or contains a fixed sleep

@@ -31,8 +31,6 @@ assert_not_contains() {
 for prompt in "$task_prompt" "$final_prompt"; do
   assert_contains "$prompt" 'docs/REVIEW-GUIDANCE.md' \
     "review prompt discovers canonical project guidance"
-  assert_contains "$prompt" 'This file is reviewer-only.' \
-    "review prompt limits project guidance to reviewers"
   assert_contains "$prompt" '[REVIEW_NUANCE]' \
     "review prompt accepts orchestrator-supplied nuance"
   assert_contains "$prompt" 'does not override requirements,' \
@@ -41,19 +39,24 @@ for prompt in "$task_prompt" "$final_prompt"; do
     "review prompt carries the smell baseline"
 done
 
-assert_contains "$task_prompt" 'This read is an explicit exception to the limits on' \
-  "task reviewer may read guidance despite diff-only limits"
-assert_contains "$sdd" 'Do not read it' \
-  "SDD orchestrator does not consume reviewer guidance"
-assert_contains "$sdd" 'while orchestrating or pass it to implementers, fixers, explorers, planners,' \
-  "SDD excludes reviewer guidance from non-review roles"
-assert_contains "$sdd" 'Use `None` when there is none.' \
+assert_contains "$sdd" 'or `None`' \
   "SDD omits invented review nuance"
-assert_contains "$requesting" 'Do not read `docs/REVIEW-GUIDANCE.md` yourself' \
-  "ad hoc review caller leaves guidance to reviewer"
-assert_not_contains "$implementer_prompt" 'docs/REVIEW-GUIDANCE.md' \
-  "implementer prompt does not receive reviewer guidance"
+assert_contains "$sdd" 'never tells a reviewer what not to flag' \
+  "nuance cannot suppress findings"
+for prompt in "$task_prompt" "$final_prompt"; do
+  assert_contains "$prompt" 'one hop' "reviewer traces beyond the diff, within a boundary"
+  assert_contains "$prompt" 'Go further' "reviewer may follow a concrete finding further"
+  assert_contains "$prompt" 'lifecycle gaps' "reviewer looks past plan compliance"
+  assert_contains "$prompt" 'Every finding names a concrete scenario' \
+    "findings carry evidence, which curbs speculative review"
+done
+assert_contains "$implementer_prompt" 'docs/REVIEW-GUIDANCE.md' \
+  "implementers follow the project's review conventions up front"
 assert_not_contains "$implementer_prompt" 'smell-baseline' \
   "implementer prompt does not receive the smell baseline"
+
+assert_contains "$task_prompt" 'a realistic mutation no test' "task reviewer runs the mutation check"
+assert_contains "$implementer_prompt" 'It is not the whole' "Proves is not the whole test list"
+assert_contains "$implementer_prompt" 'run its mutation check before you report' "implementers run the mutation check"
 
 echo "PASS"

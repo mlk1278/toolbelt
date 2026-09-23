@@ -5,8 +5,6 @@ description: Use when an approved implementation plan is ready to be implemented
 
 # Delivery
 
-**Announce:** "I'm using delivery to deliver this approved plan."
-
 **Entry:** an approved implementation plan.
 
 **Exit:** every PR boundary merged, reconciled, and cleaned up.
@@ -49,19 +47,19 @@ Execute the boundary with toolbelt:subagent-driven-development, supplying its bo
 
 ## 4. Gate the boundary
 
-When the boundary meets ux-gate's entry condition (new user flows, material interaction, layout, or responsive changes, or an explicit UX-review request), supply the gate runner as SDD's optional pre-final gate, with the changed routes, base..head, acceptance criteria, and environment. Routine cosmetic changes need no model review. That broad final review is the slice gate; add no other whole-slice review.
+When the boundary meets ux-gate's entry condition (new user flows, material interaction, layout, or responsive changes, or an explicit UX-review request), supply SDD with a UX gate runner, dispatched with the changed app pages, base..head, acceptance criteria, and environment. Routine cosmetic changes need no model review. That broad final review is the slice gate; add no other whole-slice review.
 
 ## 5. Ship
 
-After the final review is clean, hand the branch to the chain's pr-monitor with the worktree path, the target base (the predecessor's branch for a dependent boundary, the base branch otherwise), the final-review SHA, and the ledger path. It runs toolbelt:finishing-a-development-branch on the pull-request route, records `Boundary <N>: branch <name>, PR #<num>, base <branch>, state open` in the ledger, and owns the PR to merge.
+After the final review is clean, hand the branch to the chain's pr-monitor with the worktree path, the target base (the predecessor's branch for a dependent boundary, the base branch otherwise), the final-review SHA, and both ledger paths: delivery's `delivery.md` and the boundary's SDD `progress.md`. It runs toolbelt:finishing-a-development-branch on the pull-request route, records `Boundary <N>: branch <name>, PR #<num>, base <branch>, state open` in the ledger, and owns the PR to merge.
 
 Record per boundary in the ledger, with its SDD workspace path: `Boundary <N>: branch <name>, base <branch>, state <prepared|open|merged|blocked>`.
 
 Once the boundary's monitor is running, start the next; any number may be open. A dependent boundary waits for its predecessor's ledger PR record.
 
-Each chain has exactly one pr-monitor. Always run it in the background. While independent boundaries remain, keep delivering them; then block on its return with one wait. Never poll it. Resume it with a dependent boundary's branch when that boundary's final review is clean; an independent boundary starts its own chain.
+Each chain has exactly one pr-monitor. Always run it in the background. While independent boundaries remain, keep delivering them; then wait on its return. Resume it with a dependent boundary's branch when that boundary's final review is clean; an independent boundary starts its own chain.
 
-Process each monitor's return: merged, run step 6; blocked or escalated, surface it to your human partner. Never report the slice complete or end the session while the monitor runs. A completion notification is not that return. A monitor that looks dead is not grounds to start a second one: check that state directly first.
+Process each monitor's return: merged, run step 6; blocked or escalated, surface it to your human partner. Never report the slice complete or end the session while the monitor runs. A monitor that looks dead is not grounds to start a second one: check that state directly first.
 
 A chain whose bottom PR closed without merging returns `CLOSED` and a durable blocker for every layer above: surface it and open no more boundaries in that chain.
 

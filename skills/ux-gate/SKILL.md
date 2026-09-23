@@ -5,8 +5,6 @@ description: "Use before final review of new user flows or material changes to i
 
 # UX Gate
 
-**Announce:** "I'm running the UX gate for <surface>."
-
 **Entry:** changed routes, base..head range, approved acceptance criteria, and a running isolated environment. Judge the rendered effect, not line count: a one-line shared-layout change can need review; a button-color change usually does not.
 **Exit:** `Pass` bound to the reviewed head SHA, or `Changes Required` with component-level findings. The gate does not fix anything.
 

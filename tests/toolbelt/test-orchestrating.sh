@@ -36,7 +36,7 @@ assert_contains "$skill" "name: orchestrating" "frontmatter name"
 assert_contains "$skill" "This list is complete:" "read list is closed"
 assert_contains "$skill" "A skill named anywhere else is a dispatch target, not a read: pr-monitor, ux-gate, finishing-a-development-branch" "named skills are dispatch targets"
 assert_contains "$skill" "Never open one to relay, verify, summarize, or re-judge it." "artifacts move by path"
-assert_contains "$skill" "A rebutted finding needs your ruling before any re-dispatch" "rebuttals are ruled on"
+assert_contains "$skill" "Escalations from a PR monitor or gate runner go to your human partner" "escalations reach the human"
 assert_contains "$skill" "never poll, sleep-loop, or schedule check-ins" "one blocking wait"
 
 assert_contains "$delivery" "Invoke toolbelt:orchestrating first" "delivery enters through orchestrating"
@@ -49,6 +49,8 @@ assert_contains "$monitor" "Publish an unpublished branch first: run toolbelt:fi
 
 assert_contains "$implementer" "its Result is \`REBUTTED:\`" "implementer can rebut a finding"
 assert_contains "$rereview" "A \`REBUTTED\` row is ADDRESSED when its reasoning holds" "re-review judges rebuttals"
-assert_contains "$sdd" "rebutted rows go to adjudication" "orchestrator close routes rebuttals to adjudication"
+assert_contains "$skill" "When a fix loop ends with findings still open, you rule on them" "open and rebutted findings are ruled on"
+assert_contains "$skill" "## Keep going" "orchestrator names the early stops to avoid"
+assert_contains "$sdd" "**Wrong, or its rebuttal holds** — park it" "SDD lists the rulings"
 
 echo "PASS"

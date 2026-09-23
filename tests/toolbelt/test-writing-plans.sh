@@ -26,61 +26,56 @@ assert_not_contains() {
   echo "ok - $description"
 }
 
-# Exploration begins in context and dispatches only for questions that need it.
+# Exploration happens before drafting; explorers are routed and sparing.
 assert_contains 'nearest instructions' "exploration starts from local instructions"
-assert_contains '2–3 targeted inline `rg` searches' \
-  "exploration begins with bounded inline searches"
+assert_contains 'Keep searching until you can name exact paths, signatures, and precedents' \
+  "exploration has a completion condition, not a search budget"
 assert_contains "agent-routing's \`explorer\` role" \
   "explorers are routed, not hand-picked"
-assert_contains 'completeness inventory' \
-  "explorers are reserved for completeness inventories"
-assert_contains 'invisible trap' "explorers are reserved for invisible traps"
-assert_contains 'plan-shaping existence question' \
-  "explorers are reserved for plan-shaping existence questions"
-assert_contains 'Start with one explorer' "exploration starts with one agent"
-assert_contains 'unfamiliar, independent subsystems' \
-  "additional explorers require unfamiliar independent subsystems"
-assert_contains 'checkable paths and pointers' \
+assert_contains 'most plans need one explorer or none' \
+  "explorer fan-out stays small"
+assert_contains 'Ask for checkable answers' \
   "explorer briefs request checkable evidence"
+assert_contains 'get wrong here?' "explorer briefs end with the forcing question"
 assert_not_contains 'fan out explorers — one per surface the plan will touch' \
   "unconditional per-surface fan-out is absent"
 
-# Exploration must land before File Structure, which depends on it.
-explore_line=$(grep -n '^## Exploration Before Drafting' "$skill" | cut -d: -f1)
-structure_line=$(grep -n '^## File Structure' "$skill" | cut -d: -f1)
-if [ "$explore_line" -ge "$structure_line" ]; then
-  echo "not ok - exploration section precedes File Structure" >&2
-  exit 1
-fi
-echo "ok - exploration section precedes File Structure"
+line_of() { grep -n -- "$1" "$skill" | head -1 | cut -d: -f1; }
+assert_order() {
+  local a b
+  a=$(line_of "$1"); b=$(line_of "$2")
+  if [ -z "$a" ] || [ -z "$b" ] || [ "$a" -ge "$b" ]; then
+    echo "not ok - $3" >&2
+    exit 1
+  fi
+  echo "ok - $3"
+}
+assert_order '^## Explore first' '^## Shape the work' "exploration precedes shaping the work"
+assert_order '^## PR Boundaries' '^### Task 1:' "PR Boundaries precede tasks in the plan document"
 
-assert_contains 'get wrong here?' "explorer briefs end with the forcing question"
-
-# The gotcha hunt and its resolution rule.
+# Traps are resolved or named.
 assert_contains 'An absence check must exclude its own evidence' \
-  "gotcha taxonomy covers unpassable absence guards"
-assert_contains 'A gotcha that is neither is a plan defect' \
-  "every gotcha is resolved or named"
+  "trap list covers unpassable absence checks"
+assert_contains 'a precondition read from output the gated command itself produces' \
+  "a gate cannot observe the command it gates"
+assert_contains 'Coverage that leaves with the code' \
+  "deletions relocate coverage for kept code"
+assert_contains 'or named with an instruction to escalate' \
+  "every trap is resolved or named"
 
-# Gotchas reach implementers through the plan document.
+# Shared plan sections reach implementers through task-brief.
 assert_contains '## Known Gotchas' "plan header carries cross-cutting gotchas"
 assert_contains '**Gotchas:**' "task structure carries task-local gotchas"
+assert_contains '`scripts/task-brief` copies `## Global Constraints`, `## Known Gotchas`, and `## Data Model`' \
+  "shared sections are copied into every brief"
+assert_contains '> Execute with toolbelt:delivery.' \
+  "the plan header points at delivery, not SDD"
 
 # PR boundaries partition tasks into independently verifiable outcomes.
-assert_contains '## PR Boundaries' "plan declares PR boundaries"
-boundary_line=$(grep -n '^## PR Boundaries' "$skill" | cut -d: -f1)
-task_line=$(grep -n '^## Task Structure' "$skill" | cut -d: -f1)
-if [ "$boundary_line" -ge "$task_line" ]; then
-  echo "not ok - PR Boundaries precedes Task Structure" >&2
-  exit 1
-fi
-echo "ok - PR Boundaries precedes Task Structure"
 assert_contains '| PR | Outcome | Tasks | Depends on | Independent verification |' \
   "each PR row carries the required boundary fields"
 assert_contains 'Every task number appears in exactly one boundary' \
   "boundaries cover tasks without overlap"
-assert_contains 'why no smaller independently verifiable outcome exists' \
-  "one-PR plans require a justification"
 assert_contains 'core plus one representative consumer' \
   "shared substrate starts with one representative consumer"
 assert_contains 'repeat the same reviewer judgment' \
@@ -90,38 +85,30 @@ assert_contains 'Novel lifecycle, export, or rollout work stays separate' \
 assert_contains 'at most one predecessor whose PR may still be open when the boundary starts' \
   "a boundary depends on at most one still-open predecessor"
 
-# Gotcha classes added after the Phase 7 run.
-assert_contains 'Coverage that leaves with the code' \
-  "deletion slices must inventory coverage they strip from kept surfaces"
-assert_contains 'a precondition read from output the gated command itself produces' \
-  "a gate cannot observe the command it gates"
-
-# The plan review gate, and its new powers.
-assert_contains 'It may fan out its own explorers' "plan reviewer may explore too"
-assert_contains '**Unflagged gotchas**' "plan reviewer judges unflagged gotchas"
-assert_contains '**PR boundaries**' "plan reviewer judges PR boundaries"
-assert_contains 'missing, horizontal, overlapping, or unjustified' \
-  "self-review rejects invalid PR partitions"
-assert_contains 'Handing the plan to delivery' \
-  "the whole plan is handed to delivery"
-
-# Tracks are the default; task size is capped; RED names each test.
-assert_contains 'states in one sentence why no tasks can run concurrently' \
-  "an all-serial plan justifies itself in one sentence"
-assert_contains "A task's **Files:** block is closed" \
+# Task shape.
+assert_contains "A task's **Files:** block lists every file" \
   "a task lists every file it touches"
-assert_contains 'at most 8 files' "a task is capped at eight files"
-assert_contains 'Each step is one action (2-5 minutes).' \
-  "a step is one action"
-assert_contains 'Mechanical sweep:' \
-  "the file cap has one exception, marked and verified"
-assert_contains 'Expected, per test:' "the RED step names one failure per test"
-assert_contains 'when the guard is absent' \
-  "a guard's red is the failure seen without the guard"
+assert_contains 'up to roughly 15 files or 800 changed lines' "task size is a guideline"
+assert_contains 'Split when two parts could run in parallel on disjoint files' \
+  "bigger tasks never swallow parallel work"
+assert_contains 'For any boundary with more than three tasks, look for tracks' \
+  "planners actively look for parallel work"
+assert_contains '`test-first`' "tasks can be test-first"
+assert_contains '`checks-only`' "tasks can be verified by commands alone"
+assert_contains '**Verify:** test-first' "the task template names its verify mode"
+assert_contains 'Mechanical sweep:' "mechanical sweeps are marked and verified"
+assert_contains '**Proves:**' "each task lists the behaviors it must prove"
+assert_contains 'must be seen failing without the guard, whatever the task' \
+  "a guard's red is the failure seen without the guard, in every mode"
 assert_contains 'Produces: none' \
   "a task with no downstream dependents says so"
 
-# WOR-753 §6: self-review must not argue against the gate that follows it.
+# Review and handoff.
+assert_contains 'It may dispatch its own explorers' "plan reviewer may explore too"
+assert_contains 'ask it to judge:' "plan reviewer gets an explicit rubric, not this skill's handoff"
+assert_contains 'Unless your human partner or the session' \
+  "handoff waits for approval unless told otherwise"
+assert_contains 'invoke toolbelt:delivery' "the whole plan is handed to delivery"
 assert_not_contains 'No need to re-review' \
   "stale no-re-review clause no longer contradicts the plan gate"
 

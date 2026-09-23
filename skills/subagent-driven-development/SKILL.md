@@ -1,135 +1,87 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when delivery hands you one PR boundary of an approved plan to execute task by task.
 ---
 
 # Subagent-Driven Development
 
-Run the plan to completion. Stop for your human partner only on an unresolvable BLOCKED status, a blocking ambiguity, or the end of the plan.
+Execute one PR boundary of an approved plan: a fresh implementer per task, a review after each task, and a whole-branch review at the end. Invoke toolbelt:orchestrating first; its read list, path routing, and dispatch rules hold throughout.
 
-## The Process
+Delivery supplies the boundary number, its task set, the starting SHA, the resolved routes, and optionally a UX gate runner. Dispatch every role on the route delivery gave you. If a role has no route, stop and tell your human partner rather than choosing a model yourself.
 
-1. Read the plan once, for its boundaries, Global Constraints, Known Gotchas, and the pre-flight scan. Execute only the caller’s active PR boundary and its tasks; without a caller, select the next unfinished boundary. Create todos and the ledger.
-2. Pre-flight scan, then per task: record BASE (current head), dispatch the implementer with its brief, answer its questions, build the review package on DONE, dispatch the task reviewer, run the fix loop, mark the task complete in todos and the ledger.
-3. After all tasks, dispatch the final whole-branch reviewer ([code-reviewer.md](../requesting-code-review/code-reviewer.md)) before the branch is published.
-4. Return the final-review SHA to the caller, which hands the branch to its PR owner; without a caller, dispatch toolbelt:pr-monitor with the branch.
+Scripts below live in this skill's `scripts/` directory.
 
-**Optional pre-final gate:** If the caller supplies a pre-final gate, run it after all task reviews and before the broad final review. Dispatch the caller's gate runner, route the returned review file to the owning implementer, and resume the runner for the recapture.
+## Setup
 
-**Pre-flight scan.** Before Task 1, scan the plan for tasks that contradict each other, the Global Constraints, or the review rubric. Ask about all findings in one batched question, each beside its plan text.
+1. Run `scripts/sdd-workspace PLAN_FILE`. It prints this plan's git-ignored workspace (`<repo-root>/.toolbelt/sdd/<plan-basename>-<digest>/`), where every brief, report, review, and the ledger live.
+2. Open or resume the ledger (see Ledger).
+3. Read the plan if it is not already in your context. Before Task 1, look for tasks that contradict each other, the Global Constraints, or the [task-review rubric](task-reviewer-prompt.md), and ask about all of them in one message, each beside its plan text.
 
-## Orchestrator Context
+When the plan has an `## Execution Tracks` section, read [parallel-tracks.md](parallel-tracks.md); otherwise run tasks one at a time. Never run two implementers in one worktree, or more implementers at once than the plan's declared tracks.
 
-Invoke toolbelt:orchestrating; its read list and path-routing rule govern this skill. Task text reaches implementers and reviewers through the brief.
+## Per task
 
-## Model Selection
+1. Record BASE, the current head.
+2. Run `scripts/task-brief PLAN_FILE N`. The brief holds the plan's Global Constraints, Known Gotchas, and Data Model, then the task. Dispatch the implementer with [implementer-prompt.md](implementer-prompt.md).
+3. Act on its status:
+   - **DONE** — review it.
+   - **DONE_WITH_CONCERNS** — resolve a correctness or scope concern before review, the same way as NEEDS_CONTEXT; log any other concern and review.
+   - **NEEDS_CONTEXT** — if the plan already answers it, resume the implementer pointing at that plan text. A product or contract decision the plan doesn't make is not yours either: take it to your human partner, record their answer as a ledger ruling, and resume the implementer with its path.
+   - **BLOCKED** — change something before retrying: more context or a more capable routed model. If the plan is wrong or the task is too large to finish, take it to your human partner to re-plan; don't split the task yourself.
+4. Run `scripts/review-package --plan PLAN_FILE BASE HEAD`; it prints the review-package path. Dispatch the task reviewer with [task-reviewer-prompt.md](task-reviewer-prompt.md). Use the BASE you recorded, never `HEAD~1`, which drops every commit but the last.
+5. A spec ❌ or any Critical or Important finding starts the fix loop, except those labeled `plan-mandated` or `plan-gap`: those need a decision the plan doesn't make, so batch them to your human partner, each beside its plan text. Minor findings and the out-of-scope count go to the ledger for the final review to triage.
+6. Mark the task complete in the ledger.
 
-Caller routing takes precedence: plan route, then project route, then the session routing brief. Every role you dispatch comes from the brief. If no route resolves, stop and tell your human partner; do not substitute your own judgment for a missing route. Resolve the final whole-branch review with specialty `gate`, honoring caller overrides. Name the model in every dispatch; an omitted model inherits your session's model.
+Every task gets its review from a dispatched reviewer; an implementer's confidence, or a review you arranged in your own context, does not count. You never fix code yourself: a fix in your context burns it and skips review.
 
-## Handling Implementer Status
+## Fix loop
 
-Only the final answer carrying the Status token is the return; on an intermediate message or an interrupted wait, resume waiting on the same agent with one blocking wait. A dispatched agent notifies you when it finishes: never poll it between waits, and never schedule a check-in while one is running. After a wait times out, inspect it once and decide.
+1. Resume the original implementer with the review-file path. If your harness cannot message a finished agent, dispatch a fresh one with the brief, report, and review paths. It fixes or rebuts each Critical and Important finding and appends a findings table to its report.
+2. Run `scripts/review-package --plan PLAN_FILE FIX_BASE HEAD`, where FIX_BASE is the head the previous review saw, and dispatch [re-review-prompt.md](re-review-prompt.md) with it. Findings the re-reviewer notices outside the fix diff go to the ledger as minors and never extend the loop.
+3. Findings still NOT ADDRESSED, plus any new Critical or Important breakage in the fix diff, remain open. If any do, run one more round of steps 1–2. After the second round, rule on each finding still open:
+   - **Wrong, or its rebuttal holds** — park it: `Task <N>: parked — <finding> — ruling: <why the code stands>`.
+   - **Real, but nothing downstream builds on it** — park it the same way, ruled real and deferred.
+   - **Real and load-bearing** — mark the task `Task N: blocked (<why>)` and give your human partner the finding, the plan text it collides with, and the fix history.
 
-- **DONE:** run `scripts/review-package --plan PLAN_FILE BASE HEAD` (from this skill's directory; it prints the path it wrote) and dispatch the task reviewer with that path and the review-file path. BASE is the commit you recorded before dispatching, never `HEAD~1`.
-- **DONE_WITH_CONCERNS:** address correctness and scope concerns before review; note observations and proceed.
-- **NEEDS_CONTEXT:** supply what was missing and re-dispatch.
-- **BLOCKED:** change something before retrying — more context, a more capable routed model, a smaller task, or escalation if the plan is wrong.
+A finding labeled `plan-mandated` or `plan-gap`, or a rebuttal marked plan-gap, goes to your human partner at any point: show it beside the plan text and ask what governs. Their answer becomes a ledger ruling the fixer is given by path.
 
-Resolve every "⚠️ Cannot verify from diff" line in the reviewer's return yourself before marking the task complete; a confirmed gap enters the fix loop.
+Log each round: `Task <N>: fix round <R> (<X> addressed, <Y> open — <one-liners>; commits <a7>..<b7>)`.
 
-## The Fix Loop
+## Final review
 
-Trigger: spec ❌, any Critical or Important finding, or a ⚠️ item you confirmed. Handle these separately:
+After every task in the boundary is complete:
 
-- **Minor findings** go to the ledger roll-up.
-- **Plan-mandated findings** are the human's decision: present the finding beside the plan text and ask which governs.
+1. If delivery supplied a UX gate runner, dispatch it. Send its review file to one fresh implementer, with the plan path as its brief and `ux-fix-report.md` as its report, then resume the runner to recapture, until it passes or returns findings for your human partner. The whole-branch review that follows covers those fixes.
+2. Run `scripts/review-package --plan PLAN_FILE START HEAD`, START being the boundary's fork point (after a rebase, the recorded new parent head), and dispatch the whole-branch reviewer on the `gate` route with [code-reviewer.md](../requesting-code-review/code-reviewer.md). `[DESCRIPTION]` names the boundary number and its task set, so later boundaries' tasks don't read as missing; point it at the ledger's minor findings to triage.
+3. Critical and Important findings go through the fix loop (plan-mandated and plan-gap ones go to your human partner, as in per-task step 5), with one fresh implementer fixing the review file's complete list rather than one fixer per finding; the plan path stands in for the brief and `final-fix-report.md` for the report. Final-review Minors go to the ledger.
+4. The review is clean when no Critical or Important finding is open. Record `Final review: clean at <full SHA>, route <harness/model/effort>, report <absolute path>` in the ledger and return that SHA to delivery.
 
-**One fix round per task.** Resume the original implementer with the review-file path. If your harness cannot message a live subagent, dispatch a fresh one with the brief, report-file, and review-file paths.
+## Verification scope
 
-**Re-review** when the task's `Interfaces: Produces:` value is anything other than exactly `none`, or when any open finding was Critical. Dispatch [re-review-prompt.md](re-review-prompt.md) over the fix delta: `scripts/review-package --plan PLAN_FILE FIX_BASE HEAD`, FIX_BASE being the head the previous review saw. It reads the findings from the review file, marks each ADDRESSED or NOT ADDRESSED there, and flags new breakage **in the fix diff only**; Critical or Important breakage there joins the open findings, and out-of-scope observations go to the ledger as deferred minors and never extend the loop. Append `Task <N>: fix round (<X> addressed, <Y> open — <one-liners>; commits <a7>..<b7>)`.
+Run the smallest command that proves what changed:
 
-**Orchestrator close** otherwise: the plan template writes `Produces: none` when nothing downstream depends on the task. The fix report's findings table must hold exactly one complete row per open finding, naming the finding, the commit, the covering test command, and its passing output, or a `REBUTTED` result with its reasoning. Ask the implementer to confirm row completeness in its return; rebutted rows go to adjudication before task completion. Resume the implementer once for a row that is missing, or whose result is a claim without the command's output; if it is still incomplete, escalate to your human partner as a BLOCKED task. Append `Task <N>: fix round closed by orchestrator (<X> findings, commits <a7>..<b7>)`.
+- **While iterating:** focused tests for the code being changed.
+- **Task gate:** the task's `Verify:` command, plus the suites of direct consumers when the task changes a shared contract. Risky changes (auth, tenancy, migrations, shared schemas) add targeted cross-package checks.
+- **Fix rounds:** the tests covering the fix.
+- **Workspace-wide suite:** once, when finishing-a-development-branch publishes the PR. Task gates never run it.
 
-Adjudicate **only** after the re-review or the orchestrator close, ruling on each finding the return lists as still open or rebutted:
+Implementers produce fresh evidence for their own claims. Reviewers read that evidence instead of re-running it, unless it leaves a real doubt.
 
-- **Wrong, or contestable** — park it: `Task <N>: parked — <finding> — ruling: <why the code stands>`.
-- **Real, but nothing downstream builds on it** — park it the same way, ruled real and deferred.
-- **Real and load-bearing** — stop. Append `Task <N>: BLOCKED — <reason>` and give your human partner the finding, the plan text it collides with, and the fix history.
+## Filling prompts
 
-Every adjudication is a ledger entry.
+- `[REVIEW_NUANCE]` is task-specific context or risk, or `None`. It never tells a reviewer what not to flag and never pre-rates a severity.
+- One task per prompt; never the session's history.
+- Report and review files sit beside the brief: `task-N-report.md` and `task-N-review.md`; the final review writes `final-review.md` and its fixer `final-fix-report.md`. Fix reports and re-reviews append to the same files.
+- Fill every template placeholder; each template lists its own.
 
-## Verification Scope
+## Ledger
 
-Run the smallest command that proves what the diff touched.
+`<workspace>/progress.md` is the durable record; the todo list is not. After compaction or resume, tasks the ledger marks complete are done; check it and `git log`, and never re-dispatch a completed task.
 
-- **Iterating:** focused tests for the code being changed.
-- **Task gate:** the affected package suite(s) once — packages the diff touches, plus direct consumers of a changed shared contract. High-risk changes (auth, tenancy, migrations, shared schemas, cross-package behavior) add targeted cross-package checks, never a workspace run.
-- **Fix rounds:** covering tests only.
-- **Workspace-wide suite:** once, at the final gate. Its evidence, its reuse, and the docs-only rule belong to toolbelt:finishing-a-development-branch Step 1. Task gates never run it; a PR opening never reruns it.
-
-Reviewers and orchestrators read the implementer's test evidence on unchanged source instead of re-running it. Implementers and fixers always produce their own fresh evidence.
-
-Run suites through the project's quiet-run wrapper when it has one, reading back exit status, pass count, and failure tail only. A buffered wrapper releases nothing until the command exits, so it never carries a check that gates that command; run the gate first.
-
-Surface any plan or brief mandating broader verification than this policy; neither obey nor override it yourself.
-
-## Constructing Reviewer Prompts
-
-- Never tell a reviewer what not to flag, and never pre-rate a severity.
-- Copy binding requirements verbatim from the plan's Global Constraints or the spec: exact values, formats, and stated relationships.
-- `[REVIEW_NUANCE]` takes task-specific context and risks, and never overrides requirements, suppresses findings, or pre-judges severity. Use `None` when there is none.
-- `docs/REVIEW-GUIDANCE.md` is reviewer-only. Do not read it while orchestrating or pass it to implementers, fixers, explorers, planners, errands, or monitors.
-- Describe one task per dispatch prompt, never the session's history.
-- Fix dispatches carry the implementer contract. Before ending the round, confirm the fix report contains the covering tests, the command, and the output.
-- Point the final review at the ledger's minor findings, to triage before merge.
-- **Final-review findings get ONE fix subagent** with the review-file path holding the complete list, not one fixer per finding. Then run exactly one scoped re-review of the fix wave, and adjudicate residual findings as at the task loop. There is no second fix wave; residual load-bearing findings go to your human partner before the branch is published.
-
-## File Handoffs
-
-For a rendering task, the brief names the ux-gate skill directory and, when present, `.toolbelt/ux-policy.md`; the implementer reads them, writes `.toolbelt/ux/smoke/task-<N>/matrix.json` for its pathway, starts the isolated server, and runs the smoke capture before reporting DONE. You read neither.
-
-- **Task brief:** run `scripts/task-brief PLAN_FILE N`. The dispatch carries: where the task fits, in one line; the brief path; interfaces and decisions from earlier tasks; the plan's Global Constraints and Known Gotchas; your resolution of any ambiguity; the report-file path and report contract; the `[UX_SMOKE]` inputs when the plan has a user-visible surface. Exact values appear only in the brief.
-- **Report file:** named after the brief (`…/task-N-brief.md` → `…/task-N-report.md`). The implementer writes its full report there and returns status, commits, a one-line test summary, and concerns.
-- **Review file:** named after the brief (`…/task-N-review.md`; the final review uses `…/final-review.md`). The reviewer writes its full report there and returns the verdict, severity counts, one line per Critical, Important, or ⚠️ item, and the path. Re-reviews append to the same file.
-- **Reviewer inputs:** the brief, the report, the review package, the smell baseline (`../requesting-code-review/smell-baseline.md`), and the constraints binding the task.
-- **Review package:** `scripts/review-package --plan PLAN_FILE BASE HEAD` for tasks, `scripts/review-package --plan PLAN_FILE MERGE_BASE HEAD` for the final review (MERGE_BASE = `git merge-base main HEAD`). Pass the printed path as `[DIFF_FILE]`.
-- Fix dispatches carry the review-file path and append their fix report to the same report file; re-reviews read both.
-
-## Durable Progress
-
-At skill start run `scripts/sdd-workspace PLAN_FILE`; it prints this plan's git-ignored directory (`<repo-root>/.toolbelt/sdd/<plan-basename>-<digest>/`), holding every artifact for THIS plan.
-
-This plan's ledger is `<workspace>/progress.md`. Tasks marked complete there are DONE; resume at the first task not marked complete. A ledger whose header names a different plan file belongs to that plan: leave it and start your own.
-
-The ledger, not the todo list, is the durable record:
-
-- **Header:** branch, plan path, current exact head SHA. The plan path is the ledger's identity.
+- **Header:** branch, plan path, current head SHA.
 - **One line per task:** `Task N: in-progress (agent <id>, route <harness>/<model>/<effort>)`, `Task N: blocked (<why>)`, or `Task N: complete (commits <base7>..<head7>, review clean, route <harness>/<model>/<effort>, report <path>)`.
-- **Final review:** record `Final review: clean at <full SHA>, route <harness/model/effort>, report <absolute path>` from the reviewer's return; write it before handoff. After interruption, ask the reviewer to confirm that verdict at the current head before reuse.
-- **Active agents:** one line per live dispatch; remove it when that agent's final answer arrives.
-- **Minor findings:** the running roll-up the final review triages, plus findings parked with rulings.
-- **Exactly one `Next:` line** naming the next expected event (e.g. `Next: task 4 review verdict`).
+- **Active agents:** one line per live dispatch, removed when its final message arrives.
+- **Findings:** the minor-finding roll-up and parked findings with rulings.
+- **Exactly one `Next:` line** naming the next expected event, e.g. `Next: task 4 review verdict`.
 
-Retain the workspace until delivery (or, without it, branch completion) confirms the PR merged, or your human partner abandons the work; final review alone never triggers deletion.
-
-## Parallel Tracks
-
-Read [parallel-tracks.md](parallel-tracks.md) when the plan declares a top-level `## Execution Tracks` section; otherwise this skill is serial.
-
-## Prompt Templates
-
-[implementer-prompt.md](implementer-prompt.md), [task-reviewer-prompt.md](task-reviewer-prompt.md), [re-review-prompt.md](re-review-prompt.md), [code-reviewer.md](../requesting-code-review/code-reviewer.md).
-
-## Ownership rules
-
-**Never:**
-
-- Start implementation on main/master without your human partner's explicit consent
-- Run implementers concurrently beyond the plan's declared Execution
-  Tracks: one implementer per track worktree, never two in one worktree,
-  however independent two tasks look
-- Skip the task review, or take an implementer's confidence in place of one; a self-arranged review does not count
-- Fix findings yourself instead of dispatching a fixer — controller fixes pollute context and skip review
-- Re-dispatch a task the ledger already marks complete — check the ledger and `git log` after compaction or resume
-- Read a report, review, diff, or log file to relay or re-judge it; route its path to the agent that acts on it
-
+Keep the workspace until delivery confirms the PR merged or your human partner abandons the work.

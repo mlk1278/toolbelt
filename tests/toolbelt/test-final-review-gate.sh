@@ -26,44 +26,44 @@ assert_not_contains() {
   echo "ok - $description"
 }
 
-assert_contains 'plan route, then project route, then the session routing brief' \
-  "caller routing precedence is explicit"
-
-assert_contains 'do not substitute your own judgment for a missing route' \
+assert_contains 'Dispatch every role on the route delivery gave you' \
+  "SDD dispatches on delivery's resolved routes"
+assert_contains 'rather than choosing a model yourself' \
   "a missing route escalates instead of being guessed"
-assert_contains 'If the caller supplies a pre-final gate, run it after all task reviews and before the broad final review.' \
-  "optional pre-final gate runs at the retained seam"
-assert_contains 'scripts/review-package --plan PLAN_FILE MERGE_BASE HEAD` for the final review' \
-  "broad final review still receives a review package"
-assert_contains '**Final-review findings get ONE fix subagent**' \
+assert_contains 'If delivery supplied a UX gate runner, dispatch it' \
+  "the UX gate runs inside the final-review step"
+assert_before_text() {
+  local first=$1 second=$2 description=$3 a b
+  a=$(grep -nF -- "$first" "$skill" | head -1 | cut -d: -f1)
+  b=$(grep -nF -- "$second" "$skill" | head -1 | cut -d: -f1)
+  if [ -z "$a" ] || [ -z "$b" ] || [ "$a" -ge "$b" ]; then
+    echo "not ok - $description" >&2
+    exit 1
+  fi
+  echo "ok - $description"
+}
+assert_before_text 'If delivery supplied a UX gate runner' 'dispatch the whole-branch reviewer' \
+  "UX gate runs before the whole-branch review"
+assert_contains 'scripts/review-package --plan PLAN_FILE START HEAD`, START being the boundary' \
+  "final review covers exactly the boundary's commits"
+assert_contains "one fresh implementer fixing the review file's complete list" \
   "final findings are fixed together"
-assert_contains 'with the review-file path holding the complete list, not one fixer per finding.' \
+assert_contains 'rather than one fixer per finding' \
   "one fixer receives the complete finding set"
-assert_contains 'contains the covering tests, the command, and the output' \
-  "fix verification carries evidence"
-assert_contains "read the implementer's test evidence on unchanged source instead of re-running it" \
-  "evidence reuse is commit-bound and actor-scoped"
-assert_contains 'Implementers and fixers always produce their own fresh evidence' \
+assert_contains 'Implementers produce fresh evidence for their own claims' \
   "implementers never reuse evidence for their own claims"
-assert_contains '**Workspace-wide suite:** once, at the final gate.' \
-  "workspace suite is final-gate only"
-assert_contains 'Then run exactly one scoped re-review of the fix wave' \
-  "final fix wave is re-reviewed over its delta"
-assert_contains 'There is no second fix wave' \
-  "final review does not loop indefinitely"
-assert_contains '**One fix round per task.**' \
-  "task fix loop is bounded"
-assert_contains 'Adjudicate **only** after the re-review' \
-  "adjudication cannot be used to exit the loop early"
-assert_contains 'out-of-scope observations go to the ledger as deferred minors and never extend the loop' \
+assert_contains 'Reviewers read that evidence instead of re-running it' \
+  "reviewers reuse implementer evidence"
+assert_contains '**Workspace-wide suite:** once, when finishing-a-development-branch publishes the PR' \
+  "workspace suite runs once, at publication"
+assert_contains 'After the second round, rule on each finding still open' \
+  "the fix loop is bounded at two rounds"
+assert_contains 'never extend the loop' \
   "re-review scope cannot grow the loop"
-
-assert_contains 'it never carries a check that gates that command' \
-  "a buffered wrapper cannot carry a gating check"
-
-assert_not_contains '### Final whole-branch gate' "exact-head gate section removed"
+assert_not_contains 'without a caller' "SDD has no caller-less mode"
+assert_not_contains 'Orchestrator close' "the orchestrator no longer closes fix rounds itself"
+assert_not_contains 'Cannot verify from diff' "reviewers resolve their own doubts"
 assert_not_contains 'REVIEW_HEAD=$(git rev-parse HEAD)' "exact-head state removed"
 assert_not_contains 'approved SHA' "approved-SHA bookkeeping removed"
-assert_not_contains 'After any compaction or resume' "resume state machinery removed"
 
 echo "PASS"

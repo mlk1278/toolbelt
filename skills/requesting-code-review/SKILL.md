@@ -5,39 +5,9 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
-Dispatch a code reviewer subagent after each task in subagent-driven development, after a major feature, before merging to main, or whenever your human partner asks. The reviewer gets crafted context, never your session's history.
+Get an independent review of finished work: after a major feature, before merging, or when your human partner asks. Subagent-driven development runs its own reviews; this is for work outside it. The reviewer gets context you construct, never your session's history.
 
-## How to Request
-
-**1. Get git SHAs:**
-
-```bash
-BASE_SHA=$(git merge-base origin/main HEAD)  # or the base you recorded before the work began
-HEAD_SHA=$(git rev-parse HEAD)
-```
-
-BASE is the recorded commit before the work, never `HEAD~1`, which drops every commit but the last, leaving the reviewer to approve a diff that isn't the work.
-
-**2. Build the review package** with `review-package` from the subagent-driven-development skill's `scripts/` directory:
-
-```bash
-../subagent-driven-development/scripts/review-package $BASE_SHA $HEAD_SHA
-```
-
-It writes the commit list, stat summary, and the diff with extended context to one file and prints the path. Pass that path as `{DIFF_FILE}`; the diff never enters your context. If the script isn't reachable, pass `None` and the reviewer falls back to git commands.
-
-**3. Dispatch the reviewer** on the `reviewer` route (specialty `code`) from the session routing brief, filling the template at [code-reviewer.md](code-reviewer.md). Pass the author's model for reviewer independence.
-
-Do not read `docs/REVIEW-GUIDANCE.md` yourself. The reviewer template loads it when it exists. Fill `{SMELLS_FILE}` with the resolved path of [smell-baseline.md](smell-baseline.md). Supply only concise nuance from the approved requirements and concrete risks; use `None` if none.
-
-**Placeholders:**
-- `{DESCRIPTION}` - Brief summary of what you built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{REVIEW_NUANCE}` - Review-specific context or concrete risks
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
-- `{DIFF_FILE}` - Review package path from step 2 (`None` if unavailable)
-- `{REVIEW_FILE}` - Where the reviewer writes its report, beside the review package
-- `{SMELLS_FILE}` - Resolved path of `smell-baseline.md`
-
-**4. Act on feedback:** the agent that fixes reads the review file; a dispatcher reads only the returned verdict. Fix Critical and Important issues before proceeding, note Minor ones for later, and push back with technical reasoning where the reviewer is wrong.
+1. **Pick the range.** BASE is the commit recorded before the work began, or `git merge-base origin/main HEAD`; never `HEAD~1`, which drops every commit but the last and leaves the reviewer approving a diff that isn't the work. HEAD is `git rev-parse HEAD`.
+2. **Build the review package.** `../subagent-driven-development/scripts/review-package BASE HEAD` writes the commit list, stat summary, and diff with context to one file and prints its path. The diff never enters your context.
+3. **Dispatch the reviewer** with [code-reviewer.md](code-reviewer.md), filling its placeholders. Resolve a `reviewer` with specialty `code` through toolbelt:agent-routing, passing your harness as the author, so the review comes from a different harness.
+4. **Act on the verdict.** Whoever fixes reads the review file; you read only the returned verdict. Fix Critical and Important findings before proceeding, note Minor ones, and push back with technical reasoning where the reviewer is wrong.

@@ -28,30 +28,31 @@ assert_not_contains() {
   echo "ok - $description"
 }
 
-assert_contains "$sdd" 'when the task'"'"'s `Interfaces: Produces:` value is anything other than exactly `none`' \
-  "re-review is required unless the produces value is exactly none"
-assert_contains "$sdd" 'or when any open finding was Critical' \
-  "a Critical finding forces the re-review route"
-assert_contains "$sdd" '**Orchestrator close**' \
-  "the other exit from the fix round is named"
-assert_contains "$sdd" 'Task <N>: fix round closed by orchestrator' \
-  "orchestrator close has its own ledger line"
-assert_contains "$sdd" 'exactly one complete row per open finding' \
-  "the close compares the table against every open finding"
-assert_contains "$sdd" 'escalate to your human partner as a BLOCKED task' \
-  "an incomplete findings table escalates"
+assert_contains "$sdd" 'dispatch [re-review-prompt.md](re-review-prompt.md)' \
+  "every fix round is re-reviewed"
+assert_contains "$sdd" 'run one more round of steps 1–2' \
+  "an open finding gets a second round"
+assert_contains "$sdd" 'Task <N>: fix round <R>' \
+  "each fix round has its own ledger line"
+assert_contains "$sdd" '**Real and load-bearing** — mark the task `Task N: blocked' \
+  "a load-bearing residual escalates"
 assert_contains "$sdd" 'Task N: in-progress (agent <id>, route <harness>/<model>/<effort>)' \
   "in-progress ledger line records the resolved route"
 assert_contains "$sdd" 'route <harness>/<model>/<effort>, report <path>' \
   "complete ledger line records the resolved route"
-assert_contains "$sdd" 'Produces: none' \
-  "the plan template's empty-produces marker is named"
 
 assert_contains "$implementer" 'against code that lacks the guard' \
   "seen red means the guard failed against code missing the guard"
 assert_contains "$implementer" '| Finding | Commit | Covering test command | Result |' \
   "the fix report uses the required findings table"
-assert_contains "$rereview" 'outside the fix diff go to the ledger and never extend the loop' \
+assert_contains "$rereview" 'never extend the fix loop' \
   "out-of-scope findings never extend the fix loop"
+
+assert_contains "$implementer" 'You decide only how the code is written inside the brief' \
+  "implementers make code decisions only"
+assert_contains "$implementer" "Report a bug you find outside your task; don't fix it." \
+  "implementers stay inside their task"
+assert_contains "$sdd" 'A product or contract decision the plan doesn' \
+  "missing decisions go to the human, not the orchestrator or implementer"
 
 echo "PASS"

@@ -1,86 +1,50 @@
-# Scoped Re-Review Prompt Template
-
-Use when dispatching the re-review after the fix round.
+# Re-Review Prompt Template
 
 ```
 Subagent (role: reviewer):
   description: "Re-review Task N fixes"
-  model: [MODEL — REQUIRED: per SKILL.md Model Selection]
+  model: [MODEL — from the resolved route]
   prompt: |
-    Mark each finding addressed or not and inspect the fix diff.
+    Check whether the fixes for Task N's review findings worked.
 
-    ## The Task
+    - Task brief: [BRIEF_FILE]
+    - Findings under verification: the Critical and Important findings and
+      spec gaps in the latest round of [REVIEW_FILE]
+    - Fix results: the findings table appended to [REPORT_FILE]
+    - Fix diff: [DIFF_FILE], covering [FIX_BASE_SHA]..[HEAD_SHA]. If it is
+      missing, run `git diff [FIX_BASE_SHA]..[HEAD_SHA]`.
+    - Project review guidance: `docs/REVIEW-GUIDANCE.md` at the repository
+      root, if it exists.
 
-    Task brief: [BRIEF_FILE]
+    Read whatever else you need, and run a test when a row's evidence
+    leaves a real doubt. You are read-only: leave the working tree
+    untouched and dispatch no subagents.
 
-    ## Project Review Guidance
+    For each finding, in order: ADDRESSED or NOT ADDRESSED, with file:line
+    evidence. The defect must be gone; an attempt is not enough.
+    A `REBUTTED` row is ADDRESSED when its reasoning holds against the
+    code; otherwise NOT ADDRESSED, saying why.
 
-    Read `docs/REVIEW-GUIDANCE.md` if it exists at the repository root;
-    it is reviewer-only. Report conflicts with the task requirements.
+    Then report anything the fix broke or introduced, with severity
+    (Critical, Important, Minor) and file:line. Problems outside the fix
+    diff go under Out of scope: they are logged for the final review and
+    never extend the fix loop.
 
-    ## The Findings Under Verification
+    Append to [REVIEW_FILE] under `## Re-review <head7>`: the per-finding
+    verdicts, new breakage or "None", out-of-scope notes or "None", and
+    the verdict — all findings addressed with no new Critical or Important
+    breakage, or findings remain open.
 
-    The Critical and Important findings and spec gaps in the previous
-    review, [REVIEW_FILE].
-
-    ## The Fix
-
-    Implementer's report: [REPORT_FILE]
-
-    **Fix base:** [FIX_BASE_SHA]  **Head:** [HEAD_SHA]
-    **Diff file:** [DIFF_FILE]
-
-    Read the review file, the report's fix results, and the diff file once
-    each. Leave the working tree untouched; dispatch no subagents. If the
-    diff file is missing, rebuild it with `git diff [FIX_BASE_SHA]..[HEAD_SHA]`.
-
-    Findings outside the fix diff go to the ledger and never extend the loop;
-    report them under Out-of-Scope Observations.
-
-    The report's fix results are the test evidence: confirm each row names
-    the covering test command and its output, and check the claims against
-    the diff. Run at most one focused check for remaining doubt.
-
-    ## Output Format
-
-    Append your report to [REVIEW_FILE] under `## Re-review <head7>`,
-    starting with the first verdict. Every line is a verdict, a finding
-    with file:line, or a check you ran.
-
-    ### Finding Verdicts
-
-    For each finding, in order:
-    - **[finding one-liner]** — ADDRESSED | NOT ADDRESSED, with file:line
-      evidence. "Attempted" is not addressed: the defect must no longer
-      exist. A `REBUTTED` row is ADDRESSED when its reasoning holds
-      against the code; otherwise NOT ADDRESSED, stating why.
-
-    ### New Breakage in the Fix Diff
-
-    Anything the fix broke or introduced, with severity
-    (Critical/Important/Minor) and file:line. "None" if clean.
-
-    ### Out-of-Scope Observations
-
-    "None" if none.
-
-    ### Verdict
-
-    **Fix round:** [All findings addressed, no new Critical/Important
-    breakage | Findings remain open] — list the open ones.
-
-    Return: head, fix-round verdict, one line per open finding, rebuttal
-    (with judgment), and new Critical/Important breakage, out-of-scope count,
-    and review path. Use under 12 lines unless findings need more.
+    Reply with only: the head SHA, the verdict, one line per open finding
+    and per new Critical or Important breakage, the out-of-scope count, and
+    the review file path, in under 12 lines unless the findings need more.
 ```
 
 **Placeholders:**
-- `[MODEL]` — REQUIRED: per SKILL.md Model Selection; small fix diffs take
-  a cheap-to-mid tier
-- `[BRIEF_FILE]` — the task brief (the same file the implementer worked from)
-- `[REVIEW_FILE]` — the previous review's file
-- `[REPORT_FILE]` — the implementer's report file, fix reports appended
+- `[MODEL]` — the route of the review being re-checked (task reviewer, or `gate` for the final review)
+- `[BRIEF_FILE]` — the task brief the implementer worked from; for final-review fixes, the plan path
+- `[REVIEW_FILE]` — the task's review file, or `final-review.md`
+- `[REPORT_FILE]` — the implementer's report, fix tables appended
 - `[FIX_BASE_SHA]` — the head the previous review saw
-- `[HEAD_SHA]` — current commit
-- `[DIFF_FILE]` — the path printed by
-  `scripts/review-package --plan PLAN_FILE FIX_BASE HEAD`
+- `[HEAD_SHA]` — the current commit
+- `[DIFF_FILE]` — the path `scripts/review-package --plan PLAN_FILE FIX_BASE HEAD` printed

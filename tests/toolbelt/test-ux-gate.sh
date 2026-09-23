@@ -27,7 +27,6 @@ assert_no_model_names() {
 [ -f "$skill" ] || { echo "not ok - skill file missing: $skill" >&2; exit 1; }
 
 assert_contains "$skill" "name: ux-gate" "frontmatter name"
-assert_contains "$skill" "I'm running the UX gate for <surface>." "announce line"
 assert_contains "$skill" "\`Pass\` bound to the reviewed head SHA, or \`Changes Required\`" "verdict contract"
 assert_contains "$skill" "The gate does not fix anything." "gate does not fix"
 assert_contains "$skill" "nothing downstream may claim UX was verified" "runtime preflight is mandatory"

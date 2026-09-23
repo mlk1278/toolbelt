@@ -5,8 +5,6 @@ description: Use when a small, decision-complete change has one coherent outcome
 
 # Quick Task
 
-**Announce:** "I'm using quick-task to ship this."
-
 **Entry:** a small, decision-complete request — the ask itself is the spec.
 **Exit:** the shared delivery path returns merged and cleaned up, or the request is redirected to planning.
 
@@ -16,7 +14,7 @@ Confirm the work has one coherent outcome, an established owner surface, no unre
 
 ## 2. Mini-plan
 
-Write a git-ignored one-task implementation plan at `.toolbelt/quick/<slug>-plan.md` in writing-plans format. Include the request, exact files, TDD steps, and verification commands. It is scratch; never commit it.
+Write a git-ignored one-task implementation plan at `.toolbelt/quick/<slug>-plan.md` in writing-plans format. Include the request, exact files, and the task's Contract, Decisions, Proves, and Verify mode; logic is `test-first`. It is scratch; never commit it.
 
 ## 3. Deliver
 

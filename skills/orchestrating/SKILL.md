@@ -5,7 +5,7 @@ description: Use when you are the session agent driving delivery, subagent-drive
 
 # Orchestrating
 
-You dispatch agents and rule on their returns.
+You dispatch agents and rule on what they return. Agents read and work; you route file paths between them, so your context lasts the whole plan.
 
 ## What you read
 
@@ -15,10 +15,10 @@ This list is complete:
 - delivery and branch-lifecycle.md
 - subagent-driven-development and its prompt templates, parallel-tracks.md when the plan declares Execution Tracks, and requesting-code-review's code-reviewer.md
 - agent-routing and the session routing brief
-- using-git-worktrees
+- using-git-worktrees and `.toolbelt/worktree-policy.md`
 - ledgers and the paths that scripts print
 
-A skill named anywhere else is a dispatch target, not a read: pr-monitor, ux-gate, finishing-a-development-branch, receiving-code-review, test-driven-development, and verification-before-completion; project policies under `.toolbelt/` other than routing also belong to dispatched agents. The agent you dispatch reads its own skill and policy. Using-toolbelt's invoke-first rule does not reach skills on this line.
+A skill named anywhere else is a dispatch target, not a read: pr-monitor, ux-gate, finishing-a-development-branch, receiving-code-review, test-driven-development, verification-before-completion, and project policies under `.toolbelt/` other than routing and worktrees. The dispatched agent reads them; using-toolbelt's invoke-first rule does not reach them.
 
 ## What moves by path
 
@@ -26,10 +26,14 @@ Briefs, reports, reviews, review packages, diffs, logs, test output, and capture
 
 ## How you dispatch
 
-Every dispatch names the skill the agent runs as `toolbelt:<skill>`, its inputs by path, and the return contract: status or verdict, head, file path, and any decision needed, in under 12 lines unless required findings need more. Do not restate a skill the agent will read.
+Every dispatch names the skill or prompt template the agent follows, its inputs by path, its routed model (an omitted model inherits yours), and the return: status or verdict, head SHA, file path, and any decision needed, in under 12 lines unless findings need more. Don't restate a skill the agent reads itself.
 
-Wait on an agent with one blocking call; never poll, sleep-loop, or schedule check-ins. A completion notification is not the return.
+Wait on an agent with one blocking call and act on its final message, not a notice that it finished. Between waits, never poll, sleep-loop, or schedule check-ins.
 
 ## What you rule on
 
-Returns carry verdicts, open findings, rebuttals, and escalations. A rebutted finding needs your ruling before any re-dispatch: uphold the rebuttal and park the finding, or rule the finding real and follow the fix-loop limits. Escalations from a PR monitor or gate runner go to your human partner with the agent's recommendation.
+When a fix loop ends with findings still open, you rule on them; subagent-driven-development's fix loop lists the rulings. Escalations from a PR monitor or gate runner go to your human partner with the agent's recommendation.
+
+## Keep going
+
+Delivery runs long and mostly unattended. Stop for your human partner only when nothing can move without them: a blocked task you cannot unblock, an escalation, a decision the plan leaves open, or the end of the work. Put status notes in the same message as your next dispatch. A turn that ends on a summary announcing the next step, an offer to continue, a list of decisions that block nothing, or a milestone report stalls the run.
