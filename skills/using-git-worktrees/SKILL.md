@@ -28,16 +28,17 @@ A policy may also set rules for worktrees that run concurrently, which subagent-
 
 **Native tool first.** If the harness has a worktree tool (named like `EnterWorktree` or `WorktreeCreate`, or a `/worktree` command), use it and go to Step 2: it owns placement, branching, and cleanup, and a `git worktree add` beside it creates state the harness can't see. Fall back to git only when there is no such tool, or it can't take the caller's source ref or branch name.
 
-**Git fallback.** Put worktrees in the directory your instructions prefer; otherwise an existing `.worktrees/` or `worktrees/` (`.worktrees` wins if both exist); otherwise `.worktrees/` at the project root. The directory must be git-ignored, or the next commit sweeps the whole tree into the repo:
+**Git fallback.** Put worktrees in the directory your instructions prefer; otherwise an existing `.worktrees/` or `worktrees/` (`.worktrees` wins if both exist); otherwise `.worktrees/` at the project root. `LOCATION` is that directory relative to the repo root. It must be git-ignored, or the next commit sweeps the whole tree into the repo:
 
 ```bash
 mkdir -p "$LOCATION"
-git check-ignore -q "$LOCATION" || echo "$LOCATION/" >> "$(git rev-parse --git-common-dir)/info/exclude"
+git check-ignore -q "$LOCATION" || echo "/$LOCATION/" >> "$(git rev-parse --git-common-dir)/info/exclude"
+git check-ignore -q "$LOCATION" || { echo "cannot ignore $LOCATION" >&2; exit 1; }
 git worktree add "$LOCATION/$BRANCH_NAME" -b "$BRANCH_NAME" "${SOURCE_REF:-HEAD}"
 cd "$LOCATION/$BRANCH_NAME"
 ```
 
-If `git worktree add` fails with a permission error, the sandbox blocked it: tell your human partner you are working in the current directory instead, and continue with setup and baseline there.
+If `git worktree add` fails with a permission error, the sandbox blocked it. With a clean working tree, create the branch in place instead (`git switch -c "$BRANCH_NAME" "${SOURCE_REF:-HEAD}"`), tell your human partner, and continue with setup and baseline there. Otherwise stop and ask; never continue on the base branch.
 
 ## Step 2: Set up the project
 

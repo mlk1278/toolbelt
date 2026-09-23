@@ -25,7 +25,7 @@ ceilings=(
   "skills/requesting-code-review/code-reviewer.md:700"
   "skills/interactive-design/SKILL.md:1200"
   "skills/interactive-design/iteration-mode.md:500"
-  "skills/subagent-driven-development/SKILL.md:1300"
+  "skills/subagent-driven-development/SKILL.md:1375"
   "skills/subagent-driven-development/task-reviewer-prompt.md:800"
   "skills/subagent-driven-development/implementer-prompt.md:760"
   "skills/subagent-driven-development/re-review-prompt.md:380"

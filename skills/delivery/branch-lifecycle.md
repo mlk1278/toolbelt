@@ -30,6 +30,6 @@ After the PR is confirmed merged and the issue tracker reconciled:
 
 1. Mark the boundary `merged` in the ledger.
 2. Confirm the local branch head is the final head SHA the monitor returned. Anything beyond it is unpublished work: stop and ask your human partner.
-3. Tear down the worktree as finishing-a-development-branch Step 6 describes, then delete the branch with `git branch -D` (a squash merge leaves its commits unmerged by ancestry).
+3. Release any teardown `.toolbelt/worktree-policy.md` defines (containers, ports, processes, per-worktree data). From the main repo root, `git worktree remove <path>` and `git worktree prune`, then `git branch -D <branch>` (a squash merge leaves its commits unmerged by ancestry).
 
 Never remove a worktree with live agents, unmerged track work, or evidence another open boundary needs. Keep prototype baselines until the boundaries that use them close. Remove `delivery.md` and its workspace only after every boundary closes. Abandoning a boundary takes your human partner's explicit instruction.

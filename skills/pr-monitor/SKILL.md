@@ -17,7 +17,7 @@ For an unpublished branch, run toolbelt:finishing-a-development-branch on the pu
 
 For each PR, record its number, branch, base, head SHA, and local-gate SHA. The local final gate must have approved this exact head before monitoring begins.
 
-**Evidence belongs to one head.** Any push starts a new cycle: CI and provider reviews complete again on the new head. The local gate carries forward through your own fix pushes and through rebases that apply without conflict. A docs-only push, as finishing-a-development-branch Step 1 defines it, also carries completed provider reviews forward; record the head range it covers.
+**Evidence belongs to one head.** Any push starts a new cycle: CI and provider reviews complete again on the new head. The local gate carries forward through your own fix pushes and through rebases that leave its `git patch-id --stable` unchanged. A docs-only push, as finishing-a-development-branch Step 1 defines it, also carries completed provider reviews forward; record the head range it covers.
 
 ## Chain rules
 
@@ -37,7 +37,7 @@ On a rebase conflict, run `git rebase --abort` and return that PR as blocked wit
 2. Refresh exact-head CI with the policy file's command, or `gh pr checks` without a policy. Distinguish failed, pending, and unavailable; fail closed on unavailable.
 3. Request each policy-named provider at most once per head, then await it. A provider has completed when a review object or authenticated completion names the current head, or the docs-only head it carries forward from.
 4. Once every awaited provider has completed on the current head, verify each finding against the code and judge it yourself: fix what is real, inline in your own session, and rebut what is not on the thread with code evidence. Each fix carries fresh passing covering-test evidence; don't rerun the workspace suite. Push all fixes as one batch. The providers' next round on the new head is the re-review: request no local review of a fix round and dispatch no fixer. Escalate to the caller only when a finding would substantially change the design or the PR has diverged from its plan: send the decision needed, your recommendation, and minimal code evidence.
-5. When nothing is actionable, wait with one call: the policy's wait command (foreground, timeout above its ceiling) or one bounded interval (default 180 seconds). Between waits, never poll, sleep-loop, tail logs, or emit keep-alive commands. Do not nest another watcher.
+5. With nothing actionable, wait with one call: the policy's wait command (foreground, timeout above its ceiling) or one bounded interval (default 180 seconds). Between waits, never poll, sleep-loop, tail logs, or emit keep-alive commands. Do not nest another watcher.
 
 ## Fallback
 
@@ -45,6 +45,6 @@ A provider that hits the policy timeout on one head (default 20 minutes), or exp
 
 ## Merge and return
 
-Just before merging a PR, check it on the expected head: each policy-named provider completed or recorded as a fallback, exact-head green CI, mergeable, and zero unresolved threads. Merge when all pass, then confirm the remote PR is `MERGED`.
+Before merging a PR, check its expected head: each policy-named provider completed or recorded as a fallback, exact-head green CI, mergeable, and zero unresolved threads. Merge when all pass, then confirm the remote PR is `MERGED`.
 
 Return when every PR is merged or one is durably blocked, never on a round count or elapsed time. Return one entry per PR: number, final head SHA, remote state (`MERGED`, `OPEN`, `CLOSED`), merge commit when merged, target branch, and any blocker. A bottom PR closed without merging blocks every PR above it. The caller owns post-merge reconciliation.

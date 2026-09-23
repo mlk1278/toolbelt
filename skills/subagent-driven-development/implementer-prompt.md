@@ -72,7 +72,8 @@ Subagent (role: implementer):
       might contradict, or `None`
 
     When your dispatch or resume names a review file, do only this: fix
-    each Critical and Important finding and spec gap in it, re-run the tests covering the
+    each Critical and Important finding and spec gap in it (in a UX
+    review, each blocker and should), re-run the tests covering the
     change, and append this table to your report:
 
     | Finding | Commit | Covering test command | Result |

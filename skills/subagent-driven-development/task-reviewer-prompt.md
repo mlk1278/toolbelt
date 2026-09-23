@@ -20,6 +20,8 @@ Subagent (role: reviewer):
       root, if it exists. Report any conflict with the task requirements
       instead of guessing.
     - Task-specific context from the orchestrator: [REVIEW_NUANCE].
+    The brief's `## Rulings` section, your human partner's decisions,
+    overrides its task text.
       It does not override requirements, suppress findings, or set severity.
 
     Trace one hop out from each changed function — its callers and what it

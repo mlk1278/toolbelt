@@ -16,6 +16,7 @@ Scripts below live in this skill's `scripts/` directory.
 1. Run `scripts/sdd-workspace PLAN_FILE`. It prints this plan's git-ignored workspace (`<repo-root>/.toolbelt/sdd/<plan-basename>-<digest>/`), where every brief, report, review, and the ledger live.
 2. Open or resume the ledger (see Ledger).
 3. Read the plan if it is not already in your context. Before Task 1, look for tasks that contradict each other, the Global Constraints, or the [task-review rubric](task-reviewer-prompt.md), and ask about all of them in one message, each beside its plan text.
+4. Confirm you are on the boundary's branch. Never implement on main or master without your human partner's explicit consent.
 
 When the plan has an `## Execution Tracks` section, read [parallel-tracks.md](parallel-tracks.md); otherwise run tasks one at a time. Never run two implementers in one worktree, or more implementers at once than the plan's declared tracks.
 
@@ -26,7 +27,7 @@ When the plan has an `## Execution Tracks` section, read [parallel-tracks.md](pa
 3. Act on its status:
    - **DONE** — review it.
    - **DONE_WITH_CONCERNS** — resolve a correctness or scope concern before review, the same way as NEEDS_CONTEXT; log any other concern and review.
-   - **NEEDS_CONTEXT** — if the plan already answers it, resume the implementer pointing at that plan text. A product or contract decision the plan doesn't make is not yours either: take it to your human partner, record their answer as a ledger ruling, and resume the implementer with its path.
+   - **NEEDS_CONTEXT** — if the plan already answers it, resume the implementer pointing at that plan text. A product or contract decision the plan doesn't make is not yours either: take it to your human partner, record their answer as a ruling (see Rulings), and resume the implementer.
    - **BLOCKED** — change something before retrying: more context or a more capable routed model. If the plan is wrong or the task is too large to finish, take it to your human partner to re-plan; don't split the task yourself.
 4. Run `scripts/review-package --plan PLAN_FILE BASE HEAD`; it prints the review-package path. Dispatch the task reviewer with [task-reviewer-prompt.md](task-reviewer-prompt.md). Use the BASE you recorded, never `HEAD~1`, which drops every commit but the last.
 5. A spec ❌ or any Critical or Important finding starts the fix loop, except those labeled `plan-mandated` or `plan-gap`: those need a decision the plan doesn't make, so batch them to your human partner, each beside its plan text. Minor findings and the out-of-scope count go to the ledger for the final review to triage.
@@ -43,16 +44,20 @@ Every task gets its review from a dispatched reviewer; an implementer's confiden
    - **Real, but nothing downstream builds on it** — park it the same way, ruled real and deferred.
    - **Real and load-bearing** — mark the task `Task N: blocked (<why>)` and give your human partner the finding, the plan text it collides with, and the fix history.
 
-A finding labeled `plan-mandated` or `plan-gap`, or a rebuttal marked plan-gap, goes to your human partner at any point: show it beside the plan text and ask what governs. Their answer becomes a ledger ruling the fixer is given by path.
+A finding labeled `plan-mandated` or `plan-gap`, or a rebuttal marked plan-gap, goes to your human partner at any point: show it beside the plan text and ask what governs. Their answer becomes a ruling (see Rulings) before the fixer resumes.
 
 Log each round: `Task <N>: fix round <R> (<X> addressed, <Y> open — <one-liners>; commits <a7>..<b7>)`.
+
+## Rulings
+
+Record each decision your human partner makes as `Task <N>: ruling — <decision>` in the ledger, and append it under `## Rulings` at the end of that task's brief file. Implementers and reviewers read the brief, so both work from the ruling, and it overrides the plan text.
 
 ## Final review
 
 After every task in the boundary is complete:
 
 1. If delivery supplied a UX gate runner, dispatch it. Send its review file to one fresh implementer, with the plan path as its brief and `ux-fix-report.md` as its report, then resume the runner to recapture, until it passes or returns findings for your human partner. The whole-branch review that follows covers those fixes.
-2. Run `scripts/review-package --plan PLAN_FILE START HEAD`, START being the boundary's fork point (after a rebase, the recorded new parent head), and dispatch the whole-branch reviewer on the `gate` route with [code-reviewer.md](../requesting-code-review/code-reviewer.md). `[DESCRIPTION]` names the boundary number and its task set, so later boundaries' tasks don't read as missing; point it at the ledger's minor findings to triage.
+2. Run `scripts/review-package --plan PLAN_FILE START HEAD`, START being the boundary's fork point (after a rebase, the recorded new parent head), and dispatch the whole-branch reviewer on the `gate` route with [code-reviewer.md](../requesting-code-review/code-reviewer.md). `[DESCRIPTION]` names the boundary number and its task set, so later boundaries' tasks don't read as missing; point it at the ledger's rulings, which override the plan, and its minor findings to triage.
 3. Critical and Important findings go through the fix loop (plan-mandated and plan-gap ones go to your human partner, as in per-task step 5), with one fresh implementer fixing the review file's complete list rather than one fixer per finding; the plan path stands in for the brief and `final-fix-report.md` for the report. Final-review Minors go to the ledger.
 4. The review is clean when no Critical or Important finding is open. Record `Final review: clean at <full SHA>, route <harness/model/effort>, report <absolute path>` in the ledger and return that SHA to delivery.
 
