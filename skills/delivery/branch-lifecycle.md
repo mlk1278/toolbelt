@@ -1,21 +1,35 @@
 # Branch lifecycle
 
-## Ledger and evidence
+## Ledger
 
-At entry, resolve the installed SDD skill’s `scripts/sdd-workspace` and run it with the plan path from the starting worktree. Keep delivery’s `delivery.md` in that returned workspace. Record its absolute path in each boundary’s SDD ledger header. Boundary entries live here, with pointers to their SDD workspaces; keep this file until every boundary closes. Retain the starting worktree while it holds this record. Before execution record the prepared boundary’s branch, predecessor PR, fork SHA, and SDD workspace.
+Resolve the installed SDD skill's `scripts/sdd-workspace` and run it with the plan path from the starting worktree. Keep `delivery.md` in the workspace it prints, and keep the starting worktree until every boundary closes. Each boundary's SDD ledger header records the absolute path of `delivery.md`.
 
-SDD records `Final review: clean at <full SHA>, route <harness/model/effort>, report <absolute path>` before handing off. Supply its ledger path to branch completion and require it to record `Suite: passed at <full SHA>, command <command>, output <absolute path>` (or its documented docs-only exemption) before publishing. This records Step 1’s existing verification; it adds no test run.
+One line per boundary, updated in place as it moves:
 
-After interruption, verify the recorded report and suite output against the current head before publication. Reuse matching evidence; missing or invalid evidence requires only the missing gate. Pass the verified final-review SHA as the monitor’s local-gate SHA. Record the PR when opened; check remote state before retrying publication.
+`Boundary <N>: branch <name>, base <branch>, fork <sha7>, workspace <SDD workspace path>, PR <#num|none>, state <prepared|open|merged|blocked>`
+
+Whoever moves a branch appends `Boundary <N>: rebased <old SHA> → <new SHA>`, so a later rebase can find the old head after compaction.
+
+The SDD ledger carries the gate evidence: SDD writes `Final review: clean at <SHA> ...`, and pr-monitor writes `Suite: passed at <SHA>, command <command>, output <path>` (or `Suite: docs-only`) when it publishes. After an interruption, reuse a recorded result only when its SHA is the current head; rerun only the gate whose evidence is missing or stale. Check the remote for an existing PR before publishing again.
 
 ## Rebases
 
-Ownership follows publication. Delivery owns an unpublished boundary; afterwards only its monitor moves the branch. Implementers and fixers never rebase.
+Ownership follows publication: you rebase an unpublished boundary; once its PR exists, only its monitor moves the branch. Implementers and fixers never rebase.
 
-At task boundaries check the predecessor PR and fetch its remote head. After it merges, use the updated base branch and the recorded pre-merge parent head; retarget the unpublished boundary’s planned PR base. Closure without merge blocks descendants. If the parent moved, stop opening new tracks, finish and merge active tracks, and wait for primary-worktree implementers, fixers, and reviewers. Rebase with `git rebase --onto <parent-new> <parent-old> <boundary-branch>`, serialized with other branch operations — always before that lane's broad final review. Abort on conflict and report the paths.
+While a dependent boundary is executing, check its predecessor between tasks. If the predecessor's head moved or it merged, rebase before the boundary's final review:
 
-Append `Boundary <N>: rebased <old7> → <new7>`, mapping old task ranges to new ranges. Review evidence may carry forward only when the task’s `git patch-id --stable`, consumed contracts, and relevant dependencies are unchanged; record that comparison. Otherwise obtain affected review and test evidence again. Reuse UX evidence only under ux-gate’s rendered-dependency rule. Branch completion still requires its exact-head suite evidence or docs-only exemption.
+1. Stop starting tracks, merge the active ones, and wait until no implementer, fixer, or reviewer is working in the primary worktree.
+2. Run `git rebase --onto <parent-new> <parent-old> <boundary-branch>`, where the parent is the predecessor's branch, or the updated base branch once it has merged. On conflict, `git rebase --abort` and report the paths to your human partner.
+3. After a merge, retarget the boundary's base to the base branch.
+
+Completed task reviews stand after a clean rebase; the final review runs on the rebased head. Reuse UX evidence only under ux-gate's rendered-dependency rule. A predecessor closed without merging blocks this boundary.
 
 ## Cleanup
 
-After confirmed merge and linked-issue reconciliation, remove the worktree, branch, and ignored scratch for that boundary. First preserve its merged record in the delivery ledger. Never remove a workspace with live agents, unmerged track work, or evidence another open boundary needs. Keep prototype baselines until their consumers finish. Remove the delivery ledger and its containing scratch only after every boundary closes. Explicit abandonment requires your human partner’s instruction.
+After the PR is confirmed merged and the issue tracker reconciled:
+
+1. Mark the boundary `merged` in the ledger.
+2. Confirm the local branch head is the final head SHA the monitor returned. Anything beyond it is unpublished work: stop and ask your human partner.
+3. Tear down the worktree as finishing-a-development-branch Step 6 describes, then delete the branch with `git branch -D` (a squash merge leaves its commits unmerged by ancestry).
+
+Never remove a worktree with live agents, unmerged track work, or evidence another open boundary needs. Keep prototype baselines until the boundaries that use them close. Remove `delivery.md` and its workspace only after every boundary closes. Abandoning a boundary takes your human partner's explicit instruction.

@@ -59,9 +59,9 @@ assert_not_contains "$sdd" 'Dispatch multiple implementation subagents in parall
   "old unconditional parallel-dispatch flag is gone"
 
 # using-git-worktrees: parallel-workspace policy rules.
-assert_contains "$worktrees" 'parallel-workspace rules' \
+assert_contains "$worktrees" 'rules for worktrees that run concurrently' \
   "policy contract covers parallel workspaces"
-assert_contains "$worktrees" 'concurrency limit lower than 3' \
+assert_contains "$worktrees" "concurrency limit below SDD's three tracks" \
   "policy may lower the track cap, never raise it"
 
 # Validate the copyable example as structured input, including task partition

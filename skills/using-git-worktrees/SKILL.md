@@ -1,93 +1,53 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback
+description: Use when starting feature work that needs isolation from the current checkout, or when delivery prepares a PR boundary's worktree
 ---
 
 # Using Git Worktrees
 
-## Step 0: Detect Existing Isolation
+A caller may name a **source ref** (the SHA or branch to start from; default `HEAD`) and a branch name. A caller that asks for a new worktree, as delivery does for each boundary, always gets one: skip Step 0 and go to Step 1.
+
+## Step 0: Check for existing isolation
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
 GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
+git rev-parse --show-superproject-working-tree 2>/dev/null   # prints a path inside a submodule
 ```
 
-`GIT_DIR != GIT_COMMON` is also true inside a submodule, so check:
+- **`GIT_DIR != GIT_COMMON` and not a submodule:** you are already in a linked worktree. Report "Already in isolated workspace at `<path>` on branch `<name>`" (or "detached HEAD, externally managed; a branch is needed at finish time") and go to Step 2.
+- **Otherwise** (a normal checkout, or a submodule): follow any worktree preference in your instructions. With none, ask: "Would you like me to set up an isolated worktree? It protects your current branch from changes." If your human partner declines, work in place and go to Step 2.
+
+## Project worktree policy
+
+Read `<repo-root>/.toolbelt/worktree-policy.md` when it exists and follow it for the rest of this skill: port ranges and how to pick a set no other worktree uses, sidecar containers and their naming, per-worktree data directories, environment files to derive rather than copy, and what to tear down at finish. Report the set you claimed. Without a policy file, use the project's defaults rather than inventing a scheme the next worktree collides with.
+
+A policy may also set rules for worktrees that run concurrently, which subagent-driven-development applies to each track worktree: how to derive a per-workspace database name (or equivalent) from the branch, which resources are shared, setup commands to run per workspace, and a concurrency limit below SDD's three tracks when the machine can't run three setups at once. A track that needs isolated stateful resources the policy doesn't cover is a gap to report, not improvise around.
+
+## Step 1: Create the worktree
+
+**Native tool first.** If the harness has a worktree tool (named like `EnterWorktree` or `WorktreeCreate`, or a `/worktree` command), use it and go to Step 2: it owns placement, branching, and cleanup, and a `git worktree add` beside it creates state the harness can't see. Fall back to git only when there is no such tool, or it can't take the caller's source ref or branch name.
+
+**Git fallback.** Put worktrees in the directory your instructions prefer; otherwise an existing `.worktrees/` or `worktrees/` (`.worktrees` wins if both exist); otherwise `.worktrees/` at the project root. The directory must be git-ignored, or the next commit sweeps the whole tree into the repo:
 
 ```bash
-# If this returns a path, you're in a submodule, not a worktree — treat as normal repo
-git rev-parse --show-superproject-working-tree 2>/dev/null
+mkdir -p "$LOCATION"
+git check-ignore -q "$LOCATION" || echo "$LOCATION/" >> "$(git rev-parse --git-common-dir)/info/exclude"
+git worktree add "$LOCATION/$BRANCH_NAME" -b "$BRANCH_NAME" "${SOURCE_REF:-HEAD}"
+cd "$LOCATION/$BRANCH_NAME"
 ```
 
-**`GIT_DIR != GIT_COMMON` and not a submodule:** already in a linked worktree. Skip to Step 2. Report:
+If `git worktree add` fails with a permission error, the sandbox blocked it: tell your human partner you are working in the current directory instead, and continue with setup and baseline there.
 
-- On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
-- Detached HEAD: "Already in isolated workspace at `<path>` (detached HEAD, externally managed). Branch creation needed at finish time."
+## Step 2: Set up the project
 
-Asked for a new sibling worktree, this skill creates it rather than skipping creation.
+Apply the policy's setup (ports, sidecar containers, per-worktree data directories), then install dependencies the way the project's manifest says.
 
-**`GIT_DIR == GIT_COMMON` or in a submodule:** normal repo checkout. Honor any worktree preference in your instructions. Otherwise ask:
+## Step 3: Verify a clean baseline
 
-> "Would you like me to set up an isolated worktree? It protects your current branch from changes."
+Run the smallest focused checks that prove a clean start: the tests the work will rely on, not a workspace or package-wide baseline. When the base commit already has qualifying test evidence or green CI, cite that instead of re-running; docs-only work needs no baseline suite.
 
-If your human partner declines, work in place and skip to Step 2.
-
-## Project Worktree Policy
-
-Read `<repo-root>/.toolbelt/worktree-policy.md` when it exists and follow it for the rest of this skill: port ranges and how to pick a non-conflicting set, sidecar containers and their naming, per-worktree data directories, environment files to derive rather than copy, and what to tear down at finish. Report the set you claimed. With no policy file, use project defaults; an invented scheme collides with the next worktree.
-
-A policy may also declare **parallel-workspace rules** for worktrees that run concurrently:
-
-- How to derive a per-workspace database name (or equivalent) from the branch name.
-- Which resources are per-workspace and which are shared.
-- Setup commands to run per workspace (codegen, migrations, and the like).
-- An optional concurrency limit lower than 3 when the machine cannot support three concurrent setups; subagent-driven-development honors the lower number.
-
-subagent-driven-development applies them per track worktree and reports the resources claimed. A track needing isolated stateful resources with no policy declaring how is a gap to report, not improvise around.
-
-## Step 1: Create Isolated Workspace
-
-A caller may name a **source ref** — the SHA or branch the worktree starts from. Otherwise use `HEAD`.
-
-### 1a. Native Worktree Tools
-
-Look for a tool named like `EnterWorktree` or `WorktreeCreate`, or a `/worktree` command. If one exists, use it and skip to Step 2: it owns placement, branching, and cleanup, and `git worktree add` in its place creates phantom state your harness can't see or manage.
-
-Use Step 1b only with no native tool, or a source ref that tool cannot take.
-
-### 1b. Git Worktree Fallback
-
-Pick the directory in this order: a preference in your instructions; an existing `.worktrees/` or `worktrees/`, `.worktrees` winning if both exist; otherwise `.worktrees/` at the project root.
-
-Verify it is ignored first; an unignored worktree directory commits the whole tree into the repo:
-
-```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
-```
-
-**If NOT ignored:** add to .gitignore, commit, then proceed.
-
-```bash
-path="$LOCATION/$BRANCH_NAME"
-
-git worktree add "$path" -b "$BRANCH_NAME" "${SOURCE_REF:-HEAD}"
-cd "$path"
-```
-
-**Sandbox fallback:** if `git worktree add` fails with a permission error (sandbox denial), tell your human partner the sandbox blocked creation and you're working in the current directory instead, then run setup and baseline in place.
-
-## Step 2: Project Setup
-
-Apply the policy's setup rules first — allocated ports, sidecar containers, per-worktree data directories — then install dependencies the way the project's manifest says.
-
-## Step 3: Verify Clean Baseline
-
-Run the smallest focused checks that prove a clean start: the tests the work will rely on, not a workspace or package-wide baseline. When the base commit already has qualifying test evidence or authoritative green CI, cite that instead of re-running; docs-only work needs no baseline suite.
-
-**If tests fail:** report them and ask whether to proceed or investigate. Otherwise report ready.
-
-### Report
+If the baseline fails, report the failures and ask whether to proceed or investigate. Otherwise report:
 
 ```
 Worktree ready at <full-path>

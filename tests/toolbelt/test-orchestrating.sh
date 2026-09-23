@@ -45,7 +45,7 @@ assert_not_contains "$sdd" "read [the UX matrix reference]" "orchestrator no lon
 
 assert_contains "$ux" "A dispatched gate runner (role \`errand\`) runs this skill" "gate runner runs ux-gate"
 assert_not_contains "$ux" "The orchestrator runs this skill" "orchestrator does not run ux-gate"
-assert_contains "$monitor" "Publish an unpublished branch first: run toolbelt:finishing-a-development-branch" "monitor publishes the PR"
+assert_contains "$monitor" "For an unpublished branch, run toolbelt:finishing-a-development-branch" "monitor publishes the PR"
 
 assert_contains "$implementer" "its Result is \`REBUTTED:\`" "implementer can rebut a finding"
 assert_contains "$rereview" "A \`REBUTTED\` row is ADDRESSED when its reasoning holds" "re-review judges rebuttals"

@@ -22,6 +22,6 @@ assert_contains "cite that instead of re-running" "base evidence can replace a b
 assert_contains "docs-only work" "docs-only work needs no baseline suite"
 assert_contains "Baseline: <focused tests passing" "report names the baseline path used"
 assert_contains ".toolbelt/worktree-policy.md" "project worktree policy is consulted"
-assert_contains "non-conflicting" "policy governs shared-resource allocation"
+assert_contains "a set no other worktree uses" "policy governs shared-resource allocation"
 
 echo "PASS"

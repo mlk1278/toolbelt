@@ -7,6 +7,8 @@ lifecycle="$repo_root/skills/delivery/branch-lifecycle.md"
 metadata="$repo_root/skills/delivery/agents/openai.yaml"
 workflow="$repo_root/docs/WORKFLOW.md"
 routing="$repo_root/skills/agent-routing/SKILL.md"
+monitor="$repo_root/skills/pr-monitor/SKILL.md"
+plans="$repo_root/skills/writing-plans/SKILL.md"
 
 assert_contains() {
   local file=$1 text=$2 description=$3
@@ -54,32 +56,32 @@ assert_no_model_names() {
 
 assert_contains "$skill" "name: delivery" "frontmatter name"
 assert_contains "$skill" "Use when an approved implementation plan is ready to be implemented and shipped" "approved-plan trigger"
-assert_contains "$skill" "one coherent delivery slice" "single-slice scope"
+assert_contains "$skill" "one branch, one PR" "one PR per boundary"
 assert_contains "$skill" '## Agent Routing' "optional plan routing section"
 assert_contains "$skill" "plan route, then project route, then bundled default" "route precedence"
 assert_contains "$skill" "session agent remains the orchestrator" "plan cannot route orchestrator"
 assert_contains "$skill" "toolbelt:using-git-worktrees" "isolated worktree handoff"
-assert_before "$skill" "Fetch the predecessor's remote head" "toolbelt:using-git-worktrees" \
+assert_before "$skill" "fetch its remote head" "toolbelt:using-git-worktrees" \
   "the source ref is chosen before the worktree is created"
 assert_contains "$skill" "toolbelt:subagent-driven-development" "SDD handoff"
 assert_contains "$skill" "ux-gate" "conditional UX gate"
-assert_contains "$skill" "UI smoke per task" "implementer owns its task's smoke pass"
-assert_contains "$skill" "UX capture at the boundary" "gate operator owns boundary capture"
-assert_contains "$skill" "broad final review is the slice gate" "SDD final review is the slice gate"
-assert_contains "$skill" "toolbelt:finishing-a-development-branch" "branch completion handoff"
+assert_contains "$skill" "UI smoke of the touched pathway" "implementer owns its task's smoke pass"
+assert_contains "$skill" "Boundary UX capture" "gate operator owns boundary capture"
+assert_contains "$skill" "SDD's final review is the boundary's gate" "SDD final review is the slice gate"
+assert_contains "$monitor" "toolbelt:finishing-a-development-branch" "monitor runs branch completion"
 assert_contains "$skill" "pr-monitor" "PR monitor handoff"
-assert_contains "$skill" "run it in the background" "background monitoring is allowed"
+assert_contains "$skill" "starts its monitor in the background" "background monitoring is allowed"
 assert_contains "$skill" "<plan-slug>/pr-<N>" "boundary branch naming"
-assert_contains "$skill" "Boundary <N>: branch" "ledger line per boundary"
+assert_contains "$lifecycle" "Boundary <N>: branch" "ledger line per boundary"
 assert_contains "$skill" "exactly one pr-monitor" "one monitor per chain"
 assert_contains "$lifecycle" "Ownership follows publication" "rebase ownership rule"
 assert_contains "$lifecycle" "Boundary <N>: rebased" "ledger line per rebase"
-assert_contains "$skill" "Never report the slice complete or end the session while the monitor runs" "monitor is never orphaned"
-assert_contains "$lifecycle" "always before that lane's broad final review" "rebase precedes the lane's final review"
-assert_contains "$skill" "Reconcile the issue tracker only when the plan is linked to one" "optional issue-tracker reconciliation"
-assert_contains "$lifecycle" "remove the worktree, branch, and ignored scratch" "post-merge cleanup"
-assert_before "$skill" "ux-gate" "broad final review is the slice gate" "UX runs before broad final review"
-assert_before "$skill" "broad final review is the slice gate" "toolbelt:finishing-a-development-branch" "review precedes PR completion"
+assert_contains "$skill" "Never report the work complete or end the session while a monitor runs" "monitor is never orphaned"
+assert_contains "$lifecycle" "rebase before the boundary's final review" "rebase precedes the final review"
+assert_contains "$skill" "reconcile the issue tracker only when the plan is linked to one" "optional issue-tracker reconciliation"
+assert_contains "$lifecycle" "Tear down the worktree" "post-merge cleanup"
+assert_before "$skill" "ux-gate" "SDD's final review is the boundary's gate" "UX runs before broad final review"
+assert_before "$skill" "SDD's final review is the boundary's gate" "toolbelt:pr-monitor" "review precedes PR completion"
 assert_not_contains "$skill" "workstack-slice-gate" "no replacement slice-gate skill"
 assert_not_contains "$skill" "no stacked branches" "stacked branches are no longer forbidden"
 assert_not_contains "$skill" "At most one PR" "no single-monitor cap"
@@ -101,10 +103,8 @@ assert_contains "$workflow" "No separate resume state machine" "recovery avoids 
 assert_contains "$workflow" "one pr-monitor per chain" "workflow documents one monitor per chain"
 assert_not_contains "$workflow" "workstack-resume" "workflow does not revive resume skill"
 
-assert_contains "$skill" "run concurrently and that edit the same files are one PR" \
-  "concurrent file overlap beats clean outcome division"
-assert_contains "$skill" "Sequential slices may revisit the same file once the first has merged" \
-  "the overlap rule does not collapse sequential slices"
+assert_contains "$plans" "must not edit the same files: make them one PR or chain them" \
+  "independent boundaries never share files"
 assert_contains "$skill" "is not grounds to start a second one" \
   "a dead-looking monitor does not justify a second owner"
 assert_contains "$skill" "check that state directly" \

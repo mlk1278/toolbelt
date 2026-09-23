@@ -5,52 +5,39 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 # Finishing a Development Branch
 
-**Completion contract:** If the invoking prompt declared exactly one completion route (optionally naming the target base branch) before this skill was invoked, run the Step 1 test verification, then execute that route and its cleanup directly instead of presenting the options below. An undeclared or ambiguous route falls through to the normal options. This changes only who chooses the option; every verification and cleanup rule still applies.
+**Declared route:** if the prompt that invoked this skill already named one route, optionally with a target base branch, run Step 1, then that route and its cleanup without showing the menu. With no route, or an ambiguous one, show the menu. Either way, every check and cleanup rule applies.
 
-## Step 1: Verify Tests
+## Step 1: Verify tests
 
-**Exact-head evidence reuse:** If the caller supplies evidence of a full-suite run at the exact current head SHA — the command, its passing output (with the final pass/exit state visible), and the head SHA it ran against — read that output yourself and treat this step as satisfied, an exception to toolbelt:verification-before-completion's run-it-yourself rule. A report missing the command, the output, or the SHA is a claim, not evidence. Without qualifying evidence, run the suite.
+Run the project's full test suite, unless one of these applies:
 
-**Docs-only case:** if every file the branch changes is Markdown under `docs/**` or at the repository root, or `.toolbelt/**` scratch, no suite is required — never a file the application builds, renders, or serves, or that CI executes, regardless of path.
+- **Exact-head evidence:** the caller supplies a full-suite run at the current head SHA: the command, its passing output with the final pass or exit state visible, and the SHA it ran against. Read that output yourself; it stands in for running the suite. A report missing the command, the output, or the SHA is a claim, not evidence.
+- **Docs-only:** every changed file is Markdown under `docs/**` or at the repository root, or `.toolbelt/**` scratch, and none is a file the application builds, renders, or serves, or that CI executes.
 
-Both shortcuts require a clean worktree.
+Both exceptions require a clean worktree.
 
-**If tests fail:** stop here.
+If tests fail, stop and report the failures. Nothing below runs until they pass.
 
-```
-Tests failing (<N> failures). Must fix before completing:
-
-[Show failures]
-
-Cannot proceed with merge/PR until tests pass.
-```
-
-## Step 2: Detect Environment
+## Step 2: Detect the environment
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
 GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 ```
 
-| State | Menu | Cleanup |
-|-------|------|---------|
-| `GIT_DIR == GIT_COMMON` (normal repo) | Standard 4 options | No worktree to clean up |
-| `GIT_DIR != GIT_COMMON`, named branch | Standard 4 options | Provenance-based (see Step 6) |
-| `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 3 options (no merge) | No cleanup (externally managed) |
+| State | Menu |
+|-------|------|
+| `GIT_DIR == GIT_COMMON` (normal repo) | 4 options |
+| `GIT_DIR != GIT_COMMON`, named branch (linked worktree) | 4 options |
+| `GIT_DIR != GIT_COMMON`, detached HEAD (externally managed) | 3 options, no merge, no cleanup |
 
-## Step 3: Determine Base Branch
+## Step 3: Determine the base branch
 
-```bash
-git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
-```
+Use the base the caller named. Otherwise find the branch this one split from (usually `main` or `master`) and confirm it: "This branch split from main — is that correct?"
 
-Or ask: "This branch split from main - is that correct?"
+## Step 4: Present options
 
-## Step 4: Present Options
-
-Satisfy Step 1's verification requirement before offering options.
-
-**Normal repo and named-branch worktree — present exactly these 4 options:**
+**Normal repo or named-branch worktree — exactly these 4:**
 
 ```
 Implementation complete. What would you like to do?
@@ -63,7 +50,7 @@ Implementation complete. What would you like to do?
 Which option?
 ```
 
-**Detached HEAD — present exactly these 3 options:**
+**Detached HEAD — exactly these 3:**
 
 ```
 Implementation complete. You're on a detached HEAD (externally managed workspace).
@@ -77,9 +64,9 @@ Which option?
 
 No added explanation.
 
-## Step 5: Execute Choice
+## Step 5: Execute the choice
 
-### Option 1: Merge Locally
+### Merge locally
 
 From the main repo root (Step 6):
 
@@ -90,24 +77,22 @@ git merge <feature-branch>
 <test command>
 ```
 
-Then clean up the worktree (Step 6) — a checked-out branch cannot be deleted — then `git branch -d <feature-branch>`.
+If the merged result fails its tests, stop and report. Otherwise clean up the worktree (Step 6), since a checked-out branch cannot be deleted, then `git branch -d <feature-branch>`.
 
-### Option 2: Push and Create PR
+### Push and create a PR
 
 ```bash
 git push -u origin <feature-branch>
 gh pr create --base <base-branch> --title <title> --body <body>
 ```
 
-End in a named owner: hand the PR to toolbelt:pr-monitor, or return it to a caller that already declared it owns the monitoring (delivery does — don't start a second monitor on top of it). "PR is open" is not a terminal state. Reviews are the owner's to request; requesting here asks providers twice for the same head.
+"PR is open" is not a terminal state. Hand the PR to toolbelt:pr-monitor, unless pr-monitor is the one running this skill, in which case return the PR to it. The monitor requests reviews; requesting them here asks providers twice for the same head. Publishing never force-pushes. The worktree stays for PR feedback.
 
-Never force-push without your human partner's explicit request. The worktree stays for PR feedback.
-
-### Option 3: Keep As-Is
+### Keep as-is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
 
-### Option 4: Discard
+### Discard
 
 Confirm first and wait for the exact word:
 
@@ -120,25 +105,21 @@ This will permanently delete:
 Type 'discard' to confirm.
 ```
 
-If confirmed, clean up the worktree (Step 6) from the main repo root, then `git branch -D <feature-branch>`.
+If confirmed, clean up the worktree (Step 6), then `git branch -D <feature-branch>`.
 
-## Step 6: Cleanup Workspace
+## Step 6: Clean up the worktree
 
-Options 1 and 4 only.
+For a local merge or a discard, and for delivery's post-merge cleanup. In a normal repo (`GIT_DIR == GIT_COMMON`) there is nothing to clean up.
 
-Reuse Step 2's `GIT_DIR` and `GIT_COMMON`; equal means a normal repo, nothing to clean up. Otherwise `WORKTREE_PATH=$(git rev-parse --show-toplevel)`.
+1. If `.toolbelt/worktree-policy.md` defines teardown (sidecar containers, allocated ports, running processes, per-worktree data), release those first.
+2. Remove the worktree only when its path is under `.worktrees/` or `worktrees/`, because toolbelt created those. Run the removal from the main repo root; it fails from inside the worktree:
 
-If `.toolbelt/worktree-policy.md` defines teardown — sidecar containers, allocated ports, running processes, per-worktree data — release those first.
+   ```bash
+   WORKTREE_PATH=$(git rev-parse --show-toplevel)
+   MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
+   cd "$MAIN_ROOT"
+   git worktree remove "$WORKTREE_PATH"
+   git worktree prune
+   ```
 
-**Squash-merge guard:** after a squash merge, `git log <base>..HEAD` lists every branch commit as unmerged — none is an ancestor of the squash commit. Never conclude from ancestry alone that work did or didn't land. Before removing anything, compare the branch's files against the base for content equality and check `git rev-list --left-right --count <base>...HEAD`.
-
-Remove the worktree only when its path is under `.worktrees/` or `worktrees/` — toolbelt created those. Run removal from the main repo root; it fails from inside.
-
-```bash
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
-cd "$MAIN_ROOT"
-git worktree remove "$WORKTREE_PATH"
-git worktree prune
-```
-
-Any other path belongs to the host harness: leave it in place, or use your platform's workspace-exit tool.
+3. Any other path belongs to the host harness: leave it in place, or use your platform's workspace-exit tool.
