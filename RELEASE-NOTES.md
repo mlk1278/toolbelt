@@ -2,6 +2,17 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v7.13.0 (2026-09-23)
+
+Rewrites the workflow prompts for Opus 5.5: less restatement, and decisions move into the plan so implementers only write code.
+
+- **Plans own the decisions.** Each task carries a Contract, Decisions, a Proves list (behaviors the plan decided, plus `(guard)` items that must be seen failing), and a Verify mode: `test-first`, `test-with`, or `checks-only`. Tasks can be larger (up to about 15 files); split them when parts can run in parallel. Plans wait for approval unless the session says otherwise.
+- **Implementers decide only code.** Names, signatures, error codes, data shapes, and file lists come from the plan; anything else is NEEDS_CONTEXT, and your human partner's answer becomes a ruling appended to the task brief. Implementers test the happy path and every behavior the contract implies, not only the Proves list, and run a mutation check.
+- **Reviewers look past the plan.** Task and final reviewers check unhandled inputs and states, data mishandling, lifecycle gaps, and broken callers, tracing one hop out. Every finding needs a reachable scenario. `plan-mandated` and `plan-gap` findings go to your human partner, not the fix loop. The fix loop always re-reviews, for up to two rounds.
+- **Shorter supporting skills.** TDD, writing-good-tests, requesting and receiving code review, and systematic-debugging are rewritten short; debugging's pressure tests, creation log, and defense-in-depth doc are removed.
+- **Delivery, pr-monitor, finishing, and worktrees are restructured.** One ledger line per boundary, rebase records, and cleanup steps delivery can run itself. SDD refuses to implement on main or master, and a sandboxed worktree fallback branches in place.
+- Bundled Codex agents route to GPT-6 models.
+
 ## v7.12.2 (2026-09-22)
 
 - Claude routes and bundled agents move from Opus 5 to Opus 5.5 (`opus-5-5`, `claude-opus-5-5`).
