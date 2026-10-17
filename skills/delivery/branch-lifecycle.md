@@ -2,7 +2,7 @@
 
 ## Ledger
 
-Resolve the installed SDD skill's `scripts/sdd-workspace` and run it with the plan path from the starting worktree. Keep `delivery.md` in the workspace it prints, and keep the starting worktree until every boundary closes. Each boundary's SDD ledger opens with the absolute path of `delivery.md`.
+Resolve the installed SDD skill's `../subagent-driven-development/scripts/sdd-workspace` and run it with the plan path from the starting worktree. Keep `delivery.md` in the workspace it prints, and keep the starting worktree until every boundary closes. Each boundary's SDD ledger opens with the absolute path of `delivery.md`.
 
 Lines are appended per orchestrating's What you write. Append this record when the boundary is prepared and each time its state changes; the latest one for a boundary is its state:
 
