@@ -31,7 +31,8 @@ for case in \
   fi
 done
 
-for plan in "$fixtures/valid.md" "$repo_root/docs/toolbelt/plans/2026-10-15-lean-delivery.md"; do
+for plan in "$fixtures/valid.md" "$repo_root/docs/toolbelt/plans/2026-10-15-lean-delivery.md" \
+  "$repo_root/skills/quick-task/mini-plan-example.md"; do
   if out=$(bash "$check" "$plan") && [ -z "$out" ]; then
     ok "passes: ${plan#"$repo_root"/}"
   else

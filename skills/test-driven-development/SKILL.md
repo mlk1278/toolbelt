@@ -7,7 +7,7 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 **Iron Law: no production code without a failing test first.**
 
-This covers new features, bug fixes, refactoring, and behavior changes. The exceptions are throwaway prototypes, generated code, configuration files, and plan tasks whose `Verify:` mode is `test-with` or `checks-only`, where the approved plan already made the call. Any other exception is your human partner's to grant.
+The Iron Law covers guards (permission checks, tenant filters, money math, rejection paths) and bug fixes, each with the mutation check. Everything else writes its tests alongside the code. A plan's `Contract` may require test-first elsewhere; any other exception belongs to your human partner. Each `Proves` line gets one focused test.
 
 If you wrote the code first, delete it and start from the test. Don't keep it open as a reference or adapt it while writing the test: either way the test ends up describing what you built instead of what was required.
 
@@ -21,7 +21,7 @@ If you wrote the code first, delete it and start from the test. Don't keep it op
 
 A bug fix is the same cycle: the failing test reproduces the bug, proving the fix and keeping it from coming back.
 
-A guard — a permission check, a tenant filter, a rejection path — must fail first against code that lacks the guard, not against a missing module: build the happy path first, then write the guard's test, watch it fail, and add the guard.
+A guard's test fails first against code that lacks the guard, not against a missing module: build the happy path, write the guard's test, watch it fail, then add the guard.
 
 ## Common rationalizations
 
@@ -40,10 +40,4 @@ A guard — a permission check, a tenant filter, a rejection path — must fail 
 
 ## Writing the tests themselves
 
-When writing or changing any test, adding mocks, or adding test-only helpers, read [writing-good-tests.md](writing-good-tests.md). Its rules in brief:
-
-- Name the production change that would make the test fail, before writing it
-- Derive expected values by hand, never with the code under test
-- Assert on real behavior, never on mock behavior or source text
-- Keep test-only code in test utilities, out of production classes
-- Run the mutation check before you call a test file done
+When writing or changing any test, adding mocks, or adding test-only helpers, read [writing-good-tests.md](writing-good-tests.md).
