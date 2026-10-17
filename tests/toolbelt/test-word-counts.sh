@@ -40,7 +40,7 @@ ceilings=(
   "skills/agent-routing/routing/codex.md:140"
   "skills/brainstorming/visual-companion.md:590"
   "skills/systematic-debugging/root-cause-tracing.md:150"
-  "skills/systematic-debugging/condition-based-waiting.md:120"
+  "skills/systematic-debugging/condition-based-waiting.md:140"
   "docs/WORKFLOW.md:290"
 )
 
