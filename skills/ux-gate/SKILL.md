@@ -5,18 +5,18 @@ description: "Use before final review of new user flows or material changes to i
 
 # UX Gate
 
-**Entry:** changed routes, the base..head range, approved acceptance criteria, and a running isolated environment. Judge the rendered effect, not line count: a one-line shared-layout change can need review, and a button-color change usually does not.
+**Entry:** changed routes, the base..head range, approved acceptance criteria, and a running isolated environment. Judge the rendered effect, not line count.
 **Exit:** `Pass` bound to the reviewed head SHA, or `Changes Required` with component-level findings. The gate fixes nothing.
 
-A dispatched gate runner (role `errand`) runs this skill. It captures, dispatches the `ux` reviewer, and returns the verdict to its caller, which sends the review file to the owning implementer.
+A gate runner (role `errand`) runs this skill and returns the verdict to its caller, which sends the review file to the owning implementer.
 
 ## 0. Preflight
 
-The environment must serve the changed routes with queryable data before capture. Without that evidence the gate cannot run, and nothing may claim UX was verified.
+The environment must serve the changed routes with queryable data. Without that, the gate cannot run and nothing may claim UX was verified.
 
 ## 1. Coverage
 
-Pick the smallest set of pathways covering what the diff changed, including the acceptance criteria's entry points and states. Read `.toolbelt/ux-policy.md` when present for launch, auth, theme, data, viewports, exceptions, the design reference, and reference screens. Infer and record what it lacks.
+Pick the smallest set of pathways covering the diff and the acceptance criteria's entry points and states. Read `.toolbelt/ux-policy.md` when present for launch, auth, theme, data, viewports, exceptions, and design references; infer and record what it lacks.
 
 - Use the relevant breakpoints for changed markup, copy, or layout, or one width when presentation cannot vary.
 - Capture every supported theme for every changed surface.
@@ -35,13 +35,13 @@ Read [matrix.md](matrix.md) and write `.toolbelt/ux/matrix.json`. Set `UX_SKILL_
   --baseline .toolbelt/ux/baseline/
 ```
 
-Use the prototype ledger's absolute baseline path when present. Otherwise capture the same matrix on the base branch, served in isolation, first. With no baseline, omit `--baseline`, review every still as `new`, and record the limitation. An incomplete step is a finding. Exit 2 means capture did not run; resolve it before review.
+Use the prototype ledger's absolute baseline path when present; otherwise capture the same matrix first on the base branch, served in isolation. With no baseline, omit `--baseline`, review every still as `new`, and record why. An incomplete step is a finding. Exit 2 means capture did not run.
 
 Run any token or palette check the policy names. A mechanical finding at `should` or above joins the review's findings.
 
 ## 3. Review
 
-Route one `reviewer` with specialty `ux` through agent-routing, on a vision-capable model. Send changed and new captures, useful crops, reference screens, and any unchanged capture a criterion needs. Images go first, labelled `Image N: <tag>`, then criteria, mechanical results, the design-reference path, and the review file path (`.toolbelt/ux/<capture-dir>/review.md`). The reviewer reads `docs/REVIEW-GUIDANCE.md` when present and judges without driving the browser:
+Route one `reviewer` with specialty `ux` through agent-routing, on a vision-capable model. Send changed and new captures, useful crops, reference screens, and any unchanged capture a criterion needs, images first, labelled `Image N: <tag>`, then criteria, mechanical results, the design-reference path, and the review file path (`.toolbelt/ux/<capture-dir>/review.md`). The reviewer reads `docs/REVIEW-GUIDANCE.md` when present and judges without driving the browser:
 
 > Pass 1: mark each criterion met, not met, or not evidenced, citing the evidence.
 >
@@ -55,6 +55,6 @@ Return that reply, with the head, to your caller.
 
 ## 4. One fix round
 
-The owning implementer fixes every finding, nits included. Recapture only the pathways the fix touched, using `--pathway` and `--out .toolbelt/ux/head-2/`; a shared style or token change touches every pathway that consumes it. Send the new captures to the same reviewer thread. There is no second round: return remaining blockers with their evidence for your human partner, and the rest as Minor findings.
+The owning implementer fixes every finding, nits included. Recapture the pathways the fix touched with `--pathway` and `--out .toolbelt/ux/head-2/`, and send them to the same reviewer thread. There is no second round: return remaining blockers with their evidence for your human partner, and the rest as Minor findings.
 
-Every capture binds to the reviewed head. A new push invalidates earlier evidence, except a docs-only push. Report pathways covered separately from the screenshot count.
+Every capture binds to the head it was taken at. Carry a pathway's evidence to a new head only while its rendered dependencies and fixtures are unchanged, and record the source head; a shared style or token change touches every consuming pathway. A docs-only push carries everything forward. Report pathways covered separately from the screenshot count.

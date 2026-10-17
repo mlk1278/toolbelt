@@ -7,7 +7,7 @@ description: Use before any dispatch that needs a role resolved. Callers request
 
 ## The routing text
 
-A session-start hook injects the project's routing text for your harness in an `<AGENT-ROUTING source="...">` block, read from `.toolbelt/routing/<harness>.md` in the project's main checkout. Without the block, read the bundled `routing/claude.md` or `routing/codex.md` next to this file. Route every dispatch from it.
+A session-start hook injects `.toolbelt/routing/<harness>.md` from the project's main checkout in an `<AGENT-ROUTING source="...">` block. Without the block, read the bundled `routing/claude.md` or `routing/codex.md` next to this file. Route every dispatch from it.
 
 Map each model and effort to an agent you can launch: a native subagent on your own harness, AGX for the other. Run `codex exec` or `claude -p` directly only when AGX is not installed. If you cannot launch what the text names, stop and tell your human partner rather than substituting a model.
 
@@ -22,7 +22,7 @@ Map each model and effort to an agent you can launch: a native subagent on your 
 | `monitor` | PRs through CI, review providers, review fixes, and merge. |
 | `reviewer` | Review, with specialty `code`, `spec`, `plan`, `ux`, or `gate`. |
 
-The monitor fixes review findings on its own PR inline. All other code goes to the implementer. When the text names no route for a role you need, stop and tell your human partner.
+The monitor fixes review findings on its own PR inline; all other code goes to the implementer. When the text names no route for a role you need, stop and tell your human partner.
 
 The plan's `Risk` column raises effort and never changes the model. A `high` row raises the reviewer one effort level above its route.
 

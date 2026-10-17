@@ -38,13 +38,13 @@ Step fields:
 | Field | Meaning |
 |---|---|
 | `name` | Unique step label within its pathway. |
-| `state` | Output label, default `default`; does not create a UI state. Seed or select the state separately. |
+| `state` | Output label, default `default`. It creates no UI state; seed or select that separately. |
 | `action` | `click`, `hover`, `focus`, `scroll`, `fill`, or `press`; omit for capture/assertions only. |
 | `selector` | Playwright selector for the action. Required except for page-level `press`. |
 | `value` / `key` | String for `fill` / key combination for `press`, such as `Tab`, `Shift+Tab`, `Enter`, or `Escape`. |
 | `expectFocus` | CSS selector that must match the active element after the action. |
 | `waitFor` | Playwright selector that must become visible before capture. |
-| `capture` | Default true. False retains actions and checks but skips all step images. |
+| `capture` | Default true. False keeps actions and checks but skips the step's images. |
 | `fullPage` | Default false; true captures the full page. |
 | `crops` | Component selectors to capture at DPR 2. |
 | `motion` | True adds normal/reduced-motion frames to a filmstrip on full runs. |

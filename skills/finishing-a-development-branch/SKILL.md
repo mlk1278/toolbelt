@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 ## Step 1: Verify tests
 
-Skip this step when the caller is delivery or pr-monitor; the recorded review and CI cover it. Otherwise run the tests related to the changed files, plus an incremental typecheck and lint of the touched packages. Two exceptions skip the run, both only with a clean worktree:
+Skip this step when the caller is delivery or pr-monitor. Otherwise run the tests related to the changed files, plus an incremental typecheck and lint of the touched packages, unless one of these holds with a clean worktree:
 
 - **Exact-head evidence:** the caller supplies the command, its passing output, and the head SHA it ran against. Read the output yourself. Without all three it is a claim, not evidence.
 - **Docs-only:** every changed file is Markdown under `docs/**` or at the repository root, or `.toolbelt/**` scratch, and none is built, rendered, or served by the application, or executed by CI.
@@ -67,7 +67,7 @@ Then clean up (Step 5) and run `git branch -D <feature-branch>`.
 
 ## Step 5: Clean up the worktree
 
-This applies only to a linked worktree. Release any teardown `.toolbelt/worktree-policy.md` defines. Remove the worktree only when it sits under `.worktrees/` or `worktrees/`; any other path belongs to the host harness. Run the removal from the main repo root:
+Only for a linked worktree. Release any teardown `.toolbelt/worktree-policy.md` defines. Remove the worktree only when it sits under `.worktrees/` or `worktrees/`; any other path belongs to the host harness. Run the removal from the main repo root:
 
 ```bash
 WORKTREE_PATH=$(git rev-parse --show-toplevel)

@@ -20,7 +20,7 @@ With the predecessor's branch as the parent:
 - **Parent moved:** `git rebase --onto <parent-new> <parent-old> <branch>`.
 - **Parent merged:** `git rebase --onto <base-branch> <parent-old> <branch>`, with `<parent-old>` from the ledger, then retarget the boundary's base to the base branch.
 
-On conflict, run `git rebase --abort` and report the paths to your human partner.
+On conflict, run `git rebase --abort` and report the paths to your human partner. After a clean rebase, reuse UX evidence only under ux-gate's carry-forward rule.
 
 ## Cleanup
 

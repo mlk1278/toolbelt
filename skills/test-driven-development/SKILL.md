@@ -13,9 +13,9 @@ If you wrote the code first, delete it and start from the test. Don't keep it op
 
 ## Red, green, refactor
 
-**Red.** Write one minimal test for one behavior, named for that behavior, exercising real code; mock only what you cannot otherwise run. Run it and confirm it fails rather than errors, with the message you expected, because the behavior is missing and not because of a typo or a bad import. A test that passes on the first run is testing something that already exists; fix the test.
+**Red.** Write one minimal test for one behavior, named for it, exercising real code; mock only what you cannot otherwise run. Confirm it fails, not errors, with the message you expected because the behavior is missing. A test that passes on the first run tests something that already exists; fix the test.
 
-**Green.** Write the simplest code that passes: no extra options, no unrelated refactoring. Confirm this test and the others pass, and the output shows no new errors or warnings. If the test still fails, fix the code, not the test.
+**Green.** Write the simplest code that passes, with no extra options or unrelated refactoring. Confirm every test passes with no new errors or warnings. If the test still fails, fix the code, not the test.
 
 **Refactor.** With tests green, remove duplication and improve names without changing behavior. Then write the next failing test.
 

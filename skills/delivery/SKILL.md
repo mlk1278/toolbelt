@@ -9,13 +9,13 @@ Take an approved plan from its first PR boundary to every PR merged and cleaned 
 
 ## What you read
 
-Read the plan, this skill, [branch-lifecycle.md](branch-lifecycle.md), agent-routing with the routing text, using-git-worktrees with the worktree policy, the ledger, and each implementer's reply. `dispatch-prompt` fills the implementer and reviewer templates, so do not read them. Diffs, reviews, and logs move by path. Check an implementer's claim against the diff before you raise it to your human partner.
+Read the plan, this skill, [branch-lifecycle.md](branch-lifecycle.md), agent-routing with the routing text, using-git-worktrees with the worktree policy, the ledger, and each implementer's reply. `dispatch-prompt` fills the prompt templates, so do not read them. Diffs, reviews, and logs move by path. Check an implementer's claim against the diff before you raise it to your human partner.
 
 ## Start
 
 1. Run `bash ../writing-plans/scripts/plan-check PLAN`. A failure goes back to planning.
 2. Run `bash scripts/workspace PLAN` from the starting checkout, and keep that checkout until every boundary closes. The ledger is `<workspace>/delivery.md`.
-3. Resolve the implementer, reviewer, and monitor routes with agent-routing, plus an `errand` gate runner when a boundary runs ux-gate. Stop if no reviewer route sits on a harness other than the implementer's, unless agent-routing's outage override applies.
+3. Resolve the implementer, reviewer, and monitor routes with agent-routing, plus an `errand` gate runner when a boundary runs ux-gate.
 4. If the ledger already has lines, recover first.
 
 ## Per boundary
@@ -45,7 +45,7 @@ Hand the boundary to toolbelt:pr-monitor with the worktree, the target base (the
 ## On return
 
 - **Merged:** confirm the PR is `MERGED` on the remote, reconcile the issue tracker when the plan links one, and clean up per branch-lifecycle.md.
-- **Blocked:** take it to your human partner and continue whatever it does not block. A bottom PR closed without merging blocks its chain.
+- **Blocked:** take it to your human partner and continue whatever it does not block.
 
 You are done when every boundary is merged and cleaned up, or blocked with your human partner told. Waiting on a monitor is not done.
 
