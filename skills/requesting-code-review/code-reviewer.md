@@ -123,7 +123,7 @@ Subagent (role: reviewer):
 - `[HEAD_SHA]` — ending commit
 - `[SMELLS_FILE]` — resolved path to [smell-baseline.md](smell-baseline.md)
 - `[DIFF_FILE]` — the review package path from
-  `../subagent-driven-development/scripts/review-package BASE HEAD`, or
+  `bash ../delivery/scripts/review-package BASE HEAD`, or
   `None` when the script isn't reachable; the reviewer then uses git.
 - `[REVIEW_FILE]` — path the review is written to, beside the review package
   (`review-<base7>..<head7>.md`)

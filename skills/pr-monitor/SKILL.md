@@ -13,7 +13,7 @@ Read `.toolbelt/pr-policy.md` at the repository root if present. It names the re
 
 ## Publish
 
-For an unpublished branch, run toolbelt:finishing-a-development-branch on the pull-request route with the caller's target base. When the caller gave you a delivery ledger, append the boundary's record in [branch-lifecycle.md](../delivery/branch-lifecycle.md)'s format, with the PR number and `state open`, using `../subagent-driven-development/scripts/ledger-append`.
+For an unpublished branch, run toolbelt:finishing-a-development-branch on the pull-request route with the caller's target base. When the caller gave you a delivery ledger, append the boundary's record in [branch-lifecycle.md](../delivery/branch-lifecycle.md)'s format, with the PR number and `state open`, using `bash ../delivery/scripts/ledger-append`.
 
 For each PR, record its number, branch, base, head SHA, and local-gate SHA. The local final gate must have approved this exact head before monitoring begins.
 

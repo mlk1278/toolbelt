@@ -74,7 +74,7 @@ A placeholder is an undecided decision, not unwritten code. These fail review:
 
 ## Plan document
 
-`../subagent-driven-development/scripts/task-brief` copies `## Global Constraints`, `## Known Gotchas`, and `## Data Model` into every task's brief, so keep those headings exactly as written.
+`../delivery/scripts/task-brief` copies `## Global Constraints`, `## Known Gotchas`, and `## Data Model` into every task's brief, so keep those headings exactly as written.
 
 ````markdown
 # [Feature Name] Implementation Plan

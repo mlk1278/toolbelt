@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Tests for the SDD workspace: scripts/sdd-workspace resolves a self-ignoring
-# working-tree directory for SDD artifacts, and the SDD scripts write into it.
+# Tests for delivery's scripts: workspace resolves a self-ignoring
+# working-tree directory, and task-brief, review-package, and dispatch-prompt
+# write into it.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SDD_SCRIPTS="$REPO_ROOT/skills/subagent-driven-development/scripts"
+SCRIPTS="$REPO_ROOT/skills/delivery/scripts"
 
 FAILURES=0
 TEST_ROOT=""
@@ -23,7 +24,7 @@ cleanup() {
 }
 
 main() {
-    echo "=== Test: sdd-workspace ==="
+    echo "=== Test: delivery workspace scripts ==="
 
     TEST_ROOT="$(mktemp -d)"
     trap cleanup EXIT
@@ -36,7 +37,7 @@ main() {
     repo="$(cd "$TEST_ROOT/repo" && git rev-parse --show-toplevel)"
 
     local dir
-    dir="$(cd "$repo" && "$SDD_SCRIPTS/sdd-workspace")"
+    dir="$(cd "$repo" && "$SCRIPTS/workspace")"
 
     if [[ "$dir" == "$repo/.toolbelt/sdd" ]]; then
         pass "prints <repo-root>/.toolbelt/sdd"
@@ -98,7 +99,7 @@ Do the second thing.
 PLAN
 
     local brief_out brief_path
-    brief_out="$(cd "$repo" && "$SDD_SCRIPTS/task-brief" plan.md 1)"
+    brief_out="$(cd "$repo" && "$SCRIPTS/task-brief" plan.md 1)"
     brief_path="$(printf '%s\n' "$brief_out" | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')"
     case "$brief_path" in
         "$repo/.toolbelt/sdd/"*) pass "task-brief writes its brief under the workspace" ;;
@@ -143,7 +144,7 @@ BRIEF
         && printf 'y\n' > f && git add f \
         && git "${git_id[@]}" commit -qm c2 )
     local rp_out rp_path
-    rp_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" HEAD~1 HEAD)"
+    rp_out="$(cd "$repo" && "$SCRIPTS/review-package" HEAD~1 HEAD)"
     rp_path="$(printf '%s\n' "$rp_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
     case "$rp_path" in
         "$repo/.toolbelt/sdd/"*) pass "review-package writes its diff under the workspace" ;;
@@ -158,7 +159,7 @@ BRIEF
     ( cd "$repo" && git worktree add -q "$wt" -b wt-feature )
     local wt_root wt_dir
     wt_root="$(cd "$wt" && git rev-parse --show-toplevel)"
-    wt_dir="$(cd "$wt" && "$SDD_SCRIPTS/sdd-workspace")"
+    wt_dir="$(cd "$wt" && "$SCRIPTS/workspace")"
     if [[ "$wt_dir" == "$wt_root/.toolbelt/sdd" && "$wt_dir" != "$dir" ]]; then
         pass "linked worktree resolves its own distinct workspace"
     else
@@ -175,6 +176,117 @@ BRIEF
     else
         fail "worktree workspace invisible to git status"
         echo "    status: $wt_status"
+    fi
+
+
+    # --- review-package slices ---
+    ( cd "$repo" \
+        && mkdir -p app lib \
+        && printf 'a\n' > app/a.txt && printf 'b\n' > lib/b.txt \
+        && git add app lib && git "${git_id[@]}" commit -qm c3 )
+    local slice_out slice_path
+    slice_out="$(cd "$repo" && "$SCRIPTS/review-package" HEAD~1 HEAD -- app)"
+    slice_path="$(printf '%s\n' "$slice_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    if grep -q '^diff --git a/app/a.txt' "$slice_path" && ! grep -q '^diff --git a/lib/' "$slice_path" \
+        && sed -n '/^## Files changed/,/^## Diff/p' "$slice_path" | grep -q 'lib/b.txt'; then
+        pass "a sliced package diffs only its paths and lists every changed file"
+    else
+        fail "a sliced package diffs only its paths and lists every changed file"
+        cat "$slice_path"
+    fi
+
+    local out_a out_b path_a path_b
+    out_a="$TEST_ROOT/slice-a.out"
+    out_b="$TEST_ROOT/slice-b.out"
+    ( cd "$repo" && "$SCRIPTS/review-package" HEAD~1 HEAD -- app > "$out_a" ) &
+    ( cd "$repo" && "$SCRIPTS/review-package" HEAD~1 HEAD -- lib > "$out_b" ) &
+    wait
+    path_a="$(sed -n 's/^wrote \(.*\): [0-9].*$/\1/p' "$out_a")"
+    path_b="$(sed -n 's/^wrote \(.*\): [0-9].*$/\1/p' "$out_b")"
+    if [[ -n "$path_a" && -n "$path_b" && "$path_a" != "$path_b" ]] \
+        && grep -q '^diff --git a/app/' "$path_a" && grep -q '^diff --git a/lib/' "$path_b"; then
+        pass "two slices of one range written at once land in two files"
+    else
+        fail "two slices of one range written at once land in two files"
+        echo "    a: $path_a"
+        echo "    b: $path_b"
+    fi
+
+    # --- task-brief section boundaries and dispatch-prompt ---
+    cat > "$repo/delivery-plan.md" <<'PLAN'
+# Delivery Plan
+
+## Global Constraints
+
+- Keep it small.
+
+## Risks
+
+- The importer also writes these rows.
+
+## PR Boundaries
+
+| PR | Outcome | Tasks | Depends on | Risk | Independent verification |
+|---|---|---|---|---|---|
+| 1 | First outcome | 1–2 | none | high | tests pass |
+| 2 | Second outcome | 3 | 1 | none | tests pass |
+
+### Task 1: First
+
+Do one.
+
+### Task 2: Second
+
+Do two.
+
+### Task 3: Third
+
+Do three.
+
+## After release
+
+Not part of any task.
+PLAN
+
+    local last_brief
+    last_brief="$(cd "$repo" && "$SCRIPTS/task-brief" delivery-plan.md 3 | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')"
+    if grep -q 'Do three.' "$last_brief" && ! grep -q 'After release' "$last_brief"; then
+        pass "task-brief stops the last task before the trailing section"
+    else
+        fail "task-brief stops the last task before the trailing section"
+        cat "$last_brief"
+    fi
+    if grep -q '^## Risks' "$last_brief" && grep -q 'The importer also writes these rows.' "$last_brief"; then
+        pass "task-brief copies the plan's Risks"
+    else
+        fail "task-brief copies the plan's Risks"
+    fi
+
+    local prompt_path
+    prompt_path="$(cd "$repo" && "$SCRIPTS/dispatch-prompt" implementer --plan delivery-plan.md --boundary 1 --worktree "$wt")"
+    local ws
+    ws="$(cd "$repo" && "$SCRIPTS/workspace" delivery-plan.md)"
+    if [[ "$prompt_path" == "$ws/boundary-1-implementer.md" && -f "$prompt_path" ]]; then
+        pass "dispatch-prompt implementer writes the boundary's prompt into the workspace"
+    else
+        fail "dispatch-prompt implementer writes the boundary's prompt into the workspace"
+        echo "    got: $prompt_path"
+    fi
+    local brief_lines
+    brief_lines="$(grep -o 'task-[0-9]*-brief.md' "$prompt_path" | tr '\n' ' ')"
+    if [[ "$brief_lines" == "task-1-brief.md task-2-brief.md " ]] \
+        && ! grep -Eq '\[[A-Z][A-Z_]*\]' "$prompt_path"; then
+        pass "the implementer prompt names every brief in order and no placeholder"
+    else
+        fail "the implementer prompt names every brief in order and no placeholder"
+        echo "    briefs: $brief_lines"
+        grep -En '\[[A-Z][A-Z_]*\]' "$prompt_path" || true
+    fi
+
+    if (cd "$repo" && "$SCRIPTS/dispatch-prompt" implementer --plan delivery-plan.md --boundary 7 --worktree "$wt") >/dev/null 2>&1; then
+        fail "dispatch-prompt rejects a boundary not in the table"
+    else
+        pass "dispatch-prompt rejects a boundary not in the table"
     fi
 
     echo ""
