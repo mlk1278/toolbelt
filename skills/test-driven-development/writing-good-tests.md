@@ -43,7 +43,7 @@ A test that can fail only by crashing or by a missing selector asserts nothing. 
 
 ## How many tests
 
-Write one focused test per `Proves` line, plus what the behavior needs. Match the project's existing test idioms.
+Ship the tests the behavior needs, in the project's existing test idioms.
 
 ## The mutation check
 
