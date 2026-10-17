@@ -289,6 +289,34 @@ PLAN
         pass "dispatch-prompt rejects a boundary not in the table"
     fi
 
+
+    # --- dispatch-prompt reviewer ---
+    printf '\n## Rulings\n\n- Keep the old name.\n' >> "$ws/task-2-brief.md"
+    local pkg review_prompt
+    pkg="$(cd "$repo" && "$SCRIPTS/review-package" --plan delivery-plan.md HEAD~1 HEAD | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
+    review_prompt="$(cd "$repo" && "$SCRIPTS/dispatch-prompt" reviewer --plan delivery-plan.md --boundary 1 --package "$pkg")"
+    if [[ "$review_prompt" == "$ws/boundary-1-review.md" ]] \
+        && grep -i 'rulings' "$review_prompt" | grep -q "$ws/task-2-brief.md" \
+        && ! grep -i 'rulings' "$review_prompt" | grep -q 'task-1-brief.md' \
+        && grep -i 'scope' "$review_prompt" | grep -q 'tasks 1, 2' \
+        && ! grep -Eq '\[[A-Z][A-Z_]*\]' "$review_prompt"; then
+        pass "the reviewer prompt lists the ruled brief, names the boundary's tasks, and fills every placeholder"
+    else
+        fail "the reviewer prompt lists the ruled brief, names the boundary's tasks, and fills every placeholder"
+        echo "    path: $review_prompt"
+        [[ -f "$review_prompt" ]] && cat "$review_prompt"
+    fi
+
+    local slice_prompt
+    slice_prompt="$(cd "$repo" && "$SCRIPTS/dispatch-prompt" reviewer --plan delivery-plan.md --boundary 1 --package "$pkg" --slice "app lib")"
+    if [[ "$slice_prompt" == "$ws/boundary-1-review-"*.md && "$slice_prompt" != "$review_prompt" ]] \
+        && grep -q 'app lib' "$slice_prompt"; then
+        pass "a sliced reviewer prompt gets its own file and names its slice"
+    else
+        fail "a sliced reviewer prompt gets its own file and names its slice"
+        echo "    path: $slice_prompt"
+    fi
+
     echo ""
     if [[ "$FAILURES" -ne 0 ]]; then
         echo "FAILED: $FAILURES assertion(s)."
