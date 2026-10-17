@@ -28,6 +28,10 @@ const PLAYWRIGHT_HELP =
   '(npm i -D playwright) or set PLAYWRIGHT_MODULE=/path/to/node_modules/playwright';
 
 const CONTROL_SELECTOR = 'button, a[href], [role=button], input, select, textarea';
+// Anything a person can click, type into, or focus: a stretched link must not cover it.
+const INTERACTIVE_SELECTOR = `${CONTROL_SELECTOR}, summary, label, [contenteditable]:not([contenteditable=false]), ` +
+  '[tabindex]:not([tabindex^="-"]), [role=link], [role=checkbox], [role=radio], [role=switch], [role=tab], ' +
+  '[role=menuitem], [role=option], [role=slider], [role=textbox], [role=combobox]';
 const DEFAULT_VIEWPORTS = [
   { name: 'sm', width: 375, height: 812, dpr: 2 },
   { name: 'md', width: 768, height: 1024, dpr: 1 },
@@ -419,7 +423,7 @@ const inPageChecks = (opts) => {
   // click target, not a collision.
   const stretchedOver = (cover, covered) => {
     const link = cover.el.closest('a[href], button');
-    if (!link || covered.el.closest(controlSelector)) return false;
+    if (!link || covered.el.closest(opts.interactiveSelector)) return false;
     const box = link.getBoundingClientRect();
     return box.left <= covered.rect.left && box.top <= covered.rect.top &&
       box.right >= covered.rect.right && box.bottom >= covered.rect.bottom;
@@ -913,6 +917,7 @@ async function main() {
       theme,
       viewportWidth: viewport.width,
       controlSelector: CONTROL_SELECTOR,
+      interactiveSelector: INTERACTIVE_SELECTOR,
       allowOverflow: matrix.allowOverflow,
       allowOverlap: matrix.allowOverlap,
       allowLight: matrix.allowLight,

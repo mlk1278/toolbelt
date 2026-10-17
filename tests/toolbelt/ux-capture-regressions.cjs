@@ -33,6 +33,12 @@ const pages = {
     '<a id="card-link" href="#" style="grid-area:1/1;display:block"></a></article>',
   '/stretched-control': '<article style="display:grid;width:300px;height:60px">' +
     '<input id="card-input" style="grid-area:1/1;width:100px;height:40px"><a id="card-link" href="#" style="grid-area:1/1;display:block"></a></article>',
+  ...Object.fromEntries([
+    ['editor', '<div id="covered" contenteditable="true" style="grid-area:1/1;width:100px;height:40px">Edit</div>'],
+    ['role-link', '<span id="covered" role="link" tabindex="0" style="grid-area:1/1;width:100px;height:40px">Go</span>'],
+    ['summary', '<details style="grid-area:1/1"><summary id="covered" style="width:100px;height:40px">More</summary></details>'],
+  ].map(([name, control]) => [`/stretched-${name}`, '<article style="display:grid;width:300px;height:60px">' + control +
+    '<a id="card-link" href="#" style="grid-area:1/1;display:block"></a></article>'])),
   '/sr-only': srOnlyStyle + '<button>X<span class="sr-only">Close the dialog window</span></button>',
   '/clipped': '<span id="clipped" style="display:inline-block;width:40px;overflow:hidden;white-space:nowrap">A long clipped label</span>',
   '/sr-only-wide': srOnlyStyle + '<style>@media (min-width:1000px){.sr-only{position:static;display:inline-block;' +
@@ -137,6 +143,14 @@ async function main() {
       const r = await capture(pathway('/stretched-control'));
       assert(r.checks.some(c => c.check === 'overlap' && c.selector === 'INPUT#card-input' && c.with === 'A#card-link'),
         JSON.stringify(r.checks));
+    });
+    await check('a stretched link over editable, focusable, or native controls is still an overlap', async () => {
+      const missed = [];
+      for (const name of ['editor', 'role-link', 'summary']) {
+        const r = await capture(pathway(`/stretched-${name}`));
+        if (!r.checks.some(c => c.check === 'overlap' && /#covered/.test(c.selector) && c.with === 'A#card-link')) missed.push(name);
+      }
+      assert.deepEqual(missed, []);
     });
     await check('screen-reader-only text inside a button is not a finding', async () => {
       const r = await capture(pathway('/sr-only'));
