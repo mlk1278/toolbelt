@@ -101,6 +101,38 @@ else
   fail "should exit 3 with no output when page two fails, got $code: $(cat "$tmp/partial.out")"
 fi
 
+# (guard) Incomplete first pages are errors, not empty lists.
+incomplete_case() {
+  local name=$1 list=$2 body=$3 dir="$tmp/$1"
+  mkdir -p "$dir"
+  cp "$fixtures"/*.json "$dir/"
+  printf '%s\n' "$body" >"$dir/$list-start.json"
+  set +e
+  GH_STUB_DIR="$dir" PATH="$stub_path" bash "$script" 42 >"$dir/out" 2>/dev/null
+  code=$?
+  set -e
+  if [ "$code" -eq 3 ] && [ ! -s "$dir/out" ]; then
+    ok "exits 3 and prints nothing: $name"
+  else
+    fail "should exit 3 with no output: $name, got $code: $(cat "$dir/out")"
+  fi
+}
+incomplete_case "thread connection omitted" threads '{"data":{"repository":{"pullRequest":{}}}}'
+incomplete_case "thread page without pageInfo" threads '{"data":{"repository":{"pullRequest":{"reviewThreads":{"nodes":[]}}}}}'
+incomplete_case "review connection omitted" reviews '{"data":{"repository":{"pullRequest":{}}}}'
+incomplete_case "head commit omitted" checks '{"data":{"repository":{"pullRequest":{"headRefOid":"b2","commits":{"nodes":[]}}}}}'
+
+# A head commit with no check rollup reports checks as unavailable.
+mkdir -p "$tmp/nochecks"
+cp "$fixtures"/*.json "$tmp/nochecks/"
+printf '%s\n' '{"data":{"repository":{"pullRequest":{"headRefOid":"b2","commits":{"nodes":[{"commit":{"statusCheckRollup":null}}]}}}}}' >"$tmp/nochecks/checks-start.json"
+if out=$(GH_STUB_DIR="$tmp/nochecks" PATH="$stub_path" bash "$script" 42) &&
+  [ "$(printf '%s' "$out" | jq -r .checks.state)" = unavailable ]; then
+  ok "no check rollup reports checks unavailable"
+else
+  fail "no check rollup should report checks unavailable: ${out-}"
+fi
+
 if [ "$failures" -gt 0 ]; then
   exit 1
 fi

@@ -43,11 +43,11 @@ if [ -z "$task" ]; then
   exit 3
 fi
 
-# A shared section runs from its "## " heading to the next "#"/"##" heading or
-# a "---" rule, ignoring headings inside code fences.
+# A shared section runs from its "## " heading to the next "#"/"##" heading,
+# task heading, or "---" rule, ignoring headings inside code fences.
 shared=$(awk '
   /^```/ { infence = !infence }
-  !infence && (/^##?[ \t]/ || /^---[ \t]*$/) {
+  !infence && (/^##?[ \t]/ || /^#+[ \t]+Task[ \t]+[0-9]/ || /^---[ \t]*$/) {
     inshared = ($0 ~ /^##[ \t]+(Global Constraints|Known Gotchas|Data Model|Risks)[ \t]*$/)
   }
   inshared { print }

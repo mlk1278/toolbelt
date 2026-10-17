@@ -33,12 +33,14 @@ incomplete() {
   exit 3
 }
 
-# fetch_all NAME CONNECTION_PATH SELECTION
+# fetch_all NAME CONNECTION_PATH SELECTION [ABSENT_OK]
 # Pages through one connection of the pull request and writes its nodes,
 # one compact JSON object per line, to $tmp/NAME. The first page's raw
-# response is kept as $tmp/NAME.first.
+# response is kept as $tmp/NAME.first. A missing connection, nodes list, or
+# pageInfo is an incomplete response, except on a first page where the jq
+# test ABSENT_OK holds (a head commit with no check rollup).
 fetch_all() {
-  local name=$1 path=$2 selection=$3 query response cursor='' page=0
+  local name=$1 path=$2 selection=$3 absent_ok=${4:-false} query response cursor='' page=0
   query="query(\$owner: String!, \$name: String!, \$pr: Int!, \$after: String) {
     repository(owner: \$owner, name: \$name) { pullRequest(number: \$pr) { $selection } } }"
   : >"$tmp/$name"
@@ -50,12 +52,11 @@ fetch_all() {
     jq -e '(.errors // []) == [] and .data.repository.pullRequest != null' <<<"$response" >/dev/null ||
       incomplete "$name page $page returned an error or no pull request"
     [ "$page" -gt 1 ] || printf '%s' "$response" >"$tmp/$name.first"
-    # A null connection on the first page means the list does not exist (no checks).
-    if ! jq -e "$path != null" <<<"$response" >/dev/null; then
-      [ "$page" -eq 1 ] || incomplete "$name page $page lost its connection"
-      return
+    if [ "$page" -eq 1 ] && jq -e "$absent_ok" <<<"$response" >/dev/null; then
+      return 0
     fi
-    jq -e "$path.nodes | type == \"array\"" <<<"$response" >/dev/null || incomplete "$name page $page has no nodes"
+    jq -e "($path.nodes | type) == \"array\" and ($path.pageInfo.hasNextPage | type) == \"boolean\"" \
+      <<<"$response" >/dev/null 2>&1 || incomplete "$name page $page is missing its nodes or pageInfo"
     jq -c "$path.nodes[]" <<<"$response" >>"$tmp/$name"
     jq -e "$path.pageInfo.hasNextPage" <<<"$response" >/dev/null || return 0
     cursor=$(jq -r "$path.pageInfo.endCursor // empty" <<<"$response")
@@ -64,10 +65,11 @@ fetch_all() {
 }
 
 page_info='pageInfo { hasNextPage endCursor }'
-rollup='.data.repository.pullRequest.commits.nodes[0].commit.statusCheckRollup.contexts'
-fetch_all checks "$rollup" "headRefOid commits(last: 1) { nodes { commit { statusCheckRollup {
+commit='.data.repository.pullRequest.commits.nodes[0].commit'
+fetch_all checks "$commit.statusCheckRollup.contexts" "headRefOid commits(last: 1) { nodes { commit { statusCheckRollup {
   contexts(first: 100, after: \$after) { $page_info nodes { __typename
-    ... on CheckRun { name status conclusion } ... on StatusContext { context state } } } } } } }"
+    ... on CheckRun { name status conclusion } ... on StatusContext { context state } } } } } } }" \
+  "$commit != null and $commit.statusCheckRollup == null"
 fetch_all reviews '.data.repository.pullRequest.reviews' "reviews(first: 100, after: \$after) {
   $page_info nodes { author { login } state commit { oid } } }"
 fetch_all threads '.data.repository.pullRequest.reviewThreads' "reviewThreads(first: 100, after: \$after) {

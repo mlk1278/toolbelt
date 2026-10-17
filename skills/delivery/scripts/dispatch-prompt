@@ -53,32 +53,15 @@ load_boundary() {
   [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
   plan_abs=$(abs_path "$plan")
   workspace=$(bash "$here/workspace" "$plan")
-  tasks=$(expand_tasks "$(row_cell "$boundary" Tasks)")
+  tasks=$(row_field "$boundary" 5)
   [ -n "$tasks" ] || { echo "boundary $boundary is not in the PR Boundaries table of $plan" >&2; exit 1; }
 }
 
-# Print the named column's cell in boundary N's row of the PR Boundaries table.
-row_cell() {
-  awk -v want="$1" -v col="$2" '
-    /^```/ { fence = !fence }
-    fence { next }
-    /^## / { insec = ($0 ~ /^## PR Boundaries[ \t]*$/); next }
-    !insec || !/^\|/ { next }
-    {
-      n = split($0, cell, "|")
-      for (i = 2; i < n; i++) { c = cell[i]; gsub(/^[ \t]+|[ \t]+$/, "", c); cell[i] = c }
-      if (!pr) { for (i = 2; i < n; i++) { if (cell[i] == "PR") pr = i; if (cell[i] == col) at = i }; next }
-      if (cell[pr] == want && at) { print cell[at]; exit }
-    }
-  ' "$plan"
-}
-
-# Expand a Tasks cell such as "1–3, 5" into one task number per line.
-expand_tasks() {
-  printf '%s\n' "$1" | sed 's/–/-/g; s/—/-/g' | tr ',' '\n' | tr -d ' \t' | awk -F- '
-    NF == 2 { for (k = $1; k <= $2; k++) print k; next }
-    $0 != "" { print }
-  '
+# Print one field of boundary N's row from writing-plans' plan-rows:
+# 3 = Risk, 4 = Outcome, 5 = task numbers.
+row_field() {
+  bash "$skill_dir/../writing-plans/scripts/plan-rows" "$plan" |
+    awk -F'\t' -v want="$1" -v f="$2" '$1 == "row" && $2 == want { print $f; exit }'
 }
 
 # Print the first of the given paths that exists, or "none".
@@ -140,8 +123,8 @@ case $mode in
       out="${package%.diff}-prompt.md"
     else
       load_boundary
-      list=$(printf '%s\n' "$tasks" | paste -sd, - | sed 's/,/, /g')
-      scope="PR $boundary, $(row_cell "$boundary" Outcome): tasks $list"
+      list=${tasks// /, }
+      scope="PR $boundary, $(row_field "$boundary" 4): tasks $list"
       rulings=
       for t in $tasks; do
         brief="$workspace/task-$t-brief.md"

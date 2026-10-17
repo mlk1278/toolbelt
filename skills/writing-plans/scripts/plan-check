@@ -21,17 +21,37 @@ if [ $# -ne 1 ]; then
 fi
 [ -f "$1" ] || { echo "no such plan file: $1" >&2; exit 2; }
 
-awk '
+rows=$(bash "$(cd "$(dirname "$0")" && pwd)/plan-rows" "$1")
+
+awk -F'\t' '
   function trim(s) { gsub(/^[ \t`]+|[ \t`]+$/, "", s); return s }
   function err(msg) { print msg; errors++ }
 
+  # First input: the normalized PR Boundaries table from plan-rows.
+  FNR == NR {
+    if ($1 == "columns") { header = 1; riskcol = ("," $2 ",") ~ /,Risk,/; next }
+    if ($1 != "row") next
+    pr = $2
+    rows[pr] = 0
+    if (riskcol && $3 !~ /^(high|medium|none)$/)
+      err("PR " pr ": Risk must be high, medium, or none, not \"" $3 "\"")
+    m = split($5, ts, " ")
+    for (j = 1; j <= m; j++) {
+      k = ts[j]
+      if (k in owner) err("Task " k " is in PR " owner[k] " and PR " pr)
+      owner[k] = pr
+      rows[pr]++
+    }
+    next
+  }
+
+  # Second input: the plan itself.
   /^```/ { fence = !fence }
   fence { if (task != "") body[task] = body[task] "\n" $0; next }
 
   /^#+[ \t]/ {
     level = index($0, " ") - 1
-    if (level <= 2) section = trim(substr($0, level + 2))
-    if (level == 2 && section == "Risks") risks = 1
+    if (level == 2 && trim(substr($0, 4)) == "Risks") risks = 1
     if (task != "" && level <= tasklevel) task = ""
     if (match($0, /^#+[ \t]+Task[ \t]+[0-9]+/)) {
       t = substr($0, RSTART, RLENGTH); sub(/.*[ \t]/, "", t)
@@ -53,34 +73,6 @@ awk '
       err("Task " task " cites a line number: " trim(substr($0, RSTART, RLENGTH)))
   }
 
-  section == "PR Boundaries" && /^\|/ {
-    n = split($0, cell, "|")
-    for (i = 2; i < n; i++) cell[i] = trim(cell[i])
-    if (!header) {
-      header = 1
-      for (i = 2; i < n; i++) { if (cell[i] == "PR") prcol = i; if (cell[i] == "Tasks") taskcol = i; if (cell[i] == "Risk") riskcol = i }
-      next
-    }
-    if (cell[2] ~ /^:?-+:?$/) next
-    pr = cell[prcol]
-    rows[pr] = 0
-    if (riskcol && cell[riskcol] !~ /^(high|medium|none)$/)
-      err("PR " pr ": Risk must be high, medium, or none, not \"" cell[riskcol] "\"")
-    list = cell[taskcol]
-    gsub(/–|—/, "-", list)
-    m = split(list, part, ",")
-    for (j = 1; j <= m; j++) {
-      p = part[j]; gsub(/[ \t]/, "", p)
-      if (split(p, r, "-") == 2) { lo = r[1] + 0; hi = r[2] + 0 } else { lo = p + 0; hi = lo }
-      if (p == "") continue
-      for (k = lo; k <= hi; k++) {
-        if (k in owner) err("Task " k " is in PR " owner[k] " and PR " pr)
-        owner[k] = pr
-        rows[pr]++
-      }
-    }
-  }
-
   END {
     if (!header) err("no ## PR Boundaries table")
     else if (!riskcol) err("the PR Boundaries table has no Risk column")
@@ -96,4 +88,4 @@ awk '
     for (pr in rows) if (rows[pr] > 9) print "warning: PR " pr " has " rows[pr] " tasks; the target is three to nine"
     exit errors > 0
   }
-' "$1"
+' <(printf '%s\n' "$rows") "$1"

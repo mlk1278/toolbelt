@@ -220,16 +220,16 @@ BRIEF
 
 - Keep it small.
 
-## Risks
-
-- The importer also writes these rows.
-
 ## PR Boundaries
 
 | PR | Outcome | Tasks | Depends on | Risk | Independent verification |
 |---|---|---|---|---|---|
-| 1 | First outcome | 1–2 | none | high | tests pass |
+| 1 | First outcome | `1–2` | none | high | tests pass |
 | 2 | Second outcome | 3 | 1 | none | tests pass |
+
+## Risks
+
+- The importer also writes these rows.
 
 ### Task 1: First
 
@@ -260,6 +260,16 @@ PLAN
         pass "task-brief copies the plan's Risks"
     else
         fail "task-brief copies the plan's Risks"
+    fi
+
+    local first_brief
+    first_brief="$(cd "$repo" && "$SCRIPTS/task-brief" delivery-plan.md 1 | sed -n 's/^wrote \(.*\): [0-9][0-9]* lines$/\1/p')"
+    if grep -q 'Do one.' "$first_brief" && ! grep -q 'Do two.' "$first_brief" \
+        && [ "$(grep -c '^### Task 1:' "$first_brief")" -eq 1 ]; then
+        pass "a Risks section right before the tasks carries no task into the brief"
+    else
+        fail "a Risks section right before the tasks carries no task into the brief"
+        cat "$first_brief"
     fi
 
     local prompt_path
