@@ -14,6 +14,7 @@ Project rules, when present: [PROJECT_RULES]
 - A brief's file list is a hint. Edit the coupled files the change needs, and name them in your reply.
 - A brief's `## Rulings` section overrides the plan text.
 - Stop with `NEEDS_DECISION` only for a behavior, contract, or money decision the plan does not make. Make every other call yourself and note it.
+- Don't repeat a check the type system or an earlier layer already guarantees, such as re-validating an ID the route already validated.
 - Write tests per toolbelt:test-driven-development.
 - Run each task's `Verify` command as printed when the task is done.
 - At the end, run the related tests, typecheck, and lint once, per toolbelt:verification-before-completion. Do not rerun the `Verify` commands separately.
