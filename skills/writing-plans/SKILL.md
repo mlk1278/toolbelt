@@ -7,7 +7,7 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 Write an implementation plan that one implementer per PR carries from start to finish. The implementer reads the codebase, the plan's shared sections, and its own tasks, but not the spec or this conversation. The plan decides contracts, risks, and scope; the implementer writes the code.
 
-Save to `docs/toolbelt/plans/YYYY-MM-DD-<feature-name>.md`, or where your human partner says. If the spec covers independent subsystems, propose one plan each.
+Save to `docs/toolbelt/plans/YYYY-MM-DD-<feature-name>.md`, or where your human partner says. If the spec covers independent subsystems, propose one plan each. Plan the whole effort up front so delivery can run unattended.
 
 ## Explore first
 

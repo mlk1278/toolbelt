@@ -22,7 +22,7 @@ Project rules, when present: [PROJECT_RULES]
 
 ## Reply
 
-Reply in under 20 lines:
+Reply in as few lines as cover:
 
 - Status: `DONE`, `NEEDS_DECISION` (the question, the options, and your recommendation), or `BLOCKED` (what stops you, what you tried, and what you need).
 - Commits: short SHA and subject.

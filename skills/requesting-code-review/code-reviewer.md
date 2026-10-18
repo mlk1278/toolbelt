@@ -45,4 +45,4 @@ Write the review to [REVIEW_FILE] under three headings:
 
 Each finding gives `path:line`, the scenario, why it matters, and the fix when it is not obvious. End with `### Out of scope` (one line each, or "None") and `**Ready to merge?** Yes | No | With fixes`.
 
-Reply in under 12 lines: the head, the verdict, counts per severity, one line per Critical and Important finding with its label, and the review file path.
+Reply in as few lines as cover: the head, the verdict, counts per severity, one line per Critical and Important finding with its label, and the review file path.
