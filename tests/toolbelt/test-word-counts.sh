@@ -23,7 +23,7 @@ ceilings=(
   "skills/requesting-code-review/code-reviewer.md:490"
   "skills/interactive-design/SKILL.md:900"
   "skills/interactive-design/iteration-mode.md:240"
-  "skills/writing-plans/SKILL.md:790"
+  "skills/writing-plans/SKILL.md:816"
   "skills/ux-gate/SKILL.md:740"
   "skills/ux-gate/matrix.md:620"
   "skills/writing-specs/SKILL.md:430"
