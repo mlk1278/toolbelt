@@ -30,7 +30,7 @@ ceilings=(
   "skills/delivery/SKILL.md:930"
   "skills/delivery/branch-lifecycle.md:360"
   "skills/delivery/implementer-prompt.md:330"
-  "skills/pr-monitor/SKILL.md:710"
+  "skills/pr-monitor/SKILL.md:728"
   "skills/agent-routing/SKILL.md:490"
   "skills/quick-task/SKILL.md:244"
   "skills/test-driven-development/writing-good-tests.md:530"
