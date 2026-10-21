@@ -32,7 +32,7 @@ ceilings=(
   "skills/delivery/implementer-prompt.md:330"
   "skills/pr-monitor/SKILL.md:710"
   "skills/agent-routing/SKILL.md:490"
-  "skills/quick-task/SKILL.md:230"
+  "skills/quick-task/SKILL.md:244"
   "skills/test-driven-development/writing-good-tests.md:530"
   "skills/using-toolbelt/references/codex-tools.md:210"
   "skills/quick-task/mini-plan-example.md:120"
