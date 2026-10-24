@@ -103,6 +103,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 
 **Meta**
 - **writing-skills** - Create and edit skills and other agent-consumed documents (includes testing methodology)
+- **unslop** - Cut AI tells from writing, leaving the exact formats agents rely on alone; you start it by name, agents never do
 - **using-toolbelt** - Introduction to the skills system
 
 ## Philosophy
@@ -125,6 +126,8 @@ Plugin-infrastructure tests live in `tests/` and run via the relevant `run-*.sh`
 Toolbelt began as a fork of [Superpowers](https://github.com/obra/superpowers) by [Jesse Vincent](https://blog.fsck.com) and [Prime Radiant](https://primeradiant.com). The methodology and much of the original skill content came from there. It has since diverged and is maintained independently.
 
 The editorial rules in `writing-skills` and the review smell baseline are adapted from [Matt Pocock's skills](https://github.com/mattpocock/skills) (MIT).
+
+`unslop` is adapted from [Lauren Tan's skill in cursor/plugins](https://github.com/cursor/plugins/tree/main/pstack/skills/unslop) (MIT).
 
 ## License
 

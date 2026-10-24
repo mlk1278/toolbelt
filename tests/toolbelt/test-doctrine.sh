@@ -184,30 +184,33 @@ else
   fail "structure_fixtures: passing should report nothing"
 fi
 
-# user_only_configure_routing: only your human partner can start it, on either
-# harness, and no skill hands off to it.
-cr_skill=skills/configure-routing/SKILL.md
-cr_yaml=skills/configure-routing/agents/openai.yaml
-cr_bad=""
-[ -f "$cr_skill" ] || cr_bad="$cr_bad missing-skill"
-[ -f "$cr_yaml" ] || cr_bad="$cr_bad missing-openai-yaml"
-if [ -z "$cr_bad" ]; then
-  if ! awk 'NR == 1 && $0 == "---" { f = 1; next } f && $0 == "---" { exit } f' "$cr_skill" |
-    grep -qx 'disable-model-invocation: true'; then
-    cr_bad="$cr_bad frontmatter-lacks-disable-model-invocation"
+# user_only_skills: only your human partner can start these, on either
+# harness, and no skill hands off to them.
+for uo in configure-routing unslop; do
+  uo_skill=skills/$uo/SKILL.md
+  uo_yaml=skills/$uo/agents/openai.yaml
+  uo_bad=""
+  [ -f "$uo_skill" ] || uo_bad="$uo_bad missing-skill"
+  [ -f "$uo_yaml" ] || uo_bad="$uo_bad missing-openai-yaml"
+  if [ -z "$uo_bad" ]; then
+    if ! awk 'NR == 1 && $0 == "---" { f = 1; next } f && $0 == "---" { exit } f' "$uo_skill" |
+      grep -qx 'disable-model-invocation: true'; then
+      uo_bad="$uo_bad frontmatter-lacks-disable-model-invocation"
+    fi
+    grep -qx '  allow_implicit_invocation: false' "$uo_yaml" ||
+      uo_bad="$uo_bad openai-yaml-lacks-allow_implicit_invocation-false"
+    if grep -rq "toolbelt:$uo" skills; then
+      uo_bad="$uo_bad a-skill-names-$uo"
+    fi
   fi
-  grep -qx '  allow_implicit_invocation: false' "$cr_yaml" ||
-    cr_bad="$cr_bad openai-yaml-lacks-allow_implicit_invocation-false"
-  if grep -rq 'toolbelt:configure-routing' skills; then
-    cr_bad="$cr_bad a-skill-names-configure-routing"
+  if [ -n "$uo_bad" ]; then
+    fail "user_only_$uo:$uo_bad"
+  else
+    ok "user_only_$uo"
   fi
-fi
-if [ -n "$cr_bad" ]; then
-  fail "user_only_configure_routing:$cr_bad"
-else
-  ok "user_only_configure_routing"
-fi
+done
 
+cr_skill=skills/configure-routing/SKILL.md
 # configure_routing_jobs_match_roles: the job list configure-routing writes is
 # the Roles table in agent-routing, in the same order and spelling.
 roles=$(sed -n 's/^| `\([a-z-]*\)` |.*/\1/p' skills/agent-routing/SKILL.md)
