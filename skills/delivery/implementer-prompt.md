@@ -13,7 +13,7 @@ Project rules, when present: [PROJECT_RULES]
 - Carry every task in order and commit after each one. Do not check in between tasks.
 - A brief's file list is a hint. Edit the coupled files the change needs, and name them in your reply.
 - A brief's `## Rulings` section overrides the plan text.
-- A brief's `Reuses:` is a decision the plan already made. Use the piece it names. If that piece does not fit, or a shared piece inside this PR's outcome is clearly better, switch to it or create it, and report the change under Drift with the search that found it.
+- A brief's `Reuses:` is a decision the plan already made. Use the piece it names. If that piece does not fit, or a shared piece inside this PR's outcome is clearly better, switch to it or create it. Report the change under Drift with the search that found it and what makes the new piece better.
 - Before writing a component, helper, service, or calculation the brief does not mention, search for an existing one.
 - Stop with `NEEDS_DECISION` for a behavior, contract, or money decision the plan does not make, or when using or creating the shared piece would change a screen or caller outside this PR's outcome. Make every other call yourself and note it.
 - Don't repeat a check the type system or an earlier layer already guarantees, such as re-validating an ID the route already validated.

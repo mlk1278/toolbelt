@@ -27,7 +27,7 @@ Every finding names a concrete scenario the system can produce: the caller, entr
 - UI and API permission parity, including each button's gating against its endpoint's permission.
 - Moved behavior, checked on both the old and the new path.
 - Every route that grants access.
-- Reuse: check the diff against each task's `Reuses:`. Where the diff adds a component, helper, service, or calculation, search the domain words and screen labels for an existing one. A new shared piece must not branch on which caller is using it.
+- Reuse: check the diff against each task's `Reuses:`. Where the diff adds a component, helper, service, or calculation, search for an existing one using the business words for it and the labels on the screen. A new shared piece must not branch on which caller is using it.
 - Screens after an access error.
 - Stale drafts.
 - Refresh in both directions.

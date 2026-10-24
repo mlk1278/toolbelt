@@ -2,6 +2,15 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.4.0 (2026-10-24)
+
+A new command cuts AI tells from writing, and the planning skills read more plainly.
+
+- **A new `unslop` skill edits writing to remove AI patterns.** Start it by name (`/unslop` in Claude Code, `$unslop` in Codex); agents never load it on their own. It is adapted from Lauren Tan's skill in cursor/plugins (MIT). For a skill, `AGENTS.md`, `CLAUDE.md`, or a prompt template, it first separates the exact formats agents rely on (headings, field labels, table cells, reply words, commands, defined terms, `<Bad>` examples) from the prose, and edits only the prose. It keeps judgment an instruction grants on purpose, adding what the agent reports instead of narrowing it to a pass/fail test.
+- **`writing-plans` was rewritten for plain reading.** Same rules and protocol; sentences name who acts, and the `Reuses:` field reads as one of three things. A planner proposing a new shared piece now says what it improves and how a reviewer would see it. A new good/bad pair contrasts a contract with a code body written into the plan.
+- **`writing-specs` shows a good and a bad What already exists section.**
+- **Smaller wording fixes** in ux-gate, its matrix reference, the code reviewer, and `configure-routing`. An implementer who switches to a better shared piece now says what makes it better.
+
 ## v10.3.0 (2026-10-24)
 
 A project's agent routing can now be set by describing it, instead of writing the routing file by hand.
