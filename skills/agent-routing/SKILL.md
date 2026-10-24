@@ -49,3 +49,5 @@ The override ends the moment an other-harness route is reachable.
 ## Setup
 
 Claude Code runs the hook from this plugin. Codex does not run plugin hooks: run `scripts/setup-codex-routing` from the toolbelt checkout once per machine, then trust the hook when Codex next starts.
+
+To write or change a project's routing file, your human partner runs `configure-routing` and describes the routing they want in their own words. It drafts the file and writes it only after they confirm. Only they can start it; never invoke it for them.

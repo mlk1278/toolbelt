@@ -97,6 +97,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 - **quick-task** - Small decision-complete changes, straight to one merged PR
 - **delivery** - An approved plan, one implementer and one reviewed PR per boundary, through merge
 - **agent-routing** - Resolves logical roles to concrete agent routes
+- **configure-routing** - Write a project's routing file from a plain-language description; you start it by name, agents never do
 - **ux-gate** - UX review for new flows, material UI changes, or explicit requests
 - **pr-monitor** - PR publication, CI, review providers, fix loops, and merge
 

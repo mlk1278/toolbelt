@@ -2,6 +2,12 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.3.0 (2026-10-24)
+
+A project's agent routing can now be set by describing it, instead of writing the routing file by hand.
+
+- **A new `configure-routing` skill writes the routing file.** Start it by name and say in plain language which model should do each job. It drafts `.toolbelt/routing/claude.md` and/or `.toolbelt/routing/codex.md` in the project's main checkout, shows the whole file, and writes it only after you confirm. A job you do not mention keeps the assignment it already has, or the bundled default's line in a new file, and the skill says which ones did. A free-form routing file is converted to one line per job, keeping every existing assignment, and the skill shows which old line became which new one before writing. Only a person can start it: `disable-model-invocation` keeps Claude Code from loading it on its own, and `allow_implicit_invocation: false` does the same in Codex. A new session picks up the written file.
+
 ## v10.2.0 (2026-10-24)
 
 Specs and plans now say what the app already has, so work reuses it instead of building a second copy beside it.

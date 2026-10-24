@@ -23,7 +23,7 @@ The description decides whether the skill loads at all. It sits in context on ev
 - Leave the workflow out. An agent follows a workflow summary and skips the body; one such description produced one review where the body required two.
 - Put the trigger first, in the symptoms and error strings an agent would search for: "flaky", "ENOTEMPTY", "Hook timed out".
 - Give each trigger one phrasing. Two synonyms for one case are that case written twice.
-- Frontmatter is `name` and `description` only, under 1,024 characters.
+- Frontmatter is `name` and `description` only, under 1,024 characters. One exception: a skill only your human partner starts may add `disable-model-invocation: true`, so no agent loads it on its own. Its description then says what it does for a person reading a command list, instead of starting "Use when".
 
 ## Structure
 
