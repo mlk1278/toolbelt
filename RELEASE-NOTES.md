@@ -2,6 +2,15 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.4.0 (2026-10-24)
+
+A new command cuts AI tells from writing, and `writing-plans` has shorter sentences that name who acts.
+
+- **A new `unslop` skill edits writing to remove AI patterns.** Start it by name. Agents never load it on their own. It is adapted from Lauren Tan's skill in cursor/plugins, under the MIT license. For a skill, `AGENTS.md`, `CLAUDE.md`, or a prompt template, it first separates the exact formats agents rely on from the prose and edits only the prose. Those formats are headings, field labels, table headers, reply words, commands, code, defined terms, and `<Bad>` examples. It reports a heading or term it thinks should change instead of editing it. It keeps judgment an instruction grants on purpose, adding what the agent reports instead of narrowing it to a pass/fail test.
+- **`writing-plans` was reworded by Muse with unslop.** Headings, field labels, and the PR table are unchanged, so `plan-check` and `task-brief` behave the same. Sentences are shorter and name who acts, and the `Reuses:` definition lists its three options in one sentence. One rule is new: a planner proposing a new shared piece says what it improves and how a reviewer would see it. A new good/bad pair contrasts a contract with a code body written into the plan.
+- **`writing-specs` shows a good and a bad What already exists section.**
+- **Smaller wording fixes** in ux-gate, its matrix reference, the code reviewer, and `configure-routing`. ux-gate now names a shared formatter, data hook, or fixture alongside components, styles, and tokens as changes that make a matching screen a changed surface. One rule is new: an implementer who switches to a better shared piece says what makes it better.
+
 ## v10.3.0 (2026-10-24)
 
 A project's agent routing can now be set by describing it, instead of writing the routing file by hand.

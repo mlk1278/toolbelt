@@ -24,7 +24,17 @@ Commit it to `docs/toolbelt/specs/YYYY-MM-DD-<topic>-design.md`, or where your h
 - Cut anything the design does not need. Fix existing problems only where they affect this work.
 - Leave no placeholders such as "TBD", "add error handling", or "similar to the above". A deferred decision only moves into the plan.
 
-Every spec has a **What already exists** section. For each piece of information the feature shows and each calculation or decision it makes, name where the app already shows or does it, by screen, the shared piece that owns it, or that none exists. When the same thing will appear in more than one place, say whether it is shared from the start, what has to stay the same everywhere, and what each place may do differently. This section names screens and concepts, not files; paths and symbols belong to the plan.
+Every spec has a **What already exists** section. For each piece of information the feature shows and each calculation or decision it makes, name where the app already shows or does it, by screen, the shared piece that owns it, or that none exists. When the same thing will appear in more than one place, say whether it is shared from the start, what has to stay the same everywhere, and what each place may do differently. This section names screens and concepts, not files. Paths and symbols belong to the plan.
+
+<Good>
+Line items already appear on the estimate and invoice screens through one shared line-items table, and line totals come from one shared money helper. The new visit summary shows line items too, so it uses the same table and adds a Visit column. It matches the invoice screen's column order and totals row.
+The planner knows exactly what to search for and which screen to match.
+</Good>
+
+<Bad>
+Follow existing patterns for the line items.
+The planner still has to find out whether a shared table exists, and two planners would answer differently.
+</Bad>
 
 ## 3. Review
 
