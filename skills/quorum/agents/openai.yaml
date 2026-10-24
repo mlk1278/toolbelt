@@ -1,0 +1,7 @@
+interface:
+  display_name: "Quorum"
+  short_description: "Independent proposals from models you pick, folded into one proposal"
+  default_prompt: "Use $quorum to get proposals from the models I pick and fold the best parts into one proposal."
+
+policy:
+  allow_implicit_invocation: false

@@ -2,6 +2,12 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.5.0 (2026-10-24)
+
+A new command gets several models to pitch their own take on a feature, then folds the best parts into one proposal.
+
+- **A new `quorum` skill gathers independent proposals from models you pick.** Start it with `/quorum`. Agents never load it on their own. It asks which models should write and at what effort, and whether one more model should review the result, then plays the lineup back and waits for you to confirm before it dispatches anything. Each writer gets the same brief and works without seeing the other drafts. The brief asks for a strong view of what to add, remove, or improve, with no bad ideas at that stage and boiling the ocean allowed. Writers read the codebase first and, where the topic calls for it, look at competing products, what people say they like and dislike about them, and what people keep asking for. A writer who can dispatch subagents routes those searches through agent-routing. Drafts land under `.toolbelt/quorum/`, one file per model, with the folded proposal beside them. The fold keeps each idea it keeps at the strength its writer argued for, names the disagreements, and says why it cut what it cut. An approved proposal enters brainstorming as the starting brief. A proposal you do not want to build yet is saved and the skill stops.
+
 ## v10.4.0 (2026-10-24)
 
 A new command cuts AI tells from writing, and `writing-plans` has shorter sentences that name who acts.

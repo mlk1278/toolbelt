@@ -104,6 +104,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 **Meta**
 - **writing-skills** - Create and edit skills and other agent-consumed documents (includes testing methodology)
 - **unslop** - Cut AI tells from writing, leaving the exact formats agents rely on alone; you start it by name, agents never do
+- **quorum** - Independent proposals from models you pick, folded into one proposal; you start it with `/quorum`, agents never do
 - **using-toolbelt** - Introduction to the skills system
 
 ## Philosophy

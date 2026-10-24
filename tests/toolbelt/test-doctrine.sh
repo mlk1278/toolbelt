@@ -187,7 +187,7 @@ fi
 # user_only_skills: only your human partner can start these, on either
 # harness, and no skill hands off to them, by toolbelt: name or by an
 # "invoke ... <name>" line.
-for uo in configure-routing unslop; do
+for uo in configure-routing unslop quorum; do
   uo_skill=skills/$uo/SKILL.md
   uo_yaml=skills/$uo/agents/openai.yaml
   uo_bad=""
