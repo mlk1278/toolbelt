@@ -14,19 +14,21 @@ Do this step first when the text is something an agent reads: a skill, `AGENTS.m
 
 The protocol is:
 
-- Frontmatter, headings, field labels with their punctuation (`**Reuses:**`, `**Verify:**`), table columns and cells, and gate tags such as `<HARD-GATE>`.
+- Frontmatter, headings, field labels with their punctuation (`**Reuses:**`, `**Verify:**`), table column headers, and gate tags such as `<HARD-GATE>`.
 - Reply formats and status words (`DONE`, `NEEDS_DECISION`, `fixed <sha>; siblings: ...`), commands, paths, file names, and quoted user-facing messages.
+- Code fences, and inline code that is a literal token or marker, such as `(guard)` or `none — <why>`.
 - Terms the file or the skills around it define and repeat, such as toolbelt's `lookup`, `explorer`, `plan-gap`, and "your human partner". Keep them even where a plainer word exists.
 - Text inside `<Bad>` example blocks. It shows the mistake on purpose.
-- Short list items and table cells written to be scanned, such as a role table or a checklist. Rule 16 and rule 33 apply to sentences, not to these.
 
-Before you change a heading, label, or term, search the repository for its exact text. If anything else quotes it, leave it alone and report it instead.
+Table cells and short list items written to be scanned, such as a role table or a checklist, are prose, but rule 16 and rule 33 do not apply to them. In these files rule 13 leaves numeric ranges such as `1,000–4,000` and parentheses around an example or a literal alone.
+
+If you think a heading, label, or defined term should change, report it instead of editing it. Scripts can match them by pattern, and plans in other projects quote them, so no search of this repository proves a change is safe.
 
 Some instructions give the agent judgment on purpose, such as "propose a shared component when it makes the app look, perform, or hold up better". Keep that judgment. Rule 27 would narrow it into a pass/fail test the author never asked for, so instead add what the agent reports, which lets a reviewer check the call: "say what it improves and how a reviewer would see it."
 
 ## Patterns to detect and fix
 
-Rule numbers are stable ids that other skills cite. A removed rule leaves a gap.
+Rule numbers match the upstream skill this is adapted from. Gaps are rules upstream removed.
 
 ### Content
 

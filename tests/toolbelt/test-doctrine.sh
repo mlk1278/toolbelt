@@ -185,7 +185,8 @@ else
 fi
 
 # user_only_skills: only your human partner can start these, on either
-# harness, and no skill hands off to them.
+# harness, and no skill hands off to them, by toolbelt: name or by an
+# "invoke ... <name>" line.
 for uo in configure-routing unslop; do
   uo_skill=skills/$uo/SKILL.md
   uo_yaml=skills/$uo/agents/openai.yaml
@@ -199,7 +200,9 @@ for uo in configure-routing unslop; do
     fi
     grep -qx '  allow_implicit_invocation: false' "$uo_yaml" ||
       uo_bad="$uo_bad openai-yaml-lacks-allow_implicit_invocation-false"
-    if grep -rq "toolbelt:$uo" skills; then
+    if grep -rq "toolbelt:$uo" skills ||
+      grep -rnwi --include='*.md' "$uo" skills --exclude-dir="$uo" |
+      grep -i 'invoke' | grep -qvi 'never invoke'; then
       uo_bad="$uo_bad a-skill-names-$uo"
     fi
   fi

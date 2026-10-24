@@ -25,7 +25,7 @@ Stop exploring when you can fill in every task's `Reuses:` without guessing.
 
 - A PR boundary is an outcome a reviewer can judge on its own. Its verification passes without later boundaries. Every task is in exactly one boundary.
 - Aim for three to nine tasks and 1,000–4,000 changed lines per PR. Above 3,000 lines, say why it stays one PR. A one-task PR is fine when not tiny. Merge a boundary under about 100 changed lines into a neighboring one unless it needs its own release order, `Risk`, or revert.
-- Independent boundaries share no files. A dependent boundary names one predecessor in `Depends on`.
+- Independent boundaries list disjoint files. A dependent boundary names one predecessor in `Depends on`.
 - `Risk` is `high` for money, security, tenancy, migrations, or shared contracts; `none` for a sweep, codemod, or CI config; `medium` otherwise. `none` skips the local review.
 
 ## Detail
@@ -37,13 +37,17 @@ Stop exploring when you can fill in every task's `Reuses:` without guessing.
 You record in the plan the decisions the implementer cannot make alone. If a plan is longer than the code it describes, it contains code bodies. Replace them with contracts.
 
 <Good>
-`POST /invoices/:id/void` requires the `invoice.void` permission. A caller without it gets 403 `INVOICE_VOID_FORBIDDEN` and the invoice stays unchanged. A voided invoice cannot be voided again: 409 `INVOICE_ALREADY_VOIDED`.
+`POST /invoices/:id/void` requires the `invoice.void` permission. With it, the invoice's status becomes `voided` and the response is the updated invoice. A caller without it gets 403 `INVOICE_VOID_FORBIDDEN` and the invoice stays unchanged. A voided invoice cannot be voided again: 409 `INVOICE_ALREADY_VOIDED`.
 The implementer knows every outcome a test must check and still chooses how to write the handler.
 </Good>
 
 <Bad>
-A function body for `voidInvoice`, written out in the plan, that loads the invoice, checks the permission, and updates the status.
-By the time a later PR runs, the code around it has changed, and the implementer copies a body written against code that no longer exists.
+```ts
+const invoice = await db.invoice.findFirst({ where: { id } });
+if (!can(actor, "invoice.void")) throw new ForbiddenError();
+await db.invoice.update({ where: { id }, data: { status: "voided" } });
+```
+The body is longer than the decision it carries, and it still leaves out the error codes and the already-voided case. The implementer copies it instead of deciding, even when the code around it has changed since the plan was written.
 </Bad>
 
 ## Shared pieces
@@ -80,7 +84,7 @@ Every new record type then edits the shared table.
 
 - **Files:** the files expected to change.
 - **Contract:** what the task makes true.
-- **Reuses:** one of three things: existing code this task uses or extends instead of writing its own, as a path, a symbol, and a few words on what it does; the shared piece this task creates and its users in this plan; or `none — <why>`, naming the search that found nothing. For user-visible work, also name the screen to match, what has to look the same, what may differ, and which side owns each difference.
+- **Reuses:** one of three things: existing code this task uses or extends instead of writing its own, as a path, a symbol, and a few words on what it does; the shared piece this task creates and its users in this plan; or `none — <why>`, naming the search that found nothing. For user-visible work, also name the screen to match, what has to look the same, what legitimately differs, and which side owns each difference.
 - **Interfaces:** only on a task whose output another task in the plan uses. Give what it consumes and produces, by name and shape.
 - **Proves:** one line per decided behavior, with guards marked `(guard)`.
 - **Verify:** the command that proves the task.
@@ -96,7 +100,7 @@ In this order: Goal, Architecture, Global Constraints, Known Gotchas, Data Model
 - Who else reads or writes what this deletes, stops writing, or recalculates?
 - What does the previous release still read?
 - What other entry points reach each invariant (public link, import, replay, restore, worker, alternate actor), and which shared guard does each call?
-- Which files here does another workstream claim?
+- Which touched files does another workstream claim?
 
 The PR table's columns are `| PR | Outcome | Tasks | Depends on | Risk | Independent verification |`.
 
