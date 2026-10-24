@@ -1,0 +1,7 @@
+interface:
+  display_name: "Configure Routing"
+  short_description: "Set this project's agent routing in plain language"
+  default_prompt: "Use $configure-routing to set this project's agent routing from my description."
+
+policy:
+  allow_implicit_invocation: false
