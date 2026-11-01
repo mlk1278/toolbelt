@@ -2,6 +2,14 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.7.2 (2026-11-01)
+
+A post-merge review of `typescript-best-practices` found three corrections.
+
+- **The `isNonEmpty` example now works in `.tsx` files.** It was a generic arrow function, which TypeScript reads as JSX there.
+- **The `satisfies` rule warns about narrower types.** `{ enabled: true } satisfies { enabled: boolean }` makes `enabled` the type `true`, so assigning `false` fails. Agents now annotate a value that will change later.
+- **The exhaustiveness rule targets the real problem.** A `default` with no `never` check lets a missed variant compile. A `default` that does the check is fine, which the old wording ruled out.
+
 ## v10.7.1 (2026-11-01)
 
 `typescript-best-practices` moves closer to Lauren Tan's original.

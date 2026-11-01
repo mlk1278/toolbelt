@@ -52,7 +52,9 @@ Prefer discriminant narrowing when possible.
 ```ts
 type NonEmpty<T> = [T, ...T[]];
 
-const isNonEmpty = <T>(items: T[]): items is NonEmpty<T> => items.length > 0;
+function isNonEmpty<T>(items: T[]): items is NonEmpty<T> {
+  return items.length > 0;
+}
 ```
 
 Narrow once where a plain `T[]` arrives. `map` and `slice` return `T[]`, not `NonEmpty<T>`.
@@ -121,6 +123,8 @@ type Config = { theme: "dark" | "light"; cols: number };
 const config = { theme: "dark", cols: 3 } satisfies Config; // config.theme is "dark"
 const missing = { theme: "dark" } as Config; // compiles with cols missing
 ```
+
+`satisfies` can infer a narrower type than the one you check against. `{ enabled: true } satisfies { enabled: boolean }` makes `enabled` the type `true`, so assigning `false` fails. Annotate the variable when its properties will change.
 
 ## Object args
 

@@ -15,8 +15,8 @@ Change a type that forces a shortcut. Keep any signature the task specifies or e
 | Loose types | A `!` or a "should never happen" throw means a type is too loose. Tighten the input or return `T \| undefined`. |
 | `unknown` over `any` | A value whose shape you don't know is `unknown` until narrowed. |
 | Boundaries | Parse external data where it enters, into a named type, and trust that type inside. Use the repo's schema library when it has one, and infer the type from the schema. Accept only the documented format, because coercion turns bad input into valid-looking values. |
-| Exhaustiveness | Make adding a variant break the build at every `switch` on it. A catch-all `default` that returns a value lets the missed variant compile. |
-| `satisfies` | Check a constant against a type with `satisfies`, not `as`. It reports missing fields and keeps the inferred type. |
+| Exhaustiveness | Make adding a variant break the build at every `switch` on it. A `default` with no `never` check lets the missed variant compile. |
+| `satisfies` | Check a constant against a type with `satisfies`, not `as`. It reports missing fields. Annotate instead when the value will change later, because `satisfies` can infer a narrower type. |
 | One owner per shape | Import or derive a shape that already has an owner. Two shapes that only happen to match stay separate. |
 | Object args | Pass several arguments as one object so their order can't be confused. Skip this on hot paths: per-frame rendering, tokenizers, parsers. |
 

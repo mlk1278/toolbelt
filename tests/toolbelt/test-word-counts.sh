@@ -36,7 +36,7 @@ ceilings=(
   "skills/quorum/SKILL.md:820"
   "skills/quick-task/SKILL.md:244"
   "skills/typescript-best-practices/SKILL.md:540"
-  "skills/typescript-best-practices/references/patterns.md:690"
+  "skills/typescript-best-practices/references/patterns.md:720"
   "skills/test-driven-development/writing-good-tests.md:530"
   "skills/using-toolbelt/references/codex-tools.md:210"
   "skills/quick-task/mini-plan-example.md:120"
