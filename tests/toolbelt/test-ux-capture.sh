@@ -320,9 +320,9 @@ node -e '
   m.themes = ["light"];
   m.viewports = m.viewports.slice(0, 1);
   m.pathways = [{ name: "clean", path: "/clean.html", steps: [
-    { name: "open" },
-    { name: "stuck", waitFor: "#never-appears" },
-    { name: "later" },
+    { name: "open", target: "body" },
+    { name: "stuck", waitFor: "#never-appears", target: "body" },
+    { name: "later", target: "body" },
   ] }];
   fs.writeFileSync(process.argv[2], JSON.stringify(m, null, 2));
 ' "$tmp/matrix-clean.json" "$tmp/matrix-fail.json"
@@ -335,8 +335,8 @@ after_failure=$(each "$tmp/failout/mechanical.json" '
   const e = entries.find((e) => e.step === "later");
   if (!e) { console.log("the step after the failure was dropped"); }
   else {
-    const c = (e.checks || []).find((c) => c.check === "step-failed");
-    if (!c) console.log("no step-failed check on the skipped step");
+    const c = (e.checks || []).find((c) => c.check === "not-reached");
+    if (!c) console.log("no not-reached check on the skipped shot");
     else if (c.severity !== "blocker") console.log("severity " + c.severity);
     else if (c.message !== "skipped after failure of step stuck") console.log("message " + c.message);
     else console.log("ok");

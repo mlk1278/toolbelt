@@ -1,18 +1,61 @@
 {
   "baseUrl": "http://127.0.0.1:0",
-  "theme": {"mode": "class", "target": "html", "key": "theme", "values": {"light": "", "dark": "dark"}},
-  "themes": ["light", "dark"],
+  "theme": {
+    "mode": "class",
+    "target": "html",
+    "key": "theme",
+    "values": {
+      "light": "",
+      "dark": "dark"
+    }
+  },
+  "themes": [
+    "light",
+    "dark"
+  ],
   "viewports": [
-    {"name": "sm", "width": 375, "height": 812, "dpr": 2},
-    {"name": "md", "width": 768, "height": 1024, "dpr": 1},
-    {"name": "lg", "width": 1440, "height": 900, "dpr": 1}
+    {
+      "name": "sm",
+      "width": 375,
+      "height": 812,
+      "dpr": 2
+    },
+    {
+      "name": "md",
+      "width": 768,
+      "height": 1024,
+      "dpr": 1
+    },
+    {
+      "name": "lg",
+      "width": 1440,
+      "height": 900,
+      "dpr": 1
+    }
   ],
   "pathways": [
-    {"name": "healthy", "path": "/healthy.html",
-     "steps": [
-       {"name": "open"},
-       {"name": "scrolled", "action": "scroll", "selector": "#row-30"},
-       {"name": "modal", "action": "click", "selector": "#open-modal", "waitFor": "#modal[open]"}
-     ]}
+    {
+      "name": "healthy",
+      "path": "/healthy.html",
+      "steps": [
+        {
+          "name": "open",
+          "target": "body"
+        },
+        {
+          "name": "scrolled",
+          "action": "scroll",
+          "selector": "#row-30",
+          "target": "body"
+        },
+        {
+          "name": "modal",
+          "action": "click",
+          "selector": "#open-modal",
+          "waitFor": "#modal[open]",
+          "target": "body"
+        }
+      ]
+    }
   ]
 }

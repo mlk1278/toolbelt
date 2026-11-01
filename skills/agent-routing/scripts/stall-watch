@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Wake an orchestrator when a background agent's transcript stops changing.
+#
+# Usage: stall-watch [--once] [--every SECONDS] --minutes N TRANSCRIPT... [--minutes M TRANSCRIPT...]
+#
+# TRANSCRIPT is a file path, or an agent or session id looked up as a Claude Code
+# subagent or session transcript, or a Codex (and AGX) rollout. Each --minutes
+# applies to the transcripts after it, so a PR monitor waiting on CI can get a
+# longer limit. Prints one "STALLED <path> idle <m>m (limit <n>m)" line per
+# transcript at or past its limit and exits 0 as soon as one is; --once checks a
+# single time and exits 0 either way. Exits 2 on bad usage or an unknown id.
+set -euo pipefail
+
+usage() {
+  sed -n '4p' "$0" | sed 's/^# //' >&2
+  exit 2
+}
+
+claude_dir=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
+codex_dir=${CODEX_HOME:-$HOME/.codex}
+
+resolve() {
+  if [ -f "$1" ]; then
+    echo "$1"
+    return
+  fi
+  local found
+  found=$({
+    [ -d "$claude_dir/projects" ] && find "$claude_dir/projects" \( -name "agent-$1.jsonl" -o -name "$1.jsonl" \) 2>/dev/null
+    [ -d "$codex_dir/sessions" ] && find "$codex_dir/sessions" -name "rollout-*$1.jsonl" 2>/dev/null
+  } | head -n 1)
+  [ -n "$found" ] || { echo "stall-watch: no transcript found for $1" >&2; exit 2; }
+  echo "$found"
+}
+
+mtime() {
+  stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"
+}
+
+once=0 every=60 limit='' paths=() limits=()
+while [ $# -gt 0 ]; do
+  case $1 in
+    --once) once=1; shift ;;
+    --every) [ $# -ge 2 ] || usage; every=$2; shift 2 ;;
+    --minutes) [ $# -ge 2 ] || usage; limit=$2; shift 2 ;;
+    -*) usage ;;
+    *)
+      [ -n "$limit" ] || usage
+      paths+=("$(resolve "$1")")
+      limits+=("$limit")
+      shift
+      ;;
+  esac
+done
+[ ${#paths[@]} -gt 0 ] || usage
+
+while :; do
+  now=$(date +%s) stalled=0
+  for i in "${!paths[@]}"; do
+    idle=$(( (now - $(mtime "${paths[$i]}")) / 60 ))
+    if [ "$idle" -ge "${limits[$i]}" ]; then
+      echo "STALLED ${paths[$i]} idle ${idle}m (limit ${limits[$i]}m)"
+      stalled=1
+    fi
+  done
+  if [ "$stalled" -eq 1 ] || [ "$once" -eq 1 ]; then
+    exit 0
+  fi
+  sleep "$every"
+done

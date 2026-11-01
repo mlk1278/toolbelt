@@ -18,9 +18,12 @@ Project rules, when present: [PROJECT_RULES]
 - Stop with `NEEDS_DECISION` for a behavior, contract, or money decision the plan does not make, or when using or creating the shared piece would change a screen or caller outside this PR's outcome. Make every other call yourself and note it.
 - Don't repeat a check the type system or an earlier layer already guarantees, such as re-validating an ID the route already validated.
 - Write tests per toolbelt:test-driven-development.
+- For each visible change, write a shot list to [SHOTS]: a capture matrix per [UX_MATRIX] naming the route, target, state, and fixtures or setup that reach it. Check it with `[UX_CAPTURE] [SHOTS] --check`.
+- Prove a change to hover, drag, tap areas, focus moves, or anything else that depends on what is under the pointer in a real browser before you reply; a jsdom test cannot see hit areas. Add a `pointer` step to the shot list and run `[UX_CAPTURE] [SHOTS] --out <dir> --smoke --pathway <name>` against the running app.
 - Run each task's `Verify` command as printed when the task is done.
 - At the end, run the related tests, typecheck, and lint once, per toolbelt:verification-before-completion. Do not rerun the `Verify` commands separately.
 - Before replying, check your diff against the **Look for** list in [LOOK_FOR] and fix what it finds.
+- Give every shell command a timeout of at most 10 minutes.
 - Dispatch no subagents, leave no server running, and do not rebase.
 
 ## Reply
@@ -32,6 +35,8 @@ Reply in as few lines as cover:
 - One line per task on what changed.
 - Drift from the plan, and the coupled files you touched.
 - Each test command you ran, with its last passing line.
+- Visible changes in prose, and the shot list path, or `none`.
+- The real-pointer command and result, or `none`.
 
 ## Fix dispatches
 

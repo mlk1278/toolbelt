@@ -14,7 +14,7 @@ Review one range of work against its plan. You are read-only: leave the working 
 
 ## How to review
 
-Trace one hop from each changed function: its callers and what it calls. Go further only when a concrete lead takes you there. Run a related test only when the evidence leaves a real doubt.
+Trace one hop from each changed function: its callers and what it calls. Go further only when a concrete lead takes you there. Run a related test only when the evidence leaves a real doubt, with a timeout of at most 10 minutes.
 
 Every finding names a concrete scenario the system can produce: the caller, entry point, or data that triggers it, and what goes wrong. A concern with no reachable trigger is Minor at most. A pre-existing problem gets one line under Out of scope. Label a finding `plan-gap` when its fix needs a behavior or contract choice the plan does not make. Name the pattern and any sibling sites you saw.
 

@@ -27,6 +27,18 @@ The monitor fixes review findings on its own PR inline; all other code goes to t
 
 The plan's `Risk` column raises effort and never changes the model. A `high` row raises the reviewer one effort level above its route.
 
+## Waiting on background agents
+
+A stuck agent reads messages only at its next tool call, so a status ping cannot reach it, and its silence is not an answer. Judge liveness by when its transcript last changed. Never end a turn waiting on agents without a watchdog armed:
+
+```bash
+bash scripts/stall-watch --minutes 45 <agent id or transcript>... --minutes 120 <monitor id or transcript>...
+```
+
+It exits with a `STALLED` line once a transcript has gone unchanged past its limit. Monitors get the longer limit because they legitimately wait on CI. In Claude Code, start it as a background command that wakes you when it exits. In Codex, run it with `--once` whenever `wait_agent` returns without a final answer. Re-arm it after it fires and whenever an agent finishes, listing only agents still running. On a `STALLED` line, read the transcript's tail: a tool call with no result means the agent hung, so stop it and dispatch a replacement.
+
+Every prompt you dispatch says: give every shell command a timeout of at most 10 minutes.
+
 ## Reviewer independence
 
 A reviewer runs on a different harness from the implementer's. If the text would put a review on the implementer's harness, stop and tell your human partner.

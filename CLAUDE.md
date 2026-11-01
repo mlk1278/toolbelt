@@ -31,6 +31,7 @@ This installs globally, so no file under `skills/` may hard-code anything about 
 - `.toolbelt/routing/<harness>.md` — plain-English agent routing per orchestrating harness
 - `.toolbelt/pr-policy.md` — review providers to await, complexity lanes, timeouts
 - `.toolbelt/worktree-policy.md` — port ranges, sidecar containers, per-worktree resources
+- `.toolbelt/ux-capture.json` — ux-gate capture: app start, sign-in, capture CSS, guard allowances, setup block list
 - `docs/REVIEW-GUIDANCE.md` — review conventions, read when present
 - `AGENTS.md` — entry-point summary, copied from `docs/AGENTS-SNIPPET.md`
 

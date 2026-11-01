@@ -107,6 +107,9 @@ case $mode in
     prompt=${prompt//"[BRIEFS]"/"$briefs"}
     prompt=${prompt//"[PROJECT_RULES]"/"AGENTS.md: $agents; worktree policy: $policy"}
     prompt=${prompt//"[LOOK_FOR]"/"$(dirname "$skill_dir")/requesting-code-review/code-reviewer.md"}
+    prompt=${prompt//"[UX_MATRIX]"/"$(dirname "$skill_dir")/ux-gate/matrix.md"}
+    prompt=${prompt//"[UX_CAPTURE]"/"$(dirname "$skill_dir")/ux-gate/scripts/ux-capture"}
+    prompt=${prompt//"[SHOTS]"/"$workspace/boundary-$boundary-shots.json"}
 
     out="$workspace/boundary-$boundary-implementer.md"
     printf '%s\n' "$prompt" > "$out"

@@ -1,20 +1,77 @@
 {
   "baseUrl": "http://127.0.0.1:0",
-  "theme": {"mode": "class", "target": "html", "key": "theme", "values": {"light": "", "dark": "dark"}},
-  "themes": ["light", "dark"],
-  "viewports": [
-    {"name": "sm", "width": 375, "height": 812, "dpr": 2},
-    {"name": "md", "width": 768, "height": 1024, "dpr": 1},
-    {"name": "lg", "width": 1440, "height": 900, "dpr": 1}
+  "theme": {
+    "mode": "class",
+    "target": "html",
+    "key": "theme",
+    "values": {
+      "light": "",
+      "dark": "dark"
+    }
+  },
+  "themes": [
+    "light",
+    "dark"
   ],
-  "referenceScreens": ["/clean.html"],
+  "viewports": [
+    {
+      "name": "sm",
+      "width": 375,
+      "height": 812,
+      "dpr": 2
+    },
+    {
+      "name": "md",
+      "width": 768,
+      "height": 1024,
+      "dpr": 1
+    },
+    {
+      "name": "lg",
+      "width": 1440,
+      "height": 900,
+      "dpr": 1
+    }
+  ],
+  "referenceScreens": [
+    "/clean.html"
+  ],
   "pathways": [
-    {"name": "home", "path": "/index.html",
-     "steps": [
-       {"name": "open", "crops": [".card"], "fullPage": true},
-       {"name": "panel", "action": "click", "selector": "#open", "motion": true, "waitFor": "#panel:not([hidden])"},
-       {"name": "route", "action": "click", "selector": "#route", "waitFor": "#shifty.on"},
-       {"name": "away", "action": "click", "selector": "#leave", "waitFor": "#go"}
-     ]}
+    {
+      "name": "home",
+      "path": "/index.html",
+      "steps": [
+        {
+          "name": "open",
+          "crops": [
+            ".card"
+          ],
+          "fullPage": true,
+          "target": "body"
+        },
+        {
+          "name": "panel",
+          "action": "click",
+          "selector": "#open",
+          "motion": true,
+          "waitFor": "#panel:not([hidden])",
+          "target": "body"
+        },
+        {
+          "name": "route",
+          "action": "click",
+          "selector": "#route",
+          "waitFor": "#shifty.on",
+          "target": "body"
+        },
+        {
+          "name": "away",
+          "action": "click",
+          "selector": "#leave",
+          "waitFor": "#go",
+          "target": "body"
+        }
+      ]
+    }
   ]
 }

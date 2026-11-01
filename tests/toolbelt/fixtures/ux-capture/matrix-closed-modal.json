@@ -1,11 +1,35 @@
 {
   "baseUrl": "http://127.0.0.1:0",
-  "theme": {"mode": "class", "target": "html", "key": "theme", "values": {"light": "", "dark": "dark"}},
-  "themes": ["light"],
+  "theme": {
+    "mode": "class",
+    "target": "html",
+    "key": "theme",
+    "values": {
+      "light": "",
+      "dark": "dark"
+    }
+  },
+  "themes": [
+    "light"
+  ],
   "viewports": [
-    {"name": "lg", "width": 1440, "height": 900, "dpr": 1}
+    {
+      "name": "lg",
+      "width": 1440,
+      "height": 900,
+      "dpr": 1
+    }
   ],
   "pathways": [
-    {"name": "closed-modal", "path": "/closed-modal.html", "steps": [{"name": "open"}]}
+    {
+      "name": "closed-modal",
+      "path": "/closed-modal.html",
+      "steps": [
+        {
+          "name": "open",
+          "target": "body"
+        }
+      ]
+    }
   ]
 }

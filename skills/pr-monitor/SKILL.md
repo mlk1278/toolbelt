@@ -24,7 +24,7 @@ For an unpublished branch, run finishing-a-development-branch on the pull-reques
 5. Once every awaited provider has completed, fix what is real, with its siblings (toolbelt:receiving-code-review), and run only the tests that cover the fix. Push the fixes as one batch, and rebut the rest on the thread with code evidence. The providers' next round is the re-review.
 6. After two provider rounds, move a finding to a `## Follow-ups` list in the PR body and resolve its thread when the provider rates it below its top two severities and it touches no data, security, or money, unless the policy forbids it.
 7. A finding that would change the design, or a PR that has diverged from its plan, blocks that PR. Record why in the ledger and keep carrying the other PRs.
-8. With nothing actionable, wait with one call: the policy's wait command, or 180 seconds. Waiting on a provider or CI is not a reason to return; wait again in the same turn.
+8. With nothing actionable, wait with one call: the policy's wait command, or 180 seconds. Waiting on a provider or CI is not a reason to return; wait again in the same turn. Give every shell command, waits included, a timeout of at most 10 minutes.
 
 ## Chains
 

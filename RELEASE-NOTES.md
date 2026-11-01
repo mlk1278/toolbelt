@@ -2,6 +2,20 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.6.0 (2026-11-01)
+
+UX captures now do the risky and repetitive parts themselves, implementers hand over the shot list, and orchestrators notice an agent that stopped moving. All three come from a two-day, 25-PR UI program in a consuming project.
+
+- **Every capture blocks writes, with no off switch.** Each browser context `ux-capture` opens lets a GET through, answers a request that matches a fixture locally, lets through only the project's named allowances, checks each redirect again, and aborts everything else, WebSockets included. Every answered or aborted request is listed. Before, each runner hand-wrote this guard, and a debug re-run without it may have marked a message read in the database.
+- **Every shot names its target, and a shot that cannot find it fails.** The tool scrolls the target into view, including inside nested scroll containers, crops to it, records its box, and checks its text when the matrix gives `expectText`. A missing, zero-size, covered, or wrong-text target writes no image and exits 1 with the reason, instead of capturing something else.
+- **Fixtures, real-data setup, and sign-in live in the matrix and the project config.** Fixtures answer a URL and method with a status and a JSON body or file. A short `setup` list creates real data once through the signed-in session, and its response values fill `{{name.field}}` in routes and selectors. Setup calls that would send, charge, or sync are blocked by a list the project can replace. A new per-project `.toolbelt/ux-capture.json` holds the app start command, the sign-in, capture-only CSS, guard allowances, and the block list. Sign-in opens the app's own dev login with parameters such as a role; each pathway can pick its own identity or run signed out, and every session file is deleted when the run ends. Form-filling steps remain only for apps without a dev login.
+- **Before-and-after pairs, retakes, and a reused app.** `--base-ref` serves a temporary checkout of the base and removes it afterwards; `--base-url` uses a base that is already running. Either pairs each before image with its after image. `--shot` retakes named shots into a new folder. An app already answering is reused; otherwise `app.start` runs and is stopped at the end.
+- **The tool writes the reviewer brief.** `brief.md` has numbered images with absolute paths, the criteria, the not-reached list, findings, measurements, the request log, and setup calls, in the order ux-gate sends them.
+- **A `pointer` step proves hover and drag in a real browser.** It moves in small steps and fails when a named element disappears on the way or the click target is not under the pointer.
+- **Implementers write the shot list.** Their reply now names a shot list in the capture format and, for pointer-sensitive changes, the real-pointer result. Delivery sends a reply missing either back, and passes the shot list to the gate runner.
+- **A stall watchdog for background agents.** A new `agent-routing/scripts/stall-watch` exits when an agent's transcript has not changed for a set time (45 minutes, 120 for PR monitors). Agent-routing tells orchestrators to keep it armed whenever they wait, that a status ping cannot reach a stuck agent, and to put a 10-minute timeout on every shell command in each dispatch prompt. Delivery's liveness step uses it.
+- **Breaking:** every capturing step needs `target`, and a pathway needs explicit `steps`.
+
 ## v10.5.0 (2026-10-24)
 
 A new command gets several models to pitch their own take on a feature, then folds the best parts into one proposal.

@@ -70,6 +70,10 @@ async function capture(overrides = {}, args = ['--smoke'], project = root) {
     pathways: [{ name: 'test', path: '/clean', steps: [{ name: 'open' }] }],
     ...overrides,
   };
+  // Every shot names a target; these checks are about the whole page.
+  for (const p of matrix.pathways) {
+    for (const step of p.steps) if (step.capture !== false && !step.target) step.target = 'body';
+  }
   const out = path.join(root, `run-${++runNumber}`);
   const matrixFile = out + '.json';
   fs.writeFileSync(matrixFile, JSON.stringify(matrix));
@@ -105,6 +109,7 @@ async function main() {
         fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ type }));
         fs.copyFileSync(script, path.join(dir, 'ux-capture'));
         fs.copyFileSync(script + '.mjs', path.join(dir, 'ux-capture.mjs'));
+        fs.cpSync(path.join(path.dirname(script), 'lib'), path.join(dir, 'lib'), { recursive: true });
         const r = await promisify(execFile)(process.execPath, [path.join(dir, 'ux-capture'), '--help']);
         assert(r.stdout.includes('Usage: ux-capture'), type);
       }
@@ -185,7 +190,8 @@ async function main() {
       ]));
       assert.equal(r.code, 0, r.stderr + JSON.stringify(r.checks));
       assert.deepEqual(r.entries.map(e => Boolean(e.files.still)), [false, false, true]);
-      assert.equal(fs.readdirSync(r.out).filter(f => f.endsWith('.png')).length, 1);
+      assert.deepEqual(fs.readdirSync(r.out).filter(f => f.endsWith('.png')).sort(),
+        ['test-dismiss-default-1440-light-target.png', 'test-dismiss-default-1440-light.png']);
     });
     await check('Tab cannot falsely prove reachability of a skipped control', async () => {
       const r = await capture(pathway('/unreachable', [
