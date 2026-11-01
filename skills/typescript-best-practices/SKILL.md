@@ -18,7 +18,7 @@ Change a type that forces a shortcut. Keep any signature the task specifies or e
 | Exhaustiveness | Make adding a variant break the build at every `switch` on it. A catch-all `default` that returns a value lets the missed variant compile. |
 | `satisfies` | Check a constant against a type with `satisfies`, not `as`. It reports missing fields and keeps the inferred type. |
 | One owner per shape | Import or derive a shape that already has an owner. Two shapes that only happen to match stay separate. |
-| Swappable arguments | When two or more parameters share a primitive type but have different roles, take one object so a swap can't compile. |
+| Object args | Pass several arguments as one object so their order can't be confused. Skip this on hot paths: per-frame rendering, tokenizers, parsers. |
 
 ## Examples
 
@@ -26,8 +26,10 @@ Open the section you need:
 
 - A value with several states: [Discriminated unions](references/patterns.md#discriminated-unions)
 - A cast or `!` you want gone: [Removing an assertion](references/patterns.md#removing-an-assertion)
+- A type guard: [Type guards](references/patterns.md#type-guards)
 - A list that must have an item: [Non-empty lists](references/patterns.md#non-empty-lists)
+- A `!` or "should never happen" throw: [Simplest total type](references/patterns.md#simplest-total-type)
 - JSON, a request body, or a config value: [Parsing at a boundary](references/patterns.md#parsing-at-a-boundary)
 - A `switch` on a union: [Exhaustive switches](references/patterns.md#exhaustive-switches)
 - A typed constant: [`satisfies`](references/patterns.md#satisfies)
-- Several IDs of the same type: [IDs that can be swapped](references/patterns.md#ids-that-can-be-swapped)
+- A function with several arguments: [Object args](references/patterns.md#object-args)

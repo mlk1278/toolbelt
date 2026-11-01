@@ -2,6 +2,13 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.7.1 (2026-11-01)
+
+`typescript-best-practices` moves closer to Lauren Tan's original.
+
+- **The Object args rule is back.** Agents now pass several arguments to a function as one object, except on hot paths such as per-frame rendering, tokenizers, and parsers. It replaces the narrower rule that covered only parameters that could be swapped by accident.
+- **Three pieces of her reference file are back:** the example of a type guard that checks less than it claims, the checklist for removing a cast, and the before-and-after for "Simplest total type". The checklist has one correction: for a claim the compiler cannot express, it now says to use a branded type or assert with a comment, because `satisfies` cannot do that job. The lookup list points to the two new sections.
+
 ## v10.7.0 (2026-11-01)
 
 A new skill keeps agents from silencing the TypeScript compiler when they write or edit `.ts` and `.tsx` files.

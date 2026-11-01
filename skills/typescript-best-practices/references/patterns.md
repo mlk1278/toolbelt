@@ -1,5 +1,7 @@
 # TypeScript patterns
 
+Contents: [Discriminated unions](#discriminated-unions), [Removing an assertion](#removing-an-assertion), [Type guards](#type-guards), [Non-empty lists](#non-empty-lists), [Simplest total type](#simplest-total-type), [Parsing at a boundary](#parsing-at-a-boundary), [Exhaustive switches](#exhaustive-switches), [`satisfies`](#satisfies), [Object args](#object-args).
+
 ## Discriminated unions
 
 ```ts
@@ -15,7 +17,14 @@ type Job =
 
 ## Removing an assertion
 
-Find out why the compiler can't see the fact, then fix that. A missing discriminant needs a union. A wide source type needs a parse. With the `Job` union above, every `finishedAt` here is a `Date`, so no `!` is needed:
+When refactoring an `as` out of existing code, identify why TypeScript can't infer:
+
+- Missing discriminant: add one, switch to a discriminated union.
+- Overly wide source type (e.g. `Record<string, unknown>`): narrow it.
+- Untyped boundary: parse with the schema that owns the shape. Add a schema only where none exists.
+- Genuinely inexpressible: use a branded type, or assert with a comment saying why the claim holds.
+
+With the `Job` union above, every `finishedAt` here is a `Date`, so no `!` is needed:
 
 ```ts
 type FailedJob = Extract<Job, { status: "failed" }>;
@@ -25,19 +34,52 @@ function failures(jobs: Job[]): FailedJob[] {
 }
 ```
 
+## Type guards
+
+A guard must actually verify the claim. A lying guard is worse than `as`.
+
+```ts
+// Don't: claims a full User after checking only for id.
+function isUser(data: unknown): data is User {
+  return typeof data === "object" && data !== null && "id" in data;
+}
+```
+
+Prefer discriminant narrowing when possible.
+
 ## Non-empty lists
 
 ```ts
 type NonEmpty<T> = [T, ...T[]];
 
 const isNonEmpty = <T>(items: T[]): items is NonEmpty<T> => items.length > 0;
+```
 
-function newest<T>(items: NonEmpty<T>): T {
-  return items[0];
+Narrow once where a plain `T[]` arrives. `map` and `slice` return `T[]`, not `NonEmpty<T>`.
+
+## Simplest total type
+
+Don't strengthen everything. Keep `T[]` when every operation on it is total:
+
+```ts
+const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0); // [] is 0, fine
+```
+
+Strengthen when the loose type forces a lie at a use site. The tells are `!`, `arr[0] as T`, and a "should never happen" throw:
+
+```ts
+// Don't: partiality smuggled past the compiler
+function newestSession(sessions: Session[]): Session {
+  return sessions.at(0)!;
+}
+
+// Do: strengthen the input; the assertion disappears
+function newestSession(sessions: NonEmpty<Session>): Session {
+  return sessions[0];
 }
 ```
 
-Narrow once where a plain `T[]` arrives. `map` and `slice` return `T[]`, not `NonEmpty<T>`. Keep `T[]` when an empty list is a normal input, as in a sum.
+Weakening the result to `Session | undefined` is the other total signature.
 
 ## Parsing at a boundary
 
@@ -80,7 +122,7 @@ const config = { theme: "dark", cols: 3 } satisfies Config; // config.theme is "
 const missing = { theme: "dark" } as Config; // compiles with cols missing
 ```
 
-## IDs that can be swapped
+## Object args
 
 ```ts
 // Bad: with (jobId: string, customerId: string, invoiceId: string), a swap compiles.
