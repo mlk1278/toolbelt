@@ -80,6 +80,9 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 **Testing**
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
 
+**TypeScript**
+- **typescript-best-practices** - Rules that keep the compiler checking, for writing, editing, or critiquing `.ts` and `.tsx` files
+
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause tracing and condition-based waiting)
 - **verification-before-completion** - Audit every claim against a tool result before reporting
@@ -130,6 +133,8 @@ Toolbelt began as a fork of [Superpowers](https://github.com/obra/superpowers) b
 The editorial rules in `writing-skills` and the review smell baseline are adapted from [Matt Pocock's skills](https://github.com/mattpocock/skills) (MIT).
 
 `unslop` is adapted from [Lauren Tan's skill in cursor/plugins](https://github.com/cursor/plugins/tree/main/pstack/skills/unslop) (MIT).
+
+`typescript-best-practices` is adapted from [Lauren Tan's skill in cursor/plugins](https://github.com/cursor/plugins/tree/main/pstack/skills/typescript-best-practices) (MIT).
 
 ## License
 

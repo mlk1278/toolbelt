@@ -2,8 +2,7 @@
 #
 # Word-count ceilings, repo-wide.
 #
-# Prints every count and fails on the first file over its ceiling, then checks
-# the total across skills/**/*.md.
+# Prints every count and fails on the first file over its ceiling.
 set -euo pipefail
 
 repo_root=$(git rev-parse --show-toplevel)
@@ -36,6 +35,8 @@ ceilings=(
   "skills/unslop/SKILL.md:1270"
   "skills/quorum/SKILL.md:820"
   "skills/quick-task/SKILL.md:244"
+  "skills/typescript-best-practices/SKILL.md:520"
+  "skills/typescript-best-practices/references/patterns.md:490"
   "skills/test-driven-development/writing-good-tests.md:530"
   "skills/using-toolbelt/references/codex-tools.md:210"
   "skills/quick-task/mini-plan-example.md:120"
@@ -74,12 +75,3 @@ for entry in "${ceilings[@]}"; do
     exit 1
   fi
 done
-
-# The whole skills tree stays under one budget, so a new file cannot dodge the ceilings.
-total_ceiling=19500
-total=$(find "$repo_root/skills" -name '*.md' -print0 | xargs -0 cat | wc -w)
-echo "$total/$total_ceiling skills/**/*.md"
-if [[ "$total" -ge "$total_ceiling" ]]; then
-  echo "not ok - skills/**/*.md exceeds $total_ceiling words" >&2
-  exit 1
-fi

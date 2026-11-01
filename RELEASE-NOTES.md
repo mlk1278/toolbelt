@@ -2,6 +2,13 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.7.0 (2026-11-01)
+
+A new skill keeps agents from silencing the TypeScript compiler when they write or edit `.ts` and `.tsx` files.
+
+- **A new `typescript-best-practices` skill loads when an agent writes, edits, or critiques a TypeScript file, not when it only reads one.** It is adapted from Lauren Tan's skill in cursor/plugins, under the MIT license, and cut from 16 rules to 10. The rules cover splitting states into their own types, fixing errors instead of suppressing them, avoiding casts and `!`, parsing outside data where it enters, and making a new variant break the build. A short lookup list in the skill points to a worked example for each common case. In a small test task with no skill loaded, three of three agents used `!` or `as`, accepted `null` as a date (which zod turns into 1970), and took three swappable plain strings. On the same task with the near-final wording, none of the three did. Review then made a few small wording corrections, and the final text was not re-run.
+- **The word-count test no longer caps the total across all skills.** The limits on individual files stay.
+
 ## v10.6.0 (2026-11-01)
 
 UX captures now do the risky and repetitive parts themselves, implementers hand over the shot list, and orchestrators notice an agent that stopped moving. All three come from a two-day, 25-PR UI program in a consuming project.
