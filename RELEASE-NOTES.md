@@ -2,6 +2,12 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.8.0 (2026-11-04)
+
+A new skill improves an existing screen in a few small, checked steps.
+
+- **A new `ui-hillclimb` skill loads when an agent is asked to improve an existing screen or workflow, from polish to redesign, while it keeps showing the same information.** Changing what a screen shows stays with `interactive-design`. The agent records the starting version, writes down one improvement it can check and the behavior that must keep working, then tries up to three ideas. It keeps an idea only if it passes that check and beats the best version so far. A separate reviewer then compares the starting version and the final version without knowing which is which. It sees only the screens the change touched, plus the screen before or after one when it needs that to follow the flow. If no idea was kept, the review is skipped and the starting version stays. The skill reports back to your human partner and does not merge. GPT-6.1 Sol and Muse reviewed the wording. No test against an agent without the skill was run.
+
 ## v10.7.2 (2026-11-01)
 
 A post-merge review of `typescript-best-practices` found three corrections.

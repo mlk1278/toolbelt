@@ -91,6 +91,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 - **brainstorming** - Socratic design refinement
 - **writing-specs** - Spec documents and their review gates
 - **interactive-design** - Frontend-first prototyping against fixture-backed API contracts
+- **ui-hillclimb** - Improve an existing screen in a few one-idea attempts, each checked against the best so far, with a blind A/B review
 - **writing-plans** - Detailed implementation plans
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Verify feedback against the code before acting on it
