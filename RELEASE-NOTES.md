@@ -2,6 +2,13 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.9.0 (2026-11-07)
+
+One skill now covers improving what exists, at two sizes.
+
+- **A new `hill-climb` skill loads when an agent is asked to improve an existing screen, workflow, or product outcome through measured attempts.** A quick run improves one screen or workflow in one session. A campaign runs several rounds toward a target across many inputs, with a written contract, scripted checks proven before any actor runs, fresh blind actors, and problem groups that count as fixed only after a fresh actor re-tests them on the original input. A new `scripts/scoreboard` checks the campaign records and blocks the next fix round until those re-tests exist. Routing gains an `actor` reviewer specialty, and an actor on a visual task needs a vision-capable model.
+- **`ui-hillclimb` is folded into `hill-climb` as its quick size and removed.** Its behavior carries over, with one change at the end. A kept result now goes to `requesting-code-review`, and merging still stays with your human partner.
+
 ## v10.8.0 (2026-11-04)
 
 A new skill improves an existing screen in a few small, checked steps.

@@ -57,4 +57,4 @@ reference the old names, replace them (old on the left):
 Config and scratch moved under one dot-dir: `.workstack/` and `.superpowers/` are now
 `.toolbelt/`. Agent routing now lives in `.toolbelt/routing/<harness>.md`; the old
 `agents.json` is no longer read. Name the `errand` role (formerly `operator`) and the
-reviewer specialties `code`, `spec`, `plan`, `ux`, and `gate` there.
+reviewer specialties `code`, `spec`, `plan`, `ux`, `gate`, and `actor` there.

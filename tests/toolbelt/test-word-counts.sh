@@ -24,7 +24,6 @@ ceilings=(
   "skills/interactive-design/iteration-mode.md:240"
   "skills/writing-plans/SKILL.md:1600"
   "skills/ux-gate/SKILL.md:1060"
-  "skills/ui-hillclimb/SKILL.md:720"
   "skills/ux-gate/matrix.md:1580"
   "skills/writing-specs/SKILL.md:695"
   "skills/delivery/SKILL.md:930"

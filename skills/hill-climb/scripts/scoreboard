@@ -1,0 +1,427 @@
+#!/usr/bin/env bash
+# Check a hill-climb campaign's records and print its scoreboard.
+#
+# Record files are tab-separated with a header row. Lists inside a column
+# are comma-separated, and "-" means empty.
+#
+#   fixes.tsv: round, commit, group, problem, scenarios, sample
+#   runs.tsv: round, scenario, commit, input_hash, brief, dispatch, score,
+#     outcome (finished, incomplete, or invalid), problems
+#   regress/baseline.tsv and regress/<commit>.tsv, both optional:
+#     scenario, result (pass or fail), note
+#   loop.md may hold lines at the start of a line:
+#     scorer-hash <repo-relative-path> <sha256>
+#
+# A later fixes.tsv row with the same group replaces the earlier one. A
+# group is verified when fresh actor runs have re-tested its sample at or
+# after its fix commit, on the original input, and (when regress/ exists)
+# none of its scenarios fails regress at HEAD.
+#
+# Exit 0: clear, the fixer may run. Exit 1: blocked, with each reason and
+# what clears it. Reopened groups, regress failures, and new regress
+# failures are fixer work, so they are listed as first targets and do not
+# block. Exit 2: a bad call, or malformed records, each reported as
+# "file:line: column <name>: <problem>".
+#
+# Usage:
+#   scoreboard init <run-dir>   create fixes.tsv and runs.tsv with headers
+#   scoreboard <run-dir>        check the records and print the board
+#
+# Run the check from inside the git repository that holds the product commits.
+set -euo pipefail
+
+fixes_header=$'round\tcommit\tgroup\tproblem\tscenarios\tsample'
+runs_header=$'round\tscenario\tcommit\tinput_hash\tbrief\tdispatch\tscore\toutcome\tproblems'
+
+usage() {
+  echo "usage: scoreboard init <run-dir> | scoreboard <run-dir>" >&2
+  exit 2
+}
+
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  else
+    shasum -a 256 "$1" | awk '{print $1}'
+  fi
+}
+
+if [ "${1:-}" = init ]; then
+  [ $# -eq 2 ] || usage
+  run=$2
+  if [ -e "$run" ] && [ ! -d "$run" ]; then
+    echo "$run:1: column round: run path exists and is not a directory" >&2
+    exit 2
+  fi
+  exists=0
+  for f in fixes.tsv runs.tsv; do
+    if [ -e "$run/$f" ]; then
+      echo "$run/$f:1: column round: file already exists; init writes nothing" >&2
+      exists=1
+    fi
+  done
+  [ "$exists" -eq 0 ] || exit 2
+  mkdir -p "$run"
+  printf '%s\n' "$fixes_header" >"$run/fixes.tsv"
+  printf '%s\n' "$runs_header" >"$run/runs.tsv"
+  echo "created $run/fixes.tsv and $run/runs.tsv"
+  exit 0
+fi
+
+[ $# -eq 1 ] || usage
+run=$1
+
+if [ ! -d "$run" ]; then
+  echo "$run:1: column round: run directory is missing; create it with: scoreboard init $run" >&2
+  exit 2
+fi
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "$run:1: column commit: not inside a git repository" >&2
+  exit 2
+fi
+repo_top=$(git rev-parse --show-toplevel)
+
+missing=""
+for f in fixes.tsv runs.tsv; do
+  if [ ! -f "$run/$f" ]; then
+    missing+="$run/$f:1: column round: file is missing; create both record files with: scoreboard init $run"$'\n'
+  fi
+done
+if [ -n "$missing" ]; then
+  printf '%s' "$missing" >&2
+  exit 2
+fi
+
+# Find the regress files that matter: the baseline and the one for HEAD.
+has_regress=0
+baseline=""
+head_file=""
+head_sha=""
+if [ -d "$run/regress" ]; then
+  has_regress=1
+  head_sha=$(git rev-parse --verify --quiet 'HEAD^{commit}' 2>/dev/null) || {
+    echo "$run/regress:1: column scenario: HEAD does not resolve to a commit" >&2
+    exit 2
+  }
+  [ -f "$run/regress/baseline.tsv" ] && baseline="$run/regress/baseline.tsv"
+  for f in "$run"/regress/*.tsv; do
+    [ -e "$f" ] || continue
+    stem=$(basename "$f" .tsv)
+    [ "$stem" = baseline ] && continue
+    if resolved=$(git rev-parse --verify --quiet "${stem}^{commit}" 2>/dev/null) && [ "$resolved" = "$head_sha" ]; then
+      if [ -n "$head_file" ]; then
+        echo "$f:1: column scenario: second regress file for HEAD; keep one" >&2
+        exit 2
+      fi
+      head_file=$f
+    fi
+  done
+fi
+
+for f in "$run/fixes.tsv" "$run/runs.tsv"; do
+  if [ ! -s "$f" ]; then
+    echo "$f:1: column round: file is empty; it has no header row" >&2
+    exit 2
+  fi
+done
+for f in "$baseline" "$head_file"; do
+  if [ -n "$f" ] && [ ! -s "$f" ]; then
+    echo "$f:1: column scenario: file is empty; it has no header row" >&2
+    exit 2
+  fi
+done
+
+tmpd=$(mktemp -d)
+trap 'rm -rf "$tmpd"' EXIT
+
+validate_args=(mode=fixes "$run/fixes.tsv" mode=runs "$run/runs.tsv")
+[ -n "$baseline" ] && validate_args+=(mode=regress "$baseline")
+[ -n "$head_file" ] && validate_args+=(mode=regress "$head_file")
+
+validation=$(awk '
+  BEGIN { FS = "\t" }
+  function err(col, msg) { printf "%s:%d: column %s: %s\n", FILENAME, FNR, col, msg }
+  function badlist(s,   m, parts, i) {
+    if (s == "-") return 0
+    if (s == "") return 1
+    m = split(s, parts, ",")
+    for (i = 1; i <= m; i++) if (parts[i] == "" || parts[i] == "-") return 1
+    return 0
+  }
+  function setcols() {
+    if (mode == "fixes") ncols = split("round commit group problem scenarios sample", cols, " ")
+    else if (mode == "runs") ncols = split("round scenario commit input_hash brief dispatch score outcome problems", cols, " ")
+    else ncols = split("scenario result note", cols, " ")
+  }
+  { sub(/\r$/, "") }
+  FNR == 1 {
+    setcols()
+    if (NF != ncols) err(cols[NF < ncols ? NF + 1 : ncols], "wrong header: expected " ncols " columns, got " NF)
+    else for (i = 1; i <= ncols; i++) if ($i != cols[i]) { err(cols[i], "wrong header: expected \"" cols[i] "\", got \"" $i "\""); break }
+    next
+  }
+  NF != ncols { err(cols[NF < ncols ? NF + 1 : ncols], "expected " ncols " columns, got " NF); next }
+  mode == "fixes" {
+    if ($1 !~ /^[0-9]+$/) err("round", "expected a round number, got \"" $1 "\"")
+    if ($2 == "") err("commit", "empty")
+    if ($3 == "" || $3 ~ /[ ,]/) err("group", "expected a group ID with no spaces or commas, got \"" $3 "\"")
+    if ($4 == "") err("problem", "empty")
+    if (badlist($5)) err("scenarios", "expected a comma-separated list or -, got \"" $5 "\"")
+    else if (badlist($6)) err("sample", "expected a comma-separated list or -, got \"" $6 "\"")
+    else {
+      m = ($5 == "-") ? 0 : split($5, scen, ",")
+      k = ($6 == "-") ? 0 : split($6, samp, ",")
+      for (a = 1; a <= k; a++) {
+        found = 0
+        for (b = 1; b <= m; b++) if (samp[a] == scen[b]) found = 1
+        if (!found) err("sample", "\"" samp[a] "\" is not in scenarios")
+      }
+    }
+    next
+  }
+  mode == "runs" {
+    if ($1 !~ /^[0-9]+$/) err("round", "expected a round number, got \"" $1 "\"")
+    if ($2 == "") err("scenario", "empty")
+    if ($3 == "") err("commit", "empty")
+    if ($4 == "") err("input_hash", "empty")
+    if ($5 == "") err("brief", "empty")
+    if ($6 == "") err("dispatch", "empty")
+    if ($7 !~ /^([1-9](\.[0-9]+)?|10(\.0+)?|-)$/) err("score", "expected 1 to 10 or -, got \"" $7 "\"")
+    if ($8 != "finished" && $8 != "incomplete" && $8 != "invalid") err("outcome", "expected finished, incomplete, or invalid, got \"" $8 "\"")
+    if (badlist($9)) err("problems", "expected a comma-separated list or -, got \"" $9 "\"")
+    next
+  }
+  {
+    if ($1 == "") err("scenario", "empty")
+    if ($2 != "pass" && $2 != "fail") err("result", "expected pass or fail, got \"" $2 "\"")
+  }
+' "${validate_args[@]}")
+if [ -n "$validation" ]; then
+  printf '%s\n' "$validation" >&2
+  exit 2
+fi
+
+# Scorer hashes from loop.md. A missing or changed scorer file blocks; a
+# malformed scorer-hash line is a records problem.
+: >"$tmpd/scorer.tsv"
+loop_errors=""
+if [ -f "$run/loop.md" ]; then
+  lineno=0
+  while IFS= read -r raw || [ -n "$raw" ]; do
+    lineno=$((lineno + 1))
+    line=${raw%$'\r'}
+    trimmed=${line#"${line%%[![:space:]]*}"}
+    case "$trimmed" in
+      scorer-hash | scorer-hash\ * | scorer-hash$'\t'*) ;;
+      *) continue ;;
+    esac
+    read -r -a parts <<<"$trimmed"
+    if [ "${#parts[@]}" -ne 3 ]; then
+      loop_errors+="$run/loop.md:$lineno: column scorer-hash: expected \"scorer-hash <repo-relative-path> <sha256>\""$'\n'
+      continue
+    fi
+    spath=${parts[1]}
+    swant=${parts[2]}
+    if ! [[ $swant =~ ^[0-9a-fA-F]{64}$ ]]; then
+      loop_errors+="$run/loop.md:$lineno: column scorer-hash: expected a 64-digit sha256, got \"$swant\""$'\n'
+      continue
+    fi
+    if [ ! -f "$repo_top/$spath" ]; then
+      printf '%s\tmissing\n' "$spath" >>"$tmpd/scorer.tsv"
+    elif [ "$(sha256_of "$repo_top/$spath" | tr 'A-Z' 'a-z')" != "$(printf '%s' "$swant" | tr 'A-Z' 'a-z')" ]; then
+      printf '%s\tmismatch\n' "$spath" >>"$tmpd/scorer.tsv"
+    fi
+  done <"$run/loop.md"
+fi
+if [ -n "$loop_errors" ]; then
+  printf '%s' "$loop_errors" >&2
+  exit 2
+fi
+
+# Resolve every recorded commit, then work out which fix commits each run
+# commit contains.
+: >"$tmpd/commits.tsv"
+commit_errors=""
+while IFS=$'\t' read -r cfile cline cval; do
+  if full=$(git rev-parse --verify --quiet "${cval}^{commit}" 2>/dev/null); then
+    if ! cut -f1 "$tmpd/commits.tsv" | grep -qxF "$cval"; then
+      printf '%s\t%s\n' "$cval" "$full" >>"$tmpd/commits.tsv"
+    fi
+  else
+    commit_errors+="$cfile:$cline: column commit: \"$cval\" does not resolve to a commit"$'\n'
+  fi
+done < <(
+  awk 'BEGIN { FS = "\t"; OFS = "\t" } FNR > 1 { print FILENAME, FNR, $2 }' "$run/fixes.tsv"
+  awk 'BEGIN { FS = "\t"; OFS = "\t" } FNR > 1 { print FILENAME, FNR, $3 }' "$run/runs.tsv"
+)
+if [ -n "$commit_errors" ]; then
+  printf '%s' "$commit_errors" >&2
+  exit 2
+fi
+
+full_of() { awk -F '\t' -v orig="$1" '$1 == orig { print $2; exit }' "$tmpd/commits.tsv"; }
+
+: >"$tmpd/pairs.tsv"
+while IFS= read -r forig; do
+  [ -n "$forig" ] || continue
+  ffull=$(full_of "$forig")
+  while IFS= read -r rorig; do
+    [ -n "$rorig" ] || continue
+    rfull=$(full_of "$rorig")
+    if git merge-base --is-ancestor "$ffull" "$rfull" 2>/dev/null; then
+      printf '%s\t%s\n' "$ffull" "$rfull" >>"$tmpd/pairs.tsv"
+    fi
+  done < <(awk -F '\t' 'FNR > 1 { print $3 }' "$run/runs.tsv" | sort -u)
+done < <(awk -F '\t' 'FNR > 1 { print $2 }' "$run/fixes.tsv" | sort -u)
+
+board_args=(
+  mode=pairs "$tmpd/pairs.tsv"
+  mode=commits "$tmpd/commits.tsv"
+  mode=scorer "$tmpd/scorer.tsv"
+  mode=runs "$run/runs.tsv"
+  mode=fixes "$run/fixes.tsv"
+)
+[ -n "$baseline" ] && board_args+=(mode=baseline "$baseline")
+[ -n "$head_file" ] && board_args+=(mode=headregress "$head_file")
+head_present=0
+[ -n "$head_file" ] && head_present=1
+
+awk -v has_regress="$has_regress" -v head_present="$head_present" -v head_sha="$head_sha" '
+  BEGIN { FS = "\t"; OFS = "\t" }
+  function addscen(s) { if (!(s in seen_scen)) { seen_scen[s] = 1; scen_order[++nscen] = s } }
+  function inlist(list, item,   m, parts, i) {
+    if (list == "-") return 0
+    m = split(list, parts, ",")
+    for (i = 1; i <= m; i++) if (parts[i] == item) return 1
+    return 0
+  }
+  function regress_of(s) {
+    if (!(s in head_result)) return "-"
+    if (head_result[s] == "pass") return "pass"
+    if ((s in base_result) && base_result[s] == "fail") return "known-fail"
+    return "fail"
+  }
+  { sub(/\r$/, "") }
+  mode == "pairs" { anc[$1 SUBSEP $2] = 1; next }
+  mode == "commits" { full[$1] = $2; next }
+  mode == "scorer" { nscorer++; scorer_path[nscorer] = $1; scorer_kind[nscorer] = $2; next }
+  FNR == 1 { next }
+  mode == "runs" {
+    nruns++
+    r_round[nruns] = $1; r_scen[nruns] = $2; r_commit[nruns] = full[$3]
+    r_hash[nruns] = $4; r_dispatch[nruns] = $6; r_score[nruns] = $7
+    r_outcome[nruns] = $8; r_problems[nruns] = $9; r_line[nruns] = FNR
+    dispatch_count[$6]++
+    if (!($2 in first_hash)) first_hash[$2] = $4
+    addscen($2)
+    if (!($2 in latest_round) || $1 + 0 >= latest_round[$2] + 0) {
+      latest_round[$2] = $1; latest_score[$2] = $7; latest_outcome[$2] = $8
+    }
+    next
+  }
+  mode == "fixes" {
+    g = $3
+    if (!(g in seen_group)) { seen_group[g] = 1; group_order[++ngroups] = g }
+    g_commit[g] = full[$2]; g_commit_orig[g] = $2; g_scenarios[g] = $5; g_sample[g] = $6
+    if ($5 != "-") { m = split($5, parts, ","); for (i = 1; i <= m; i++) addscen(parts[i]) }
+    next
+  }
+  mode == "baseline" { base_result[$1] = $2; addscen($1); next }
+  mode == "headregress" { head_result[$1] = $2; addscen($1); next }
+  END {
+    for (gi = 1; gi <= ngroups; gi++) {
+      g = group_order[gi]
+      if (g_scenarios[g] != "-") {
+        m = split(g_scenarios[g], parts, ",")
+        for (i = 1; i <= m; i++) {
+          prev = (parts[i] in scen_groups) ? scen_groups[parts[i]] : ""
+          scen_groups[parts[i]] = (prev == "") ? g : prev "," g
+        }
+      }
+    }
+
+    blocked = 0
+    for (gi = 1; gi <= ngroups; gi++) {
+      g = group_order[gi]
+      C = g_commit[g]
+      reopened_line = 0
+      for (ri = 1; ri <= nruns; ri++)
+        if (((C, r_commit[ri]) in anc) && inlist(r_problems[ri], g)) { reopened_line = r_line[ri]; break }
+      regress_list = ""
+      if (g_scenarios[g] != "-") {
+        m = split(g_scenarios[g], parts, ",")
+        for (i = 1; i <= m; i++)
+          if ((parts[i] in head_result) && head_result[parts[i]] == "fail")
+            regress_list = (regress_list == "") ? parts[i] : regress_list "," parts[i]
+      }
+      needs[g] = ""
+      if (g_sample[g] != "-") {
+        k = split(g_sample[g], samp, ",")
+        for (a = 1; a <= k; a++) {
+          counted = 0
+          for (ri = 1; ri <= nruns; ri++)
+            if (r_scen[ri] == samp[a] && ((C, r_commit[ri]) in anc) &&
+                r_hash[ri] == first_hash[samp[a]] && dispatch_count[r_dispatch[ri]] == 1 &&
+                r_outcome[ri] != "invalid") { counted = 1; break }
+          if (!counted) needs[g] = (needs[g] == "") ? samp[a] : needs[g] "," samp[a]
+        }
+      }
+      if (reopened_line) { status[g] = "REOPENED by runs.tsv:" reopened_line; kind[g] = "reopened" }
+      else if (regress_list != "") { status[g] = "REGRESS FAIL " regress_list; kind[g] = "regress" }
+      else if (needs[g] != "") { status[g] = "NEEDS RETEST " needs[g]; kind[g] = "needs"; blocked++ }
+      else { status[g] = "VERIFIED"; kind[g] = "verified" }
+    }
+    regress_blocked = (has_regress && !head_present) ? 1 : 0
+    blocked += nscorer + regress_blocked
+
+    print "scenario", "latest round", "score", "outcome", "regress at HEAD", "groups"
+    for (si = 1; si <= nscen; si++) {
+      s = scen_order[si]
+      print s, (s in latest_round ? latest_round[s] : "-"), (s in latest_score ? latest_score[s] : "-"), \
+        (s in latest_outcome ? latest_outcome[s] : "-"), regress_of(s), (s in scen_groups ? scen_groups[s] : "-")
+    }
+    print ""
+
+    ntargets = 0
+    for (gi = 1; gi <= ngroups; gi++) if (kind[group_order[gi]] == "reopened") targets[++ntargets] = group_order[gi] ": " status[group_order[gi]]
+    for (gi = 1; gi <= ngroups; gi++) if (kind[group_order[gi]] == "regress") targets[++ntargets] = group_order[gi] ": " status[group_order[gi]]
+    for (si = 1; si <= nscen; si++) if (regress_of(scen_order[si]) == "fail") targets[++ntargets] = "new regress failure: " scen_order[si]
+    if (ntargets == 0) print "First targets: none"
+    else { print "First targets:"; for (t = 1; t <= ntargets; t++) print targets[t] }
+    print ""
+
+    if (ngroups == 0) print "Groups: none"
+    else { print "Groups:"; for (gi = 1; gi <= ngroups; gi++) print group_order[gi] ": " status[group_order[gi]] }
+    print ""
+
+    if (nscorer == 0) print "Scorer hashes: ok"
+    else {
+      print "Scorer hashes:"
+      for (i = 1; i <= nscorer; i++)
+        print (scorer_kind[i] == "missing" ? "scorer file missing: " : "scorer hash mismatch: ") scorer_path[i]
+    }
+
+    if (blocked > 0) {
+      print ""
+      print "Blocked:"
+      for (gi = 1; gi <= ngroups; gi++) {
+        g = group_order[gi]
+        if (kind[g] == "needs")
+          print "group " g ": NEEDS RETEST " needs[g] " (run a fresh actor on each listed scenario at or after " g_commit_orig[g] " with its original input)"
+      }
+      for (i = 1; i <= nscorer; i++) {
+        if (scorer_kind[i] == "missing")
+          print "scorer file missing: " scorer_path[i] " (restore the file or remove its scorer-hash line from loop.md)"
+        else
+          print "scorer hash mismatch: " scorer_path[i] " (restore the file or update its scorer-hash line in loop.md)"
+      }
+      if (regress_blocked) print "regress not run at HEAD (add a regress file for HEAD " head_sha ")"
+      print ""
+      print "BLOCKED: " blocked " reason(s)"
+      exit 1
+    }
+    print ""
+    print "CLEAR: fixer may run"
+    exit 0
+  }
+' "${board_args[@]}"
