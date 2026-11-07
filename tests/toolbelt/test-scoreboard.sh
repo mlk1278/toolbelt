@@ -31,12 +31,16 @@ git -C "$repo" add more.txt
 git -C "$repo" commit -qm c2
 c2=$(git -C "$repo" rev-parse HEAD)
 head_short=$(git -C "$repo" rev-parse --short HEAD)
+side=$(git -C "$repo" commit-tree "$c0^{tree}" -p "$c0" -m side)
 
-if command -v sha256sum >/dev/null 2>&1; then
-  scorer_hash=$(sha256sum "$repo/scorer.txt" | awk '{print $1}')
-else
-  scorer_hash=$(shasum -a 256 "$repo/scorer.txt" | awk '{print $1}')
-fi
+sha_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  else
+    shasum -a 256 "$1" | awk '{print $1}'
+  fi
+}
+scorer_hash=$(sha_of "$repo/scorer.txt")
 
 run="$repo/run"
 out=""
@@ -245,6 +249,92 @@ expect "outside a git repository is malformed" 2 "not inside a git repository"
 
 if out=$("$script" 2>&1); then code=0; else code=$?; fi
 expect "no arguments is a usage error" 2 "usage: scoreboard"
+
+# A regress file named after a ref, not a commit hash, is malformed. It
+# would otherwise pass as run at HEAD forever.
+verified_records
+write_regress HEAD.tsv s1:pass s2:pass
+board
+expect "ref-named regress file is malformed" 2 "HEAD.tsv:1: column scenario:"
+expect "ref-named regress file is malformed: reason" 2 "hex commit hash"
+
+# A HEAD regress file with no result for a group scenario blocks.
+verified_records
+write_regress baseline.tsv s1:pass s2:pass
+write_regress "$head_short.tsv" s2:pass
+board
+expect "missing regress result blocks" 1 "G1: REGRESS MISSING s1"
+expect "missing regress result blocks: count" 1 "BLOCKED: 1 reason(s)"
+
+verified_records
+write_regress "$head_short.tsv"
+board
+expect "header-only regress file blocks" 1 "G1: REGRESS MISSING s1,s2"
+
+# One scenario gets one row per regress file.
+verified_records
+write_regress "$head_short.tsv" s1:pass s1:fail s2:pass
+board
+expect "duplicate regress scenario is malformed" 2 "$head_short.tsv:3: column scenario:"
+expect "duplicate regress scenario is malformed: reason" 2 "duplicate"
+
+# Every fix names at least one sample scenario.
+new_run
+fix 1 "$c1" G1 "broken widget" "s1,s2" "-"
+board
+expect "empty sample is malformed" 2 "fixes.tsv:2: column sample:"
+expect "empty sample is malformed: reason" 2 "at least one sample"
+
+# A fix commit outside the history of HEAD blocks, even when records from
+# the discarded candidate would otherwise verify the group.
+new_run
+fix 1 "$side" G1 "broken widget" "s1" "s1"
+act 0 s1 "$c0" hashA v1 d0 5 finished G1
+act 1 s1 "$side" hashA v1 d1 9 finished -
+board
+expect "fix outside HEAD history blocks" 1 "G1: NOT IN HEAD"
+expect "fix outside HEAD history blocks: reason" 1 "is not in the history of HEAD"
+expect "fix outside HEAD history blocks: count" 1 "BLOCKED: 1 reason(s)"
+
+# An invalid run does not reopen a group. It is replayed instead.
+verified_records
+act 2 s1 "$c2" hashA v1 d9 - invalid G1
+board
+expect "invalid run does not reopen" 0 "G1: VERIFIED"
+expect_absent "invalid run does not reopen: no reopened line" "REOPENED"
+
+# The reference input hash comes from the first non-invalid run.
+new_run
+fix 1 "$c1" G1 "broken widget" "s1" "s1"
+act 0 s1 "$c0" hashBad v1 d0 - invalid -
+act 0 s1 "$c0" hashA v1 d1 5 finished G1
+act 1 s1 "$c1" hashA v1 d2 9 finished -
+board
+expect "reference hash skips invalid runs" 0 "G1: VERIFIED"
+
+# List items carry no spaces. A padded item would otherwise become a
+# phantom scenario, or a problem group that never matches.
+new_run
+fix 1 "$c1" G1 "broken widget" "s1, s2" "s1"
+board
+expect "padded scenario is malformed" 2 "fixes.tsv:2: column scenarios:"
+
+new_run
+act 0 s1 "$c0" hashA v1 d0 5 finished "G2, G1"
+board
+expect "padded problem group is malformed" 2 "runs.tsv:2: column problems:"
+
+new_run
+printf '\n' >>"$run/runs.tsv"
+board
+expect "blank line is malformed" 2 "runs.tsv:2: column round: blank line"
+
+# A scorer path may contain spaces. The hash is the last field.
+echo spaced >"$repo/scorer file.txt"
+verified_records
+printf 'scorer-hash scorer file.txt %s\n' "$(sha_of "$repo/scorer file.txt")" >"$run/loop.md"
+board
+expect "scorer path with spaces is read" 0 "CLEAR: fixer may run"
 
 if [ "$failures" -gt 0 ]; then
   exit 1

@@ -6,10 +6,10 @@ A multi-round climb toward a target across many inputs. The core in [SKILL.md](S
 
 Put run files in `.toolbelt/hill-climb/<run>/` and start with `bash scripts/scoreboard init <run-dir>`:
 
-- `loop.md`: the contract below, plus one `scorer-hash <path> <sha256>` line per scorer file
+- `loop.md`: the contract below, plus one `scorer-hash <repo-relative-path> <sha256>` line per scorer file. A scorer file is anything inside the repo that can change a score, such as checker code, answer keys, the actor brief, or the rubric.
 - `decisions.md`: rulings from your human partner
-- `fixes.tsv`: one row per fix with the round, the commit, the problem group, the problem, the scenarios that showed it, and the sample to re-test. A later row with the same group replaces the earlier one.
-- `runs.tsv`: one row per actor run with the round, the scenario, the commit, the input hash, the brief version, the dispatch ID, the score, the outcome, and the problem groups it hit
+- `fixes.tsv`: one row per kept fix with the round, the commit, the problem group, the problem, the scenarios that showed it, and the sample to re-test. A later row with the same group replaces the earlier one.
+- `runs.tsv`: one row per actor run with the round, the scenario, the commit, the input hash, the brief version, the dispatch ID, the score, the outcome, and the problem groups it hit. The input hash covers whatever defines the scenario's input, such as its input file, its seed data, or its setup script.
 - `regress/`: deterministic results per scenario, `baseline.tsv` from round 0 and one file per commit after that
 - `rounds/<n>/`: evidence and the round report
 
@@ -50,13 +50,13 @@ At round 0, record the baseline deterministic results in `regress/baseline.tsv` 
 
 ## The round
 
-1. Run the deterministic checks at the current commit. Record them in `regress/<commit>.tsv` and compare them with the baseline. A new failure, meaning a scenario that passed before and fails now, gets fixed first, and that scenario gets no actor this round.
+1. Run the deterministic checks at the current commit. Record them in `regress/<commit>.tsv` and compare them with the baseline. A new failure, meaning a scenario that passed before and fails now, goes to the top of the fixer's list for this round, and that scenario gets no actor this round.
 2. Run actors on the scenarios the scoreboard says need a re-test, plus one or two unseen scenarios. Record each run in `runs.tsv` as it finishes. Run actors in parallel only when the project's `.toolbelt/worktree-policy.md` proves their data is separate. Otherwise run them one at a time.
 3. Run `check` against each actor's resulting state.
 4. Run `bash scripts/scoreboard <run-dir>`. The fixer runs only on exit 0. Exit 1 lists each reason and what clears it. Exit 2 means the records are broken, so fix the named file, line, and column and run it again. Never skip the scoreboard.
-5. The fixer works a capped list of problem groups. Size the cap to the re-tests the next round can afford. The fixer sees training failures as expected versus got. It does not see answer-key files, checker code, or anything hidden. A suspected wrong key or checker bug comes back to you as a dispute.
+5. The fixer works a capped list of problem groups. Size the cap to the re-tests the next round can afford. The fixer sees training failures as expected versus got. It does not see answer-key files, checker code, or anything hidden. It also never gets `loop.md` itself, because `loop.md` names the scorer files. Pass it only the hard rules from `loop.md`. A suspected wrong key or checker bug comes back to you as a dispute.
 6. Each fix adds a deterministic check where one can prove the behavior. Judgment calls such as clutter and comprehension stay with the actor.
-7. Record each fix in `fixes.tsv`. Write a short round report in `rounds/<n>/` with the scoreboard output and any open questions in plain words.
+7. Record each fix in `fixes.tsv` once it is kept. Write a short round report in `rounds/<n>/` with the scoreboard output and any open questions in plain words.
 
 ## Problem groups
 
@@ -91,4 +91,8 @@ Once the run is at target, give the fixer one round where it may only remove, me
 
 ## Review as you go
 
-Every few rounds, and after any structural change, review the commit range. Build the package with `bash ../delivery/scripts/review-package BASE HEAD` and pass the findings to the next fixer. The final review at the exit in [SKILL.md](SKILL.md) still happens.
+Every few rounds, and after any structural change, review the commit range. Build the package with `bash ../delivery/scripts/review-package BASE HEAD`, route a `reviewer` with specialty `code` through `toolbelt:agent-routing` (required) on the package output, and pass its findings to the next fixer. The final review at the exit in [SKILL.md](SKILL.md) still happens.
+
+## Stop
+
+When the stop rule is met or the budget runs out, follow the exit in [SKILL.md](SKILL.md).

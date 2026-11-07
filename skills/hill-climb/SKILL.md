@@ -1,6 +1,6 @@
 ---
 name: hill-climb
-description: Use when asked to improve an existing screen, workflow, or product outcome through measured attempts: from polishing one screen to a multi-round climb toward a target across many inputs. Not for fixing one known bug.
+description: Use when asked to improve an existing screen, workflow, or product outcome through measured attempts, from polishing one screen to a multi-round climb toward a target across many inputs. Not for fixing one known bug. Not for changing what information a screen shows.
 ---
 
 # Hill climb
