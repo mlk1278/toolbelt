@@ -2,6 +2,13 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.10.0 (2026-11-09)
+
+Claude Fable 5.2 replaces Fable 5.1.
+
+- **The bundled `fable-5-1-*` agents are now `fable-5-2-*`** (low, medium, high, xhigh).
+- **Default routing:** the planner is Fable 5.2 high, the implementer stays Opus 5.5 high with Fable 5.2 medium kept for the occasional tricky or sensitive task, and Claude-written work is reviewed by GPT-6.1 Sol xhigh.
+
 ## v10.9.0 (2026-11-07)
 
 One skill now covers improving what exists, at two sizes.
