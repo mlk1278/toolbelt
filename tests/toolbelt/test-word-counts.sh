@@ -22,13 +22,13 @@ ceilings=(
   "skills/requesting-code-review/code-reviewer.md:525"
   "skills/interactive-design/SKILL.md:957"
   "skills/interactive-design/iteration-mode.md:240"
-  "skills/writing-plans/SKILL.md:1600"
-  "skills/ux-gate/SKILL.md:1060"
+  "skills/writing-plans/SKILL.md:1740"
+  "skills/ux-gate/SKILL.md:1460"
   "skills/ux-gate/matrix.md:1580"
   "skills/writing-specs/SKILL.md:695"
-  "skills/delivery/SKILL.md:930"
+  "skills/delivery/SKILL.md:1020"
   "skills/delivery/branch-lifecycle.md:360"
-  "skills/delivery/implementer-prompt.md:560"
+  "skills/delivery/implementer-prompt.md:700"
   "skills/pr-monitor/SKILL.md:728"
   "skills/agent-routing/SKILL.md:710"
   "skills/configure-routing/SKILL.md:786"
@@ -45,7 +45,7 @@ ceilings=(
   "skills/brainstorming/visual-companion.md:590"
   "skills/systematic-debugging/root-cause-tracing.md:150"
   "skills/systematic-debugging/condition-based-waiting.md:140"
-  "docs/WORKFLOW.md:290"
+  "docs/WORKFLOW.md:320"
 )
 
 for entry in "${ceilings[@]}"; do

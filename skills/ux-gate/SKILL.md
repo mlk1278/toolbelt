@@ -1,6 +1,6 @@
 ---
 name: ux-gate
-description: "Use before final review of new user flows or material changes to interaction, layout, or responsive behavior, or when UX review is explicitly requested. Routine color, copy, or isolated CSS adjustments do not trigger this review on their own."
+description: "Use before final review of new user flows or material changes to interaction, layout, responsive behavior, or the facts a screen shows, or when UX review is explicitly requested. A typo fix or an isolated color or spacing adjustment does not trigger this review on its own."
 ---
 
 # UX Gate
@@ -19,6 +19,8 @@ The environment must serve the changed routes with queryable data. Without that,
 Start from the implementer's shot list when given; it already names routes, targets, states, and fixtures. Pick the smallest set of pathways covering the diff and the acceptance criteria's entry points and states. Read `.toolbelt/ux-policy.md` when present for launch, auth, theme, data, viewports, exceptions, and design references; infer and record what it lacks. Read the `Reuses:` lines for this boundary's tasks in the plan, and the prototype ledger's header when a ledger path was supplied; they name any screen the changed surface has to match.
 
 - Use the relevant breakpoints for changed markup, copy, or layout, or one width when presentation cannot vary.
+- Capture each changed surface as its whole screen once per width, and in the narrowest container it appears in, such as a side panel. A viewport width is not a container width.
+- Include the hardest data each surface can meet: the longest realistic text, and every notice that can show together.
 - Capture every supported theme for every changed surface.
 - Reach the criteria's states (empty, loading, error, dense data, overlays) with the matrix's `fixtures` or `setup`, never by editing app source or a hand-written browser script.
 - Check changed hover or focus, keyboard reach for changed interactions, and scrolling past the fold. Prove Tab reach with `press` and `expectFocus`; a direct `focus` does not. Use `capture: false` for assertion-only steps, and `motion: true` for changed motion.
@@ -41,20 +43,22 @@ Run any token or palette check the policy names. A mechanical finding at `should
 
 ## 3. Review
 
-Route one `reviewer` with specialty `ux` through agent-routing, on a vision-capable model. Send the capture's `brief.md`: its numbered images first, as `Image N: <tag>`, then criteria, findings, measurements, the request log, and the review file path. Add any unchanged capture a criterion needs and the design-reference path. When you captured a screen to match, send its stills beside the changed surface they match, and say whether that screen is a reference or is itself changed by this diff. The reviewer reads `docs/REVIEW-GUIDANCE.md` when present and judges without driving the browser:
+Route one `reviewer` with specialty `ux` through agent-routing, on a vision-capable model. Send the capture's `brief.md`: its numbered images first, as `Image N: <tag>`, then criteria, findings, measurements, the request log, and the review file path. Add any unchanged capture a criterion needs, the design-reference path, and each task's `Layout:` from the plan, which says who uses the surface and what they decide there. When you captured a screen to match, send its stills beside the changed surface they match, and say whether that screen is a reference or is itself changed by this diff. Send each surface's whole-screen `<tag>.png` for each reviewed width before its target and detail crops; `brief.md` numbers only the crops, so add the whole-screen stills yourself. Keep each review to twelve images. Split a larger set by screen, then by groups of states and widths within a screen, give each batch its context images and the criteria it covers, and merge the batch verdicts into one before you return it. The reviewer reads `docs/REVIEW-GUIDANCE.md` when present and judges without driving the browser:
 
+> Review the rendered screens for the task they serve. The criteria are a floor: report a clear usability or hierarchy defect even when no criterion names it. Keep the approved design direction and the required behavior, and leave your own style preferences out.
+>
 > Pass 1: mark each criterion met, not met, or not evidenced, citing the evidence.
 >
-> Pass 2: identify visible inconsistencies or usability problems in spacing, alignment, typography, contrast, action hierarchy, and states. Use the project's design rules and reference screens. When a matching screen was sent beside the changed surface, judge the changed surface against that screen and report any difference in hierarchy, spacing, information order, and actions that the criteria do not explain. Explain the consequence and relevant criterion or convention. Distinguish legitimate disabled states from unfinished controls. Code review checks component imports; screenshots cannot establish them.
+> Pass 2: look at each whole screen first, then its crops, and answer for each surface. Can the reader find at once the facts this surface exists to give? Is anything said twice? Is a fact the reader needs for the decision shown as minor text? Do related facts and their actions sit together? Does anything collide, clip, or turn ambiguous at this width? When a matching screen or an approved mockup was sent, does the changed surface match its hierarchy, spacing, information order, and actions, apart from what the criteria explain?
 >
-> Each finding names a severity (blocker, should, nit), the evidence, expected and actual behavior, and component/file when known. Missing evidence can block a criterion.
+> Return at most five findings per review, ranked by what they cost the user, one per cause. None is a valid answer. Each finding names a severity, the image and region, what you see, the consequence for the user, and what a fix has to achieve, with the component file when known. A blocker or a should is a defect a user would hit. A nit is a preference and never blocks. Use the supplied interaction results and measurements for behavior, contrast ratios, and tap sizes, because screenshots alone do not establish them. Mark a claim not evidenced when the evidence it needs is absent; missing evidence can block a criterion. Component imports belong to code review.
 >
 > Write the report to the review file. Reply with only the verdict, one line per blocker and should, the nit count, and the path.
 
 Return that reply, with the head, to your caller.
 
-## 4. One fix round
+## 4. Fixes and the re-check
 
-The owning implementer fixes every finding, nits included. Retake the shots the fix touched with `--shot <pathway/step>` and `--out .toolbelt/ux/head-2/`, and send the new brief to the same reviewer thread. There is no second round: return remaining blockers with their evidence for your human partner, and the rest as Minor findings.
+The owning implementer fixes every blocker and should, and takes or declines each nit with a one-line reason. Retake the shots the fix touched with `--shot <pathway/step>` into a new folder, `.toolbelt/ux/head-2/` for the first fix and `.toolbelt/ux/head-3/` for the second, because the script refuses a folder that already holds a capture. Keep the earlier folders for the before images. Send the new brief to the same reviewer thread with each finding beside its before and after images, as separate images. The re-check answers only whether each finding is fixed and whether the fix broke a neighboring state; it opens no new review. Allow two fix rounds. A blocker or should still open after the second goes to your human partner with its images, at the severity the reviewer gave it.
 
 Every capture binds to the head it was taken at. Carry a pathway's evidence to a new head only while its rendered dependencies and fixtures are unchanged, and record the source head; a shared style or token change touches every consuming pathway. A docs-only push carries everything forward. Report pathways covered separately from the screenshot count.

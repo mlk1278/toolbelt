@@ -54,7 +54,7 @@ The body is longer than the decision it carries, and it still leaves out the err
 
 When nothing exists yet but information will appear on more than one screen, plan it as a shared piece and name the other screens in `Reuses:`. If you expect more screens but cannot name one, say so. Your human partner decides at plan approval.
 
-A shared piece owns what must look and behave the same. Each screen passes in what differs, as data, columns, or callbacks. The shared piece never checks which screen or record type called it. Put business rules in the screen's own save path or the backend.
+A shared piece owns what must look and behave the same. Share what a fact means and how it is calculated or worded. Let each screen arrange those facts for the question it answers, such as a list row and a confirmation dialog, and share a layout where it fits both. Each screen passes in what differs, as data, columns, or callbacks. The shared piece never checks which screen or record type called it. Put business rules in the screen's own save path or the backend.
 
 You may propose a new shared component, helper, or service when it makes the app look, perform, or hold up better. Say what it improves and how a reviewer would see it.
 
@@ -85,6 +85,7 @@ Every new record type then edits the shared table.
 - **Files:** the files expected to change.
 - **Contract:** what the task makes true.
 - **Reuses:** one of three things: existing code this task uses or extends instead of writing its own, as a path, a symbol, and a few words on what it does; the shared piece this task creates and its users in this plan; or `none — <why>`, naming the search that found nothing. For user-visible work, also name the screen to match, what has to look the same, what legitimately differs, and which side owns each difference.
+- **Layout:** only on a task that creates or reshapes something the user sees. Say who uses it and what they decide there, the facts in order of importance, where the main action sits, how it adapts in its narrowest container and on a phone, and the states to capture. Name the approved mockup or prototype when one exists. A new screen with no close match gets one rendered first, with its hardest data, for your human partner to approve. A change inside a shape already approved names the screen to match in `Reuses:` instead.
 - **Interfaces:** only on a task whose output another task in the plan uses. Give what it consumes and produces, by name and shape.
 - **Proves:** one line per decided behavior, with guards marked `(guard)`.
 - **Verify:** the command that proves the task.
@@ -135,7 +136,7 @@ The PR table's columns are `| PR | Outcome | Tasks | Depends on | Risk | Indepen
 
 1. Run `bash scripts/plan-check PLAN` and fix what it reports.
 2. Check the plan against the spec. Every requirement must have a task, and names must agree across tasks.
-3. Route one `reviewer` with specialty `plan` through agent-routing, on a harness other than yours. Give it the plan and spec paths. It judges coverage, whether any contract leaves a product decision to the implementer, the boundaries and their `Risk`, and the answers in `## Risks`. Ask it to challenge each `Reuses:` and every `none`, and to look for rebuilt code that already exists.
+3. Route one `reviewer` with specialty `plan` through agent-routing, on a harness other than yours. Give it the plan and spec paths. It judges coverage, whether any contract leaves a product decision to the implementer, the boundaries and their `Risk`, and the answers in `## Risks`. Ask it to challenge each `Reuses:`, every `none`, and a missing or vague `Layout:`, and to look for rebuilt code that already exists.
 4. Fix small gaps. Take a change of approach to your human partner.
 
 ## Handoff

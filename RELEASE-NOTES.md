@@ -2,6 +2,20 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.11.0 (2026-11-12)
+
+The agent that builds a screen now looks at it, and the UX reviewer may judge how it reads.
+
+- **The implementer captures every visible change and opens the images before it replies.** Its shot list covers the whole screen at phone and desktop widths, the narrowest container the piece appears in, and its hardest data. It fixes what it sees and captures again, for at most two fix passes. Before, it wrote a shot list and never viewed the result.
+- **A plan task that creates or reshapes a screen carries a `Layout:` field.** It says who uses the screen and what they decide there, the facts in order of importance, where the main action sits, and how it adapts when narrow. The implementer stops with `NEEDS_DECISION` when a new screen has neither a `Layout:` nor a screen to match. The plan reviewer challenges a missing or vague one.
+- **Plans share what a fact means, and each screen arranges it.** A list row and a confirmation dialog may lay the same facts out differently, and share a layout where it fits both.
+- **The UX reviewer's instructions changed.** Criteria are a floor, so it reports a clear usability or hierarchy defect no criterion names. It answers fixed questions about each surface, returns at most five findings per review, and may return none. It gets whole-screen views, the narrowest container, and at most twelve images per review.
+- **A nit no longer has to be fixed.** Blockers and shoulds are fixed; the implementer takes or declines each nit with a reason. The re-check only confirms each fix and checks neighboring states, and there are two fix rounds where there was one. A defect still open after the second goes to your human partner at its original severity, where before it was downgraded to Minor.
+- **The gate now also runs when a change alters the facts a screen shows.** A typo fix or an isolated color or spacing change still skips it.
+- **Delivery keeps the captures.** Every capture folder is copied into `<workspace>/boundary-N-ux/`, listed in the closing message with the head it was taken at, and left in place at cleanup. A screen the PR monitor changes after publication is not captured again; the closing message names it.
+
+These changes come from tracing six shipped screens back through the pipeline, and from reviews by GPT-6.1 Sol and Muse. No test against an agent without the changes was run.
+
 ## v10.10.0 (2026-11-09)
 
 Claude Fable 5.2 replaces Fable 5.1.

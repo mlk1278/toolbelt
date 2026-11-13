@@ -30,4 +30,4 @@ After the PR is confirmed merged:
 2. Confirm the local branch head is the final head SHA the monitor returned. Anything beyond it is unpublished work: stop and ask your human partner.
 3. Release any teardown `.toolbelt/worktree-policy.md` defines. From the main repo root, run `git worktree remove <path>`, `git worktree prune`, and `git branch -D <branch>`; a squash merge leaves its commits unmerged by ancestry.
 
-Never remove a worktree with live agents or evidence another open boundary needs. Keep prototype baselines until the boundaries that use them close. Remove the workspace only after every boundary closes. Abandoning a boundary takes your human partner's explicit instruction.
+Never remove a worktree with live agents or evidence another open boundary needs. Keep prototype baselines until the boundaries that use them close. After every boundary closes, remove the workspace's scratch files, and keep the workspace directory and its `boundary-N-ux/` folders for your human partner to delete. Abandoning a boundary takes your human partner's explicit instruction.
