@@ -2,6 +2,10 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.11.1 (2026-11-12)
+
+- **Secondary text alone is no longer a defect.** The implementer and the UX reviewer now ask whether a fact the reader needs is hard to find or read, where they asked whether it was shown as minor text. Required detail may sit in secondary text when the hierarchy stays clear. GPT-6.1 Sol raised this in review of a consuming project.
+
 ## v10.11.0 (2026-11-12)
 
 The agent that builds a screen now looks at it, and the UX reviewer may judge how it reads.
