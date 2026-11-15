@@ -63,8 +63,8 @@ At round 0, record the baseline deterministic results in `regress/baseline.tsv` 
 1. Run the deterministic checks at the current commit. Record them in `regress/<commit>.tsv` and compare them with the baseline. A new failure, meaning a scenario that passed before and fails now, goes to the top of the fixer's list for this round, and that scenario gets no actor this round.
 2. Run a fresh actor on each scenario the scoreboard says needs a re-test, each its own dispatch with that scenario's original brief and input. Then run one actor on a new scenario, with new tasks or a new person, because rerunning old scenarios for their own sake rescores old complaints instead of finding new problems. Run actors one at a time unless the project's `.toolbelt/worktree-policy.md` proves their data is separate. Record each run in `runs.tsv` as it finishes.
 3. Run `check` against each actor's resulting state.
-4. Run `bash scripts/scoreboard <run-dir>`. Fixers run only on exit 0. Exit 1 lists each reason and what clears it. Exit 2 means the records are broken, so fix the named file, line, and column and run it again. Never skip the scoreboard.
-5. Dispatch triage with the paths of the actor reports, the scoreboard output, and the hard rules from `loop.md`. It writes `rounds/<n>/plan.md`, as described under Triage.
+4. Dispatch triage with the paths of the actor reports, `fixes.tsv`, `runs.tsv`, earlier rounds' plans, and the hard rules from `loop.md`. It records canonical group IDs and writes `rounds/<n>/plan.md`, as described under Triage.
+5. Run `bash scripts/scoreboard <run-dir>`. Fixers run only on exit 0. Exit 1 lists each reason and what clears it. Exit 2 means the records are broken, so fix the named file, line, and column and run it again. Never skip the scoreboard. When it lists a first target the plan lacks, send it back to triage.
 6. Dispatch one fixer per contract in the plan, as described under Fixers.
 7. Dispatch the integrator once every fixer has reported, as described under Integration.
 8. Each fix adds a deterministic check where one can prove the behavior. Judgment calls such as clutter and comprehension stay with the actor.
@@ -72,23 +72,23 @@ At round 0, record the baseline deterministic results in `regress/baseline.tsv` 
 
 ## Triage
 
-Triage reads the actor reports and the scoreboard, then writes `rounds/<n>/plan.md` with:
+Actors are blind, so they name problems in their own words. Triage maps each reported problem to an existing group in `fixes.tsv` or a new group ID, and writes those IDs into the problems column of this round's `runs.tsv` rows, so a problem that comes back reopens its group. Then it writes `rounds/<n>/plan.md` with:
 
 - each problem once, with duplicates merged
 - a decision for each: fix now, won't fix with the reason, or ask your human partner
-- for each fix, a definition of done stated as something visible on screen, with the state and the path the actor took to reach it
+- for each fix, a definition of done: what the user sees on screen, with the state and the path the actor took to reach it, or for work with no screen, what a deterministic check shows
 - the fixer contracts: which problems each owns, and which screens and files it may touch
 
-Give each contract one screen, with all of that screen's problems batched, sized so one fixer can finish it within about 300K tokens of context. Give server and data-model work its own contract, because a fixer that does server work first carries that code through every later step. Prefer fewer, fuller contracts to many small ones. Plan no more fixes than the next round's actor can re-test.
+Give each contract one screen, with all of that screen's problems batched, or for work with no screen, one area of behavior, sized so one fixer can finish it within about 300K tokens of context. Give server and data-model work its own contract, because a fixer that does server work first carries that code through every later step. Prefer fewer, fuller contracts to many small ones. Plan no more fixes than the next round's actor can re-test.
 
-A problem marked won't fix that actors report again in two rounds goes to your human partner.
+A problem an earlier round's plan marked won't fix that actors report again in two rounds goes to your human partner.
 
 ## Fixers
 
 Give each fixer its contract, the definitions of done, the paths of the report sections it needs, and only the hard rules from `loop.md`. It sees training failures as expected versus got. It never sees answer-key files, checker code, anything hidden, or `loop.md` itself, because `loop.md` names the scorer files. A suspected wrong key or checker bug comes back to you as a dispute.
 
-- When the project's `.toolbelt/worktree-policy.md` gives each worktree its own running app, each fixer works in its own worktree. Otherwise fixers share the checkout and commit with `git commit -m <message> -- <paths>`, so no fixer sweeps in another's staged files.
-- For each problem, the fixer fixes it, captures the changed states, looks at the capture, and commits. The capture replays the path the actor reported, not only the happy path. It uses the capture harness the project's instructions name, or else `../ux-gate/scripts/ux-capture` with a matrix in the format of `../ux-gate/matrix.md`; pass the fixer both absolute paths. It opens all of one capture's images in a single step.
+- When the project's `.toolbelt/worktree-policy.md` gives each worktree its own running app, each fixer works in its own worktree. Otherwise fixers share the checkout: contracts that share no file run at once and commit with `git commit -m <message> -- <paths>`, and contracts that share a file run one after another, because a path-limited commit still takes another fixer's unfinished edits to a shared file.
+- For each problem, the fixer fixes it, captures the changed states, looks at the capture, and commits. Work with no screen skips capture; the deterministic check the fix adds is its evidence. The capture replays the path the actor reported, not only the happy path. It uses the capture harness the project's instructions name, or else `../ux-gate/scripts/ux-capture` with a matrix in the format of `../ux-gate/matrix.md`; pass the fixer both absolute paths. It opens all of one capture's images in a single step.
 - A capture harness blocks writes during its steps, so a state after a write comes from the harness's setup calls or response fixtures, and every replay starts from the same state. The fixer checks the real write in its running app. Its report lists its capture files for the integrator.
 - It runs the tests and typecheck for what it changed. Wider checks run at integration.
 - Its report says which definitions of done it met, where it disagrees with the plan, and any owner questions.

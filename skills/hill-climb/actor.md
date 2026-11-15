@@ -10,7 +10,7 @@ Put the intentional limits in the brief. The actor lists anything it wanted outs
 
 Keep the actor blind. The brief holds no target score, no round number, no earlier feedback, and no hint that anything changed. Dispatch every run fresh, with only the brief and no parent conversation. Record the dispatch ID in `runs.tsv`.
 
-The actor saves its report and screenshots in `rounds/<n>/` and returns the report's path with its headline outcomes, so the full report never passes through the orchestrator's context.
+The actor saves its report and screenshots in a folder you name that does not reveal the round, and returns the report's path with its headline outcomes, so the full report never passes through the orchestrator's context. Move the folder into `rounds/<n>/` afterwards.
 
 Version the brief. When the brief or the actor model changes, re-score the current commit before comparing anything with earlier runs.
 
