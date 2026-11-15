@@ -10,6 +10,8 @@ Put the intentional limits in the brief. The actor lists anything it wanted outs
 
 Keep the actor blind. The brief holds no target score, no round number, no earlier feedback, and no hint that anything changed. Dispatch every run fresh, with only the brief and no parent conversation. Record the dispatch ID in `runs.tsv`.
 
+The actor saves its report and screenshots in `rounds/<n>/` and returns the report's path with its headline outcomes, so the full report never passes through the orchestrator's context.
+
 Version the brief. When the brief or the actor model changes, re-score the current commit before comparing anything with earlier runs.
 
 ## Outcomes
@@ -20,7 +22,7 @@ Version the brief. When the brief or the actor model changes, re-score the curre
 
 ## Scoring
 
-Score a few areas, each with written anchors for what the scores mean. Add plain yes or no outcomes: finished, needed a workaround, and times stuck. Report the 1 to 10 headline score, and base decisions on the outcomes and the checker instead.
+Score a few areas, each with written anchors for what the scores mean. For a user interface, include how each task felt to do and how good the screen looks, not only whether the task could be done. Add plain yes or no outcomes: finished, needed a workaround, and times stuck. Report the 1 to 10 headline score, and base decisions on the outcomes and the checker instead.
 
 At round 0, run the baseline two or three times. The spread across those runs is the noise level, and a gain smaller than that spread is noise. Claiming the target takes two fresh runs at target on the same commit.
 

@@ -26,6 +26,9 @@ expected = {
     "haiku-5-5-xhigh": ("Claude Haiku 5.5 on xhigh effort.", "claude-haiku-5-5", "xhigh"),
 }
 
+# The implementer tier compacts at 300K so one long fix never re-reads a near-1M context on every call.
+extra_fields = {"opus-5-5-high": {"autoCompactWindow": "300000"}}
+
 agent_dir = root / "agents"
 actual_files = {path.stem for path in agent_dir.glob("*.md")} if agent_dir.exists() else set()
 if actual_files != set(expected):
@@ -49,6 +52,7 @@ for name, (description, model, effort) in expected.items():
         "description": description,
         "model": model,
         "effort": effort,
+        **extra_fields.get(name, {}),
     }
     if fields != wanted:
         raise SystemExit(f"not ok - {name}\nexpected: {wanted}\nactual: {fields}")

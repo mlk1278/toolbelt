@@ -2,6 +2,16 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.12.0 (2026-11-15)
+
+A hill-climb campaign keeps each agent's context small. A measured 13-round climb re-read about 3 billion cached tokens, nearly all of it fixers carrying 5 to 11 problems in one context that grew to 400 to 500K tokens; loops and retries were under 5%.
+
+- **The round is leaner.** A fresh actor re-runs each scenario awaiting a re-test, one dispatch each, and one more actor tries a new scenario. A triage step, routed as `planner`, writes the round's plan: each problem's decision, a definition of done visible on screen, and fixer contracts of one screen each, sized to finish within about 300K tokens, with server and data work in its own contract. One integrator runs the project's own checks for the combined change and re-runs every fixer's capture.
+- **The orchestrator only dispatches and keeps records.** It passes reports and plans as file paths and never reads them in detail, sorts problems, or touches code, so a campaign runs on a mid-tier model at medium effort.
+- **Fixers check their own work cheaply.** Each fixer works in its own worktree when the project allows it, captures each fix through the project's capture harness, replaying the actor's path, and opens a capture's images in one step. A state after a write comes from the harness's setup or fixtures, so every replay starts from the same state.
+- **A saturated actor ends the climb.** Two rounds of kept fixes with flat scores, while each actor names different problems, means switch the actor's model family or stop.
+- **Native Opus 5.5 high subagents compact at 300K** (`autoCompactWindow: 300000`), so one long fix no longer re-reads a near-1M context on every call. Cross-harness launches read no agent definition and keep their default.
+
 ## v10.11.1 (2026-11-12)
 
 - **Secondary text alone is no longer a defect.** The implementer and the UX reviewer now ask whether a fact the reader needs is hard to find or read, where they asked whether it was shown as minor text. Required detail may sit in secondary text when the hierarchy stays clear. GPT-6.1 Sol raised this in review of a consuming project.
