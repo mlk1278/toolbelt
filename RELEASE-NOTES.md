@@ -2,6 +2,20 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.14.0 (2026-11-20)
+
+The UX reviewer works from a tuned prompt. Ten measured rounds on 11 screenshots of shipped screens, graded blind against 118 known defects, found two ideas that matter and ten that do not. A mid-tier reviewer went from finding 41% of the defects to 69-75% across five runs, with at most two false statements per run.
+
+- **The reviewer's prompt is its own file**, `skills/ux-gate/reviewer-prompt.md`. Before judging, the reviewer writes an inventory of each surface's facts, controls, text styles, containers, and space, then compares the entries with each other. It then judges as the person using the screen and as a career designer. This inventory step is the larger gain: without it reviewers stop after about three problems.
+- **The design reference is read last.** Read first as the standard, it narrowed the review to its own rules and other real defects fell from 73% found to 54-58%. Read last, with nothing dropped, it cost nothing.
+- **Each surface names its focus**, the changed component or the whole screen. The reviewer studies the focus and gives the rest of the page a short fit check.
+- **One reviewer per changed page**, in parallel when a boundary changes several, with each surface's states and widths kept together. The twelve-image limit is gone. One reviewer handed 11 unrelated screens found 64% where smaller sets found 69-75%.
+- **The implementer's self-check covers the changed piece** in its tidy and hardest states at phone and desktop widths, the hardest state at tablet width, and the whole screen once per width. It continues until the captures break no rule in the design reference, where it stopped after two passes.
+- **The fix loop ends on a condition.** It repeats while each re-check closes findings. A finding goes to your human partner when the implementer reports it fixed and the reviewer still finds it open. Before, it stopped after two rounds.
+- Fix rounds stay with the same implementer. Across 157 fix rounds in one consuming project a resumed implementer took a median of 23 requests and 6.5 minutes, about half the cost of fresh agents on comparable fixes. That is not a paired test.
+- Not kept, each inside the 3-point run-to-run noise or worse: a reference image of a good screen, enlarged detail crops (two to four times the input), a slimmer inventory, the reference as a checklist without the inventory, severity labels as triage, and wording that invites the reviewer to call a screen good. Higher effort on the same model found no more.
+- Word ceilings: `ux-gate/SKILL.md` falls to 1,200, the new reviewer prompt is 870, and `delivery/implementer-prompt.md` rises from 750 to 770.
+
 ## v10.13.0 (2026-11-20)
 
 The UX reviewer judges how a screen looks, and reports everything it finds. A blind test on 11 screenshots of shipped screens, graded against the product owner's list of defects, showed reviewers stop after about three problems and file visible defects, such as a half-outlined button or an empty band beside truncated text, as taste. This release removes the two instructions that encouraged both: the five-finding cap and "leave your own style preferences out".
