@@ -2,6 +2,14 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.14.1 (2026-11-20)
+
+The core workflow skills are rewritten in plain, readable prose with no behavior changes.
+
+- **Core skills unslopped:** `delivery` (with `branch-lifecycle.md` and `implementer-prompt.md`), `requesting-code-review` (with `code-reviewer.md` and `smell-baseline.md`), `receiving-code-review`, `verification-before-completion`, `test-driven-development` (with `writing-good-tests.md`), `systematic-debugging`, `brainstorming` (with `visual-companion.md`), `interactive-design` (with `iteration-mode.md`), `writing-specs`, `writing-plans`, `quick-task`, `ux-gate` (with `matrix.md` and `reviewer-prompt.md`), `pr-monitor`, `finishing-a-development-branch`, `agent-routing`, `using-git-worktrees`, `using-toolbelt` (with `codex-tools.md`), `docs/WORKFLOW.md`, and `docs/ADOPTING-IN-A-PROJECT.md`.
+- **Protocol kept intact:** every `<HARD-GATE>`, `<ENTRY-GATE>`, script-matched heading, placeholder token, status token, threshold, handoff line, and the tuned ordering in `skills/ux-gate/reviewer-prompt.md` stays unchanged. Opus 5.5 on high reviewed the full diff against `HEAD` before release.
+- **Word ceilings adjusted** in `tests/toolbelt/test-word-counts.sh` for the ten files where replacing telegraphic shorthand with complete sentences pushed past the prior limits: `code-reviewer.md` (525 to 540), `iteration-mode.md` (240 to 255), `writing-plans/SKILL.md` (1,740 to 1,770), `ux-gate/SKILL.md` (1,200 to 1,230), `ux-gate/matrix.md` (1,580 to 1,660), `ux-gate/reviewer-prompt.md` (870 to 900), `delivery/SKILL.md` (1,020 to 1,140), `delivery/branch-lifecycle.md` (360 to 385), `delivery/implementer-prompt.md` (770 to 810), and `agent-routing/SKILL.md` (710 to 745).
+
 ## v10.14.0 (2026-11-20)
 
 The UX reviewer works from a tuned prompt. Ten measured rounds on 11 screenshots of shipped screens, graded blind against 118 known defects, found two ideas that matter and ten that do not. A mid-tier reviewer went from finding 41% of the defects to 69-75% across five runs, with at most two false statements per run.

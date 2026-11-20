@@ -17,34 +17,34 @@ expect(buildSearchQuery({ tag: 'urgent' })).toBe(expected);
 expect(buildSearchQuery({ tag: 'urgent' })).toBe('tag:"urgent"');
 ```
 
-**No change detectors.** A test that only an intentional decision can fail, such as a constant's value or exact message wording, fires on redesign and sleeps through bugs. Test the behavior that depends on the decision: not `expect(MAX_RETRIES).toBe(5)`, but "a failing call is retried 5 times and the 6th attempt never happens."
+**No change detectors.** A test that only an intentional decision can break, such as checking a constant's value or exact message wording, fails on redesign and misses bugs. Test the behavior that depends on the decision instead: not `expect(MAX_RETRIES).toBe(5)`, but that a failing call is retried 5 times and the 6th attempt never happens.
 
-**Behavior, not text.** Run scripts against controlled inputs and assert outputs, side effects, or exit codes, never that the source contains a line.
+**Behavior, not text.** Run scripts against controlled inputs and assert their outputs, side effects, or exit codes. Never assert that a source file contains a particular line.
 
-**An absence check excludes its own evidence.** Scope the search to where the thing must not appear. Wider, and migrations, lockfiles, or the test itself keep it failing forever; narrower, and it can't fail. `git grep` exits 0 on a match, which is the failure case.
+**An absence check excludes its own evidence.** Scope the search to where the forbidden pattern must not appear. If the scope is too wide, migrations, lockfiles, or the test itself will keep it failing forever; if it is too narrow, it cannot fail. With `git grep`, exit code 0 means a match, which is the failure case.
 
-**Test your code, not the framework.** Test the contract at your code's boundaries: the route you register, the query you emit, the payload you produce. Constructors, getters, constants, and plain forwarding earn tests only when they validate, normalize, default, derive, or cause side effects.
+**Test your code, not the framework.** Test the contract at your code's boundaries: the route you register, the query you emit, and the payload you produce. Constructors, getters, constants, and plain forwarding earn tests only when they validate, normalize, default, derive, or cause side effects.
 
 A test that can fail only by crashing or by a missing selector asserts nothing. Name the break or cut the test.
 
 ## Exercise the real thing
 
-**Assert on the component, not a mock.** A mock assertion passes whenever the mock is present. Asserting a `*-mock` test ID is the usual form.
+**Assert on the component, not a mock.** A mock assertion passes whenever the mock is present. Asserting a `*-mock` test ID is the usual mistake.
 
-**Mock at the right level.** Learn every side effect of the real method before replacing it. Mock the slow or external operation and keep real what the test depends on.
+**Mock at the right level.** Learn every side effect of the real method before replacing it. Mock the slow or external operation, and keep real what the test depends on.
 
-**Make doubles specific.** When arguments, call counts, or ordering are part of the contract, assert them. Give each branch (success, error, malformed) its own fixture.
+**Make doubles specific.** When arguments, call counts, or ordering are part of the contract, assert them. Give each branch, such as success, error, and malformed input, its own fixture.
 
-**Mirror real data completely.** A mocked response carries every documented field, not just the ones the test reads.
+**Mirror real data completely.** A mocked response must include every documented field, not just the ones the test reads.
 
-**Keep test-only code in test utilities**, out of production classes.
+**Keep test-only code in test utilities.** Keep it out of production classes.
 
 **Prefer real components to complex mocks.** When mock setup outgrows the test logic, switch to an integration test.
 
 ## How many tests
 
-Ship the tests the behavior needs, in the project's existing test idioms.
+Ship the tests the behavior needs, following the project's existing test idioms.
 
 ## The mutation check
 
-For a guard or a bug fix: break the guard, watch the test fail, restore it.
+For a guard or a bug fix, break the guard, watch the test fail, and then restore it.

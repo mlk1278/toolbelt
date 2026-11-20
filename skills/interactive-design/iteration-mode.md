@@ -1,26 +1,26 @@
 # Iteration mode (existing features)
 
-SKILL.md holds except where this file differs.
+SKILL.md applies except where this file differs.
 
 **Announce:** "I'm using interactive-design to iterate on this UI with ledger-tracked data changes."
 
 ## Pending data
 
-A `[PENDING]` entry lives in the ledger's **Pending** subsection with a stable id (`P1`, `P2`, …), the surface, the data needed, and the expected shape. Creating a real fixture instead is always allowed.
+Place each `[PENDING]` entry in the ledger's **Pending** subsection with a stable id (`P1`, `P2`), the affected screen, the data needed, and the expected shape. You are always free to create a real fixture instead.
 
-When the design is complete, before §4, map each pending id to an endpoint entry. Several ids may share one.
+When the design is complete, before running Section 4 of SKILL.md, map each pending id to an endpoint entry. Several ids may share one endpoint.
 
 - `[EXISTING]`: wire the frontend to the endpoint and delete the placeholder.
 - `[EXISTING — EXTENDED]`: create a marked fixture for the delta and record the delta.
 - `[FIXTURE]`: create a marked fixture route.
 
-Delete the empty Pending subsection before §4. Re-exercise affected surfaces, including new empty and error states, and bring visible changes back to the loop for your human partner's approval. A pending id with no plausible source goes to your human partner as a design question.
+Delete the empty Pending subsection before running Section 4. Re-exercise the affected screens, including new empty and error states, and bring any visible changes back to the loop for your human partner's approval. If a pending id has no plausible data source, take it to your human partner as a design question.
 
 ## Exit routing
 
-Recommend a route and let your human partner confirm:
+Recommend a route and wait for your human partner to confirm:
 
-- **Small and decision-complete** (one outcome, one PR, no product shaping): invoke `toolbelt:quick-task`, carrying every §5 obligation that applies, with the fixture-zero check passing before merge.
-- **Otherwise:** invoke `toolbelt:writing-specs`.
+- **Small and decision-complete.** When the work is one outcome, fits in one PR, and needs no product shaping, invoke `toolbelt:quick-task`. Carry every obligation from Section 5 of SKILL.md that applies, and confirm the fixture-zero check passes before merge.
+- **Otherwise.** Invoke `toolbelt:writing-specs`.
 
 Either route ships the UI changes and backend delta in one PR.

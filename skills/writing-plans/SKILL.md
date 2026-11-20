@@ -5,36 +5,36 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 # Writing Plans
 
-Write an implementation plan that one implementer per PR follows from start to finish. The implementer reads the codebase, the plan's shared sections, and their own tasks, but not the spec or this conversation. You decide contracts, risks, and scope. The implementer writes the code.
+Write an implementation plan that one implementer per PR can follow from start to finish. The implementer reads the codebase, the plan's shared sections, and their own tasks, without reading the spec or this conversation. You decide contracts, risks, and scope; the implementer writes the code.
 
-Save to `docs/toolbelt/plans/YYYY-MM-DD-<feature-name>.md`, or where your human partner says. If the spec covers independent subsystems, propose one plan each. Plan all work before delivery starts so delivery runs unattended.
+Save the plan to `docs/toolbelt/plans/YYYY-MM-DD-<feature-name>.md`, or to the path your human partner names. If the spec covers independent subsystems, propose one plan for each. Plan all the work before delivery starts so delivery can run unattended.
 
 ## Explore first
 
-Read the nearest instructions, the files to change, and their tests. For each thing the work will show, calculate, save, or send, check whether the app already does it. Look for a shared component that shows the same information on another screen, a service or helper that already decides or calculates it, and middleware already on the request path. Search by the words the business uses, the labels on the screen, and the calculation itself, not only by your planned name for the new thing.
+Read the nearest project instructions, the files you expect to change, and their tests. For each thing the work will show, calculate, save, or send, check whether the app already does it. Look for a shared component that displays the same information on another screen, a service or helper that already decides or calculates it, and middleware already on the request path. Search by the words the business uses, the labels on the screen, and the calculation itself, not only by your planned name for the new thing.
 
-Delegate the search through agent-routing whenever the answer is not in a known file. Send a narrow question to `lookup`. Send a wide question to `explorer` to map a system, find competing implementations, or list affected callers. Keep searching as questions arise while you write. There is no single search step.
+Delegate searches through agent-routing whenever the answer is not in a file you already know. Send narrow questions to `lookup`. Send wide questions to `explorer` when you need to map a system, find competing implementations, or list affected callers. Keep searching as questions come up while you write; exploration is not a single upfront step.
 
-A `lookup` brief asks for a path, a symbol, and one line on what it does, and ends with "Stop as soon as you have found the answer." An `explorer` brief ends with "What would a competent implementer, working only from a written plan, get wrong here?"
+A `lookup` brief asks for a path, a symbol, and one line explaining what it does, and ends with "Stop as soon as you have found the answer." An `explorer` brief ends with "What would a competent implementer, working only from a written plan, get wrong here?"
 
 The first time you delegate, tell your human partner in one line which routes you use and that they can name a different model. Do not wait for a reply.
 
-Stop exploring when you can fill in every task's `Reuses:` without guessing.
+Stop exploring once you can fill in every task's `Reuses:` without guessing.
 
 ## Shape
 
-- A PR boundary is an outcome a reviewer can judge on its own. Its verification passes without later boundaries. Every task is in exactly one boundary.
-- Aim for three to nine tasks and 1,000–4,000 changed lines per PR. Above 3,000 lines, say why it stays one PR. A one-task PR is fine when not tiny. Merge a boundary under about 100 changed lines into a neighboring one unless it needs its own release order, `Risk`, or revert.
+- Each PR boundary is an outcome a reviewer can judge on its own. Its verification must pass without later boundaries. Every task belongs to exactly one boundary.
+- Aim for three to nine tasks and 1,000–4,000 changed lines per PR. Above 3,000 lines, explain why it stays one PR. A one-task PR is fine when it is not tiny. Merge a boundary under about 100 changed lines into a neighboring boundary unless it needs its own release order, `Risk`, or revert.
 - Independent boundaries list disjoint files. A dependent boundary names one predecessor in `Depends on`.
-- `Risk` is `high` for money, security, tenancy, migrations, or shared contracts; `none` for a sweep, codemod, or CI config; `medium` otherwise. `none` skips the local review.
+- Set `Risk` to `high` for money, security, tenancy, migrations, or shared contracts. Set it to `none` for a sweep, codemod, or CI config. Set it to `medium` otherwise. A `none` boundary skips the local review.
 
 ## Detail
 
 - Write contracts: names, shapes, signatures, error codes, states, owners, and exact values.
 - Write no SQL, code bodies, or tutorials.
-- A reference is a path and a symbol. File lists are hints.
+- Reference code by path and symbol. File lists are hints.
 
-You record in the plan the decisions the implementer cannot make alone. If a plan is longer than the code it describes, it contains code bodies. Replace them with contracts.
+Record the decisions the implementer cannot make alone. If a plan is longer than the code it describes, it contains code bodies; replace them with contracts.
 
 <Good>
 `POST /invoices/:id/void` requires the `invoice.void` permission. With it, the invoice's status becomes `voided` and the response is the updated invoice. A caller without it gets 403 `INVOICE_VOID_FORBIDDEN` and the invoice stays unchanged. A voided invoice cannot be voided again: 409 `INVOICE_ALREADY_VOIDED`.
@@ -52,13 +52,13 @@ The body is longer than the decision it carries, and it still leaves out the err
 
 ## Shared pieces
 
-When nothing exists yet but information will appear on more than one screen, plan it as a shared piece and name the other screens in `Reuses:`. If you expect more screens but cannot name one, say so. Your human partner decides at plan approval.
+When nothing exists yet but information will appear on more than one screen, plan it as a shared piece and name the other screens in `Reuses:`. If you expect more screens but cannot name them yet, say so; your human partner decides at plan approval.
 
-A shared piece owns what must look and behave the same. Share what a fact means and how it is calculated or worded. Let each screen arrange those facts for the question it answers, such as a list row and a confirmation dialog, and share a layout where it fits both. Each screen passes in what differs, as data, columns, or callbacks. The shared piece never checks which screen or record type called it. Put business rules in the screen's own save path or the backend.
+A shared piece owns what must look and behave the same. Share what a fact means and how the app calculates or words it. Let each screen arrange those facts for the question it answers, such as a list row versus a confirmation dialog, and share a layout where it fits both. Each screen passes in what differs as data, columns, or callbacks. The shared piece never checks which screen or record type called it. Put business rules in the screen's own save path or in the backend.
 
 You may propose a new shared component, helper, or service when it makes the app look, perform, or hold up better. Say what it improves and how a reviewer would see it.
 
-Plan moving existing screens onto a new shared piece in the same plan. Split it into PRs by the normal size rule. Only your human partner may defer the move, at plan approval. Never defer it as a silent Follow-up.
+Plan moving existing screens onto a new shared piece in the same plan, splitting the move into PRs by the normal size rule. Only your human partner may defer the move at plan approval. Never defer it silently as a follow-up.
 
 <Good>
 `**Reuses:**` `LineItemsTable` in `src/components/line-items-table.tsx`, which owns the row layout, quantity and price columns, and totals row. This screen passes in its own rows and an `onChange` callback. Match the invoice screen: same column order, spacing, and totals. Line totals come from `lineTotal` in `src/lib/money.ts`.
@@ -84,26 +84,26 @@ Every new record type then edits the shared table.
 
 - **Files:** the files expected to change.
 - **Contract:** what the task makes true.
-- **Reuses:** one of three things: existing code this task uses or extends instead of writing its own, as a path, a symbol, and a few words on what it does; the shared piece this task creates and its users in this plan; or `none — <why>`, naming the search that found nothing. For user-visible work, also name the screen to match, what has to look the same, what legitimately differs, and which side owns each difference.
-- **Layout:** only on a task that creates or reshapes something the user sees. Say who uses it and what they decide there, the facts in order of importance, where the main action sits, how it adapts in its narrowest container and on a phone, and the states to capture. Name the approved mockup or prototype when one exists. A new screen with no close match gets one rendered first, with its hardest data, for your human partner to approve. A change inside a shape already approved names the screen to match in `Reuses:` instead.
-- **Interfaces:** only on a task whose output another task in the plan uses. Give what it consumes and produces, by name and shape.
+- **Reuses:** one of three things. Name existing code this task uses or extends instead of writing its own, giving its path, symbol, and a few words on what it does. Or name the shared piece this task creates and its callers in this plan. Or write `none — <why>`, naming the search that found nothing. For user-visible work, also name the screen to match, what has to look the same, what legitimately differs, and which side owns each difference.
+- **Layout:** include this only on a task that creates or reshapes something the user sees. State who uses it and what they decide there, list the facts in order of importance, and say where the main action sits. Explain how it adapts in its narrowest container and on a phone, and list the states to capture. Name the approved mockup or prototype when one exists. A new screen with no close match needs one rendered first with its hardest data for your human partner to approve. A change inside an already-approved shape names the screen to match in `Reuses:` instead.
+- **Interfaces:** include this only on a task whose output another task in the plan uses. Name what it consumes and produces, with shapes.
 - **Proves:** one line per decided behavior, with guards marked `(guard)`.
 - **Verify:** the command that proves the task.
 
-For a task that adds a member to an enum, union, status, event, or operation, paste the search for every list of those members and its results. For a scripted rewrite, name its exclusions. Its `Verify` reruns it and ends in `git diff --exit-code`.
+When a task adds a member to an enum, union, status, event, or operation, paste the search you ran for every list of those members and its results. For a scripted rewrite, name its exclusions; its `Verify` command reruns the script and ends with `git diff --exit-code`.
 
 ## Sections
 
-In this order: Goal, Architecture, Global Constraints, Known Gotchas, Data Model (when schema changes), Risks, PR Boundaries, then the tasks. `../delivery/scripts/task-brief` copies Global Constraints, Known Gotchas, Data Model, and Risks into every brief, so keep those headings exact.
+Put the plan's sections in this order: Goal, Architecture, Global Constraints, Known Gotchas, Data Model if the schema changes, Risks, PR Boundaries, and then the tasks. Because `../delivery/scripts/task-brief` copies Global Constraints, Known Gotchas, Data Model, and Risks into every brief, keep those headings exact.
 
 `## Risks` answers four questions:
 
-- Who else reads or writes what this deletes, stops writing, or recalculates?
+- Who else reads or writes what this work deletes, stops writing, or recalculates?
 - What does the previous release still read?
-- What other entry points reach each invariant (public link, import, replay, restore, worker, alternate actor), and which shared guard does each call?
+- What other entry points reach each invariant, such as a public link, import, replay, restore, worker, or alternate actor, and which shared guard does each call?
 - Which touched files does another workstream claim?
 
-The PR table's columns are `| PR | Outcome | Tasks | Depends on | Risk | Independent verification |`.
+The PR Boundaries table uses these exact columns: `| PR | Outcome | Tasks | Depends on | Risk | Independent verification |`.
 
 ## Example task
 
@@ -134,10 +134,10 @@ The PR table's columns are `| PR | Outcome | Tasks | Depends on | Risk | Indepen
 
 ## Review
 
-1. Run `bash scripts/plan-check PLAN` and fix what it reports.
-2. Check the plan against the spec. Every requirement must have a task, and names must agree across tasks.
-3. Route one `reviewer` with specialty `plan` through agent-routing, on a harness other than yours. Give it the plan and spec paths. It judges coverage, whether any contract leaves a product decision to the implementer, the boundaries and their `Risk`, and the answers in `## Risks`. Ask it to challenge each `Reuses:`, every `none`, and a missing or vague `Layout:`, and to look for rebuilt code that already exists.
-4. Fix small gaps. Take a change of approach to your human partner.
+1. Run `bash scripts/plan-check PLAN` and fix everything it reports.
+2. Check the plan against the spec. Every requirement needs a task, and names must agree across tasks.
+3. Route one `reviewer` with specialty `plan` through agent-routing on a harness other than yours, and give it the plan and spec paths. It checks spec coverage, whether any contract leaves a product decision to the implementer, the PR boundaries and their `Risk`, and the answers in `## Risks`. Ask it to challenge each `Reuses:`, every `none`, and any missing or vague `Layout:`, and to look for rebuilt code that already exists.
+4. Fix small gaps. Take any change of approach back to your human partner.
 
 ## Handoff
 

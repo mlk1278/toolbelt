@@ -5,7 +5,7 @@ description: Use when starting feature work that needs isolation from the curren
 
 # Using Git Worktrees
 
-A caller may name a **source ref** (default `HEAD`) and a branch name. A caller that asks for a new worktree, as delivery does, always gets one: go to Step 1.
+A caller may name a **source ref**, which defaults to `HEAD`, and a branch name. Whenever a caller asks for a new worktree, as delivery does, create one by jumping straight to Step 1.
 
 ## Step 0: Check for existing isolation
 
@@ -15,18 +15,18 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 git rev-parse --show-superproject-working-tree 2>/dev/null   # prints a path inside a submodule
 ```
 
-- **`GIT_DIR != GIT_COMMON` and not a submodule:** you are already in a linked worktree. Report "Already in isolated workspace at `<path>` on branch `<name>`" (or "detached HEAD, externally managed; a branch is needed at finish time") and go to Step 2.
-- **Otherwise** (a normal checkout, or a submodule): follow any worktree preference in your instructions. With none, ask: "Would you like me to set up an isolated worktree? It protects your current branch from changes." If your human partner declines, work in place and go to Step 2.
+- **Already in a linked worktree.** When `GIT_DIR != GIT_COMMON` and you are not inside a submodule, you are already isolated. Report "Already in isolated workspace at `<path>` on branch `<name>`", or "detached HEAD, externally managed; a branch is needed at finish time", and go to Step 2.
+- **Otherwise.** On a normal checkout or inside a submodule, follow any worktree preference in your instructions. With none, ask: "Would you like me to set up an isolated worktree? It protects your current branch from changes." If your human partner declines, work in place and go to Step 2.
 
 ## Project worktree policy
 
-Read `<repo-root>/.toolbelt/worktree-policy.md` when it exists and follow it for the rest of this skill: port ranges and how to pick a set no other worktree uses, sidecar containers, per-worktree data, environment files to derive rather than copy, teardown, and the concurrency limit. Report the set you claimed. Without a policy file, use the project's defaults rather than inventing a scheme the next worktree collides with.
+Read `<repo-root>/.toolbelt/worktree-policy.md` when it exists and follow it for the rest of this skill. It governs port ranges and how to claim an unused set, sidecar containers, per-worktree data, environment files to derive rather than copy, teardown, and the concurrency limit. Report the resource set you claimed. Without a policy file, use the project's defaults instead of inventing a scheme that the next worktree could collide with.
 
 ## Step 1: Create the worktree
 
-**Native tool first.** If the harness has a worktree tool (named like `EnterWorktree` or `WorktreeCreate`, or a `/worktree` command), use it and go to Step 2: it owns placement, branching, and cleanup, and a `git worktree add` beside it creates state the harness can't see. Fall back to git only when there is no such tool, or it can't take the caller's source ref or branch name.
+**Native tool first.** If the harness offers a worktree tool, such as `EnterWorktree`, `WorktreeCreate`, or a `/worktree` command, use it and go to Step 2. That tool owns placement, branching, and cleanup, whereas running `git worktree add` beside it creates state the harness cannot see. Fall back to git only when no such tool exists, or when it cannot accept the caller's source ref or branch name.
 
-**Git fallback.** Put worktrees in the directory your instructions prefer; otherwise an existing `.worktrees/` or `worktrees/` (`.worktrees` wins if both exist); otherwise `.worktrees/` at the project root. `LOCATION` is that directory relative to the repo root. It must be git-ignored, or the next commit sweeps the whole tree into the repo:
+**Git fallback.** Put worktrees in the directory your instructions prefer. Otherwise use an existing `.worktrees/` or `worktrees/` directory, with `.worktrees/` winning if both exist, or create `.worktrees/` at the project root. Set `LOCATION` to that directory relative to the repo root. It must be git-ignored, or the next commit will sweep the whole tree into the repo:
 
 ```bash
 mkdir -p "$LOCATION"
@@ -40,11 +40,11 @@ If `git worktree add` fails with a permission error, the sandbox blocked it. Wit
 
 ## Step 2: Set up the project
 
-Apply the policy's setup, then install dependencies the way the project's manifest says.
+Apply the policy's setup, then install dependencies according to the project's manifest.
 
 ## Step 3: Verify a clean baseline
 
-Run the tests the work will rely on, not a package-wide baseline. When the base commit already has green CI or test evidence, cite it instead. Docs-only work needs no baseline.
+Run the tests that this work relies on rather than a package-wide baseline. When the base commit already has green CI or test evidence, cite it instead. Docs-only work needs no baseline.
 
 If the baseline fails, report it and ask whether to proceed. Otherwise report:
 

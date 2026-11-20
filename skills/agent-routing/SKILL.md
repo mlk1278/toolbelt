@@ -7,9 +7,9 @@ description: Use before any dispatch that needs a role resolved. Callers request
 
 ## The routing text
 
-A session-start hook injects `.toolbelt/routing/<harness>.md` from the project's main checkout in an `<AGENT-ROUTING source="...">` block. Without the block, read the bundled `routing/claude.md` or `routing/codex.md` next to this file. Route every dispatch from it.
+A session-start hook injects `.toolbelt/routing/<harness>.md` from the project's main checkout inside an `<AGENT-ROUTING source="...">` block. When that block is absent, read the bundled `routing/claude.md` or `routing/codex.md` next to this file. Route every dispatch from that text.
 
-Map each model and effort to an agent you can launch: a native subagent on your own harness, AGX for the other. Run `codex exec` or `claude -p` directly only when AGX is not installed. If you cannot launch what the text names, stop and tell your human partner rather than substituting a model.
+Map each model and effort to an agent you can launch, using a native subagent on your own harness and AGX for the other harness. Run `codex exec` or `claude -p` directly only when AGX is not installed. If you cannot launch the route the text names, stop and tell your human partner instead of substituting another model.
 
 ## Roles
 
@@ -23,43 +23,43 @@ Map each model and effort to an agent you can launch: a native subagent on your 
 | `monitor` | PRs through CI, review providers, review fixes, and merge. |
 | `reviewer` | Review, with specialty `code`, `spec`, `plan`, `ux`, `gate`, or `actor`. |
 
-The monitor fixes review findings on its own PR inline; all other code goes to the implementer. When the text names no route for a role you need, stop and tell your human partner. One exception: when the text names no `lookup` route, use its `explorer` route for lookups.
+The monitor fixes review findings on its own PR inline; all other code edits go to the implementer. When the routing text names no route for a role you need, stop and tell your human partner. The one exception is `lookup`: when the text names no `lookup` route, use its `explorer` route.
 
-The plan's `Risk` column raises effort and never changes the model. A `high` row raises the reviewer one effort level above its route.
+The plan's `Risk` column raises effort and never changes the model. A `high` row raises the reviewer one effort level above its normal route.
 
 ## Waiting on background agents
 
-A stuck agent reads messages only at its next tool call, so a status ping cannot reach it, and its silence is not an answer. Judge liveness by when its transcript last changed. Never end a turn waiting on agents without a watchdog armed:
+A stuck agent reads messages only at its next tool call, so a status ping cannot reach it and silence tells you nothing. Judge liveness by when its transcript last changed. Never end a turn waiting on agents without a watchdog armed:
 
 ```bash
 bash scripts/stall-watch --minutes 45 <agent id or transcript>... --minutes 120 <monitor id or transcript>...
 ```
 
-It exits with a `STALLED` line once a transcript has gone unchanged past its limit. Monitors get the longer limit because they legitimately wait on CI. In Claude Code, start it as a background command that wakes you when it exits. In Codex, run it with `--once` whenever `wait_agent` returns without a final answer. Re-arm it after it fires and whenever an agent finishes, listing only agents still running. On a `STALLED` line, read the transcript's tail: a tool call with no result means the agent hung, so stop it and dispatch a replacement.
+The watchdog exits with a `STALLED` line once a transcript goes unchanged past its limit. Monitors get the longer limit because they wait on CI. In Claude Code, run it as a background command that wakes you when it exits. In Codex, run it with `--once` whenever `wait_agent` returns without a final answer. Re-arm it after it fires and whenever an agent finishes, listing only agents still running. On a `STALLED` line, read the transcript's tail: a tool call with no result means the agent hung, so stop it and dispatch a replacement.
 
-Every prompt you dispatch says: give every shell command a timeout of at most 10 minutes.
+Every prompt you dispatch must tell the agent to give every shell command a timeout of at most 10 minutes.
 
 ## Reviewer independence
 
-A reviewer runs on a different harness from the implementer's. If the text would put a review on the implementer's harness, stop and tell your human partner.
+A reviewer runs on a different harness from the implementer's. If the routing text would put a review on the implementer's harness, stop and tell your human partner.
 
 ## Precedence
 
-Your human partner's direct instruction wins, then the routing text, then the bundled default. Plans carry no routing, and a route in a ledger is audit metadata.
+Your human partner's direct instruction wins, followed by the routing text, then the bundled default. Plans carry no routing, and any route written to a ledger is audit metadata only.
 
 ## Outage override
 
-The trigger: the routed reviewer and every other-harness fallback the text names failed with provider availability errors on repeated attempts. Then dispatch a fresh instance of the most capable reachable route as the reviewer, even on the implementer's harness:
+This override applies only when the routed reviewer and every other-harness fallback the routing text names have failed with provider availability errors on repeated attempts. When that happens, dispatch a fresh instance of the most capable reachable route as the reviewer, even on the implementer's harness:
 
 - Record each failed route, its error, and the attempt times first.
 - Use a fresh dispatch with its own context, never the author's thread.
-- Flag the review report and the PR body `EMERGENCY SAME-HARNESS REVIEW`, naming the outage.
+- Flag both the review report and the PR body with `EMERGENCY SAME-HARNESS REVIEW`, naming the outage.
 - Keep capability; never downgrade to manufacture independence.
 
-The override ends the moment an other-harness route is reachable.
+The override ends as soon as an other-harness route becomes reachable again.
 
 ## Setup
 
-Claude Code runs the hook from this plugin. Codex does not run plugin hooks: run `scripts/setup-codex-routing` from the toolbelt checkout once per machine, then trust the hook when Codex next starts.
+Claude Code runs the hook from this plugin. Because Codex does not run plugin hooks, run `scripts/setup-codex-routing` from the toolbelt checkout once per machine, then rely on the hook when Codex starts next.
 
 To write or change a project's routing file, your human partner runs `configure-routing` and describes the routing they want in their own words. It drafts the file and writes it only after they confirm. Only they can start it; never invoke it for them.
