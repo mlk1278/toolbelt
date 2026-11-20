@@ -12,9 +12,9 @@ Read this when writing a matrix or shot list for `scripts/ux-capture`. Run it fr
   "pathways": [{
     "name": "estimate-totals",
     "path": "/estimates/{{estimate.id}}",
-    "fixtures": [{"url": "/api/settings/branding", "json": {"logoUrl": null}}],
+    "fixtures": [{"url": "/api/settings/branding", "status": 503, "json": {}}],
     "steps": [
-      {"name": "open", "target": "[data-testid=estimate-totals]", "expectText": "$1,234.50", "note": "totals with no logo"},
+      {"name": "open", "target": "[data-testid=estimate-totals]", "expectText": "$1,234.50", "note": "totals without branding"},
       {"name": "edit-focus", "action": "press", "key": "Tab", "expectFocus": "button[name=edit]", "capture": false}
     ]
   }]

@@ -2,6 +2,16 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.13.0 (2026-11-20)
+
+The UX reviewer judges how a screen looks, and reports everything it finds. A blind test on 11 screenshots of shipped screens, graded against the product owner's list of defects, showed reviewers stop after about three problems and file visible defects, such as a half-outlined button or an empty band beside truncated text, as taste. This release removes the two instructions that encouraged both: the five-finding cap and "leave your own style preferences out".
+
+- **The reviewer's prompt changed.** It judges look as well as clarity against the design reference, asks whether same-job controls match, whether space sits empty beside cramped content, and whether the screen looks planned, and reports every defect, ranked. A nit is now a preference the design reference does not back. A screen not sent as a reference is not precedent.
+- **The implementer rereads the project's design reference before its self-check**, and checks the tidy and the hardest state against it.
+- **The UX gate and the code review run together** on the same head, and their findings go to the implementer in one dispatch. Before, the review waited for the gate and its fixes.
+- **Screen data comes from the seed, then `setup`, then a fixture** for what neither can produce, reusing an existing body. In one consuming project about a third of the faked responses carried data the seed already held, and most fixture bodies were repeats of another.
+- Word ceilings rose for `ux-gate/SKILL.md` (1,460 to 1,510) and `delivery/implementer-prompt.md` (700 to 750).
+
 ## v10.12.0 (2026-11-15)
 
 A hill-climb campaign keeps each agent's context small. A measured 13-round climb re-read about 3 billion cached tokens, nearly all of it fixers carrying 5 to 11 problems in one context that grew to 400 to 500K tokens; loops and retries were under 5%.
