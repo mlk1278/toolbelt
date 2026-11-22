@@ -11,13 +11,13 @@ When the app will not run or nothing can be captured, the review cannot run and 
 
 ## At a gate
 
-**Entry:** the author's final capture folder; the finished-capture check's output line, or the capture's commit when the project has no check; the plan path; and for each changed page, its review shots, each one's focus, and the task numbers that cover it.
-**Exit:** `Pass` with the capture commit only when every page passes; else `Changes Required` with the review files. This skill fixes nothing.
+**Entry:** the author's final capture folder; the finished-capture check's output line, or the capture's commit when the project has no check; the plan path; and for each changed piece, its page, its review shots, each one's focus, and the task numbers that cover it.
+**Exit:** `Pass` with the capture commit only when every changed piece passes; else `Changes Required` with the review files. This skill fixes nothing.
 
-Read the design reference path from the project's UX policy (`.toolbelt/ux-policy.md`). Route one `reviewer` with specialty `ux` through agent-routing per changed page in one turn. Send each:
+Read the design reference path from the project's UX policy (`.toolbelt/ux-policy.md`). Route one `reviewer` with specialty `ux` through agent-routing per changed piece in one turn. Send each:
 
-- The capture brief's path, that page's review shots, and each one's focus: the changed component or the whole screen. Say that the reviewer reads only those shots and ignores the rest of the brief, because a reviewer handed every shot finds the large problems and misses the fine ones.
-- The plan path and the task numbers whose acceptance criteria and `Layout:` notes cover that page.
+- The capture brief's path, that piece's review shots, and each one's focus: the changed component or the whole screen. Say that the reviewer reads only those shots and ignores the rest of the brief, because a reviewer handed more shots than these finds the large problems and misses the fine ones.
+- The plan path and the task numbers whose acceptance criteria and `Layout:` notes cover that piece.
 - The design reference path, and [reviewer-prompt.md](reviewer-prompt.md) as an absolute path for the reviewer to follow.
 - A review file of its own in the capture folder. Say that this path replaces the one the brief prints, because several reviewers share one brief.
 

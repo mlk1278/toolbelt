@@ -37,7 +37,7 @@ Keep your reply brief, covering only:
 - One line per task on what changed.
 - Any drift from the plan and the coupled files you touched.
 - Each test command you ran, with its last passing line.
-- Visible changes in prose; the shot list path; the final capture folder; the finished-capture check's output line, or the final capture's commit when the project has no check; and for each changed page, its review shots (the hardest-state shot of each changed piece and the whole-screen shot), each with its focus (changed component or whole screen), its author-checked shots by name, and its task numbers; or `none`. A menu, popover, or empty or error state that is itself the change is a changed piece.
+- Visible changes in prose; the shot list path; the final capture folder; the finished-capture check's output line, or the final capture's commit when the project has no check; for each changed piece, the page it is on, its review shots (its hardest-state shot and the whole-screen shot of that page), each with its focus (changed component or whole screen), and its task numbers; and, once for the whole change, the author-checked shots by name; or `none`. A changed piece is what a user sees as one unit, such as a card, a dialog, a panel, a table, or a new page. Several edits inside one card are one piece. A menu, popover, or empty or error state that is itself the change is a changed piece. A piece that appears on several pages is listed once, on the page where it is hardest.
 - The `pointer` step's result, or `none`.
 
 ## Fix dispatches
