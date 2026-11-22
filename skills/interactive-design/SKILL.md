@@ -35,7 +35,7 @@ Edit directly in this session, with no subagents and no per-iteration review. Co
 ## 4. Exit
 
 1. Reconcile the code and the ledger: confirm that every marker has a matching ledger entry, every `[FIXTURE]` or `[EXISTING — EXTENDED]` entry has a marker, and the recorded shapes match the fixtures. Delete any dead routes.
-2. Write `.toolbelt/ux/matrix.json` following Section 2 of ux-gate for every screen the criteria name. Run `../ux-gate/scripts/ux-capture` against the prototype into `.toolbelt/ux/baseline/`. Under the ledger's **Acceptance criteria**, record the prototype's visual and interaction criteria, including the empty and error states, both absolute paths, and the prototype commit SHA. For each screen with an existing match, include "matches <screen> in hierarchy, spacing, information order, and actions" and name any intended difference. Stop the dev server.
+2. Write `.toolbelt/ux/matrix.json` following `../ux-review/matrix.md` for every screen the criteria name. Run `../ux-review/scripts/ux-capture` against the prototype into `.toolbelt/ux/baseline/`. Under the ledger's **Acceptance criteria**, record the prototype's visual and interaction criteria, including the empty and error states, both absolute paths, and the prototype commit SHA. For each screen with an existing match, include "matches <screen> in hierarchy, spacing, information order, and actions" and name any intended difference. Stop the dev server.
 3. Present the contract inventory to your human partner.
 4. On approval, invoke `toolbelt:writing-specs`, or in iteration mode the route that [iteration-mode.md](iteration-mode.md) confirms. Do NOT invoke any other skill.
 
@@ -44,7 +44,7 @@ Edit directly in this session, with no subagents and no per-iteration review. Co
 - The API section, taken from the ledger.
 - For each `[FIXTURE]` or `[EXISTING — EXTENDED]` entry, implement the recorded shape exactly, remove the marker, and flip the entry to `[IMPLEMENTED]`.
 - Frontend tests per project conventions, along with loading and slow-response handling.
-- The ledger's Acceptance criteria as the ux-gate criteria.
+- The ledger's Acceptance criteria as the ux-review criteria.
 - Any contract changes accepted during spec or plan review go back into the ledger and fixture in the same round.
 - The hardening tasks and delivery's review cover the prototype commits.
 - Ship everything in one PR, because fixtures must never reach the base branch.

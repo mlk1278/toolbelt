@@ -18,4 +18,4 @@ Write a git-ignored plan at `.toolbelt/quick/<slug>-plan.md` with one task per f
 
 ## 3. Deliver
 
-Invoke toolbelt:delivery with the mini-plan's absolute path so it stays reachable after delivery enters the worktree. Delivery owns the worktree, routing, implementer, review, optional UX gate, PR, merge, and cleanup. Do NOT invoke any other skill.
+Invoke toolbelt:delivery with the mini-plan's absolute path so it stays reachable after delivery enters the worktree. Delivery owns the worktree, routing, implementer, review, optional UX review, PR, merge, and cleanup. Do NOT invoke any other skill.

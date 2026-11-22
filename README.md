@@ -51,7 +51,7 @@ Nothing is required. Each is optional and read only when present:
 | `.toolbelt/routing/<harness>.md` | Plain-English agent routing per orchestrating harness (`claude.md`, `codex.md`), read from the main checkout |
 | `.toolbelt/pr-policy.md` | Which review providers to await, complexity lanes, timeouts |
 | `.toolbelt/worktree-policy.md` | Port ranges, sidecar containers, and per-worktree resources so parallel worktrees don't collide |
-| `.toolbelt/ux-capture.json` | How `ux-gate`'s capture tool starts the app, signs in, styles captures, and which writes and setup calls it allows |
+| `.toolbelt/ux-capture.json` | How `ux-review`'s capture tool starts the app, signs in, styles captures, and which writes and setup calls it allows |
 | `docs/REVIEW-GUIDANCE.md` | Project review conventions; implementers follow them and reviewers check against them |
 | `AGENTS.md` | Entry-point summary — copy from [docs/AGENTS-SNIPPET.md](docs/AGENTS-SNIPPET.md) |
 
@@ -103,7 +103,7 @@ Scratch lands in `.toolbelt/`; add it to `.gitignore`. See [docs/ADOPTING-IN-A-P
 - **delivery** - An approved plan, one implementer and one reviewed PR per boundary, through merge
 - **agent-routing** - Resolves logical roles to concrete agent routes
 - **configure-routing** - Write a project's routing file from a plain-language description; you start it by name, agents never do
-- **ux-gate** - UX review for new flows, material UI changes, or explicit requests
+- **ux-review** - UX review for new flows, material UI changes, or requests to check screens
 - **pr-monitor** - PR publication, CI, review providers, fix loops, and merge
 
 **Meta**

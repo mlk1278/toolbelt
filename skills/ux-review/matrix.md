@@ -33,7 +33,7 @@ The tool waits up to 15 seconds for the first visible, sized match containing `e
 
 When no match is found, no match has a size, none contains `expectText`, or any painted element covers the target, even one that ignores the pointer, the shot is marked **not reached**. The tool writes no image, records the reason, and exits with code 1. A failed action stops its pathway and marks every later shot in that pathway as not reached.
 
-Capture a screen the changed surface has to match as its own pathway rather than a `referenceScreens` entry, because reaching its state can take steps. Use the `match-` prefix only when the diff changes none of the components, styles, tokens, or shared code, such as a formatter, data hook, or fixture, that decide what it renders. Its stills are then treated as references, and the gate runner ignores their mechanical results. Otherwise name it like any changed pathway.
+Capture a screen the changed surface has to match as its own pathway rather than a `referenceScreens` entry, because reaching its state can take steps. Use the `match-` prefix only when the diff changes none of the components, styles, tokens, or shared code, such as a formatter, data hook, or fixture, that decide what it renders. Its stills are then treated as references, and the review ignores their mechanical results. Otherwise name it like any changed pathway.
 
 | Step field | Meaning |
 |---|---|

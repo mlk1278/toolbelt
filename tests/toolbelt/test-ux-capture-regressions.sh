@@ -12,4 +12,4 @@ if [ -z "$module" ]; then
 fi
 
 PLAYWRIGHT_MODULE="$module" node "$repo_root/tests/toolbelt/ux-capture-regressions.cjs" \
-  "$repo_root/skills/ux-gate/scripts/ux-capture"
+  "$repo_root/skills/ux-review/scripts/ux-capture"

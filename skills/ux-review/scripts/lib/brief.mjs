@@ -1,4 +1,4 @@
-// Writes brief.md: the reviewer handoff ux-gate §3 describes, built from a finished run.
+// Writes brief.md: the reviewer handoff ux-review uses, built from a finished run.
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 

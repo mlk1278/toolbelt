@@ -1,4 +1,0 @@
-interface:
-  display_name: "UX Gate"
-  short_description: "Real-browser UX verification of changed surfaces"
-  default_prompt: "Use $ux-gate to verify the changed surfaces against the approved UX criteria."

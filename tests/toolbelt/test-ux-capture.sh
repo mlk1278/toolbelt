@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root=$(git rev-parse --show-toplevel)
-script="$repo_root/skills/ux-gate/scripts/ux-capture"
+script="$repo_root/skills/ux-review/scripts/ux-capture"
 fixtures="$repo_root/tests/toolbelt/fixtures/ux-capture"
 
 tmp=$(mktemp -d)

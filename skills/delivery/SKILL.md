@@ -15,7 +15,7 @@ Read the plan, this skill, [branch-lifecycle.md](branch-lifecycle.md), agent-rou
 
 1. Run `bash ../writing-plans/scripts/plan-check PLAN`. If it fails, go back to planning.
 2. Run `bash scripts/workspace PLAN` from your starting checkout, and keep that checkout until every boundary closes. The ledger lives at `<workspace>/delivery.md`.
-3. Use agent-routing to resolve the implementer, reviewer, and monitor routes. Resolve an `errand` route for the gate runner too when any boundary will run ux-gate.
+3. Use agent-routing to resolve the implementer, reviewer, and monitor routes.
 4. If the ledger already has entries, recover first using the Recovery section below.
 
 ## Per boundary
@@ -25,17 +25,15 @@ You can run up to three implementers at once on independent boundaries with disj
 1. **Worktree.** Branch from the base branch, or from the predecessor's head while its PR is open. Create the worktree with using-git-worktrees on branch `<plan-slug>/pr-<N>`, and record the fork SHA. If a boundary follows interactive-design, keep the prototype branch, worktree, and baseline, and use the commit before the prototype commits as its review BASE.
 2. **Dispatch.** Run `bash scripts/dispatch-prompt implementer --plan PLAN --boundary N --worktree DIR`. Dispatch one implementer with "Read <printed path> and follow it", and record its agent id.
 3. **Reply.** Save the reply to `<workspace>/boundary-N-report.md`.
-   - For `DONE`, check that the reply is complete before moving on. Any visible change requires the shot list path and the capture folder the implementer inspected. Any pointer-sensitive change also requires a `pointer` result. Send an incomplete reply back to the implementer. Copy the capture folder into `<workspace>/boundary-N-ux/` so the images outlive the worktree.
+   - For `DONE`, check that the reply is complete before moving on. Any visible change requires the shot list path, the final capture folder, the finished-capture check line or capture commit, and each changed page with its shots, focus, and task numbers. Any pointer-sensitive change also requires a `pointer` result. Send an incomplete reply back to the implementer. Copy the capture folder into `<workspace>/boundary-N-ux/` so the images outlive the worktree.
    - For `NEEDS_DECISION`, take the question to your human partner. Append their ruling under `## Rulings` in the brief it concerns, then resume the implementer.
    - For `BLOCKED`, retry once with what the implementer asked for or with a stronger routed model. Take a second `BLOCKED` reply to your human partner.
 4. **Liveness.** Keep the stall watchdog armed while any agent is running, following the Waiting on background agents section of agent-routing. If an implementer stalls or cannot be resumed, dispatch a fresh one with the prompt path, the report so far, and the current head.
-5. **UX gate and Review, together.**
-   - Run the Review section's rebase first when it applies.
-   - Start the Review and, when ux-gate's entry condition holds, dispatch the gate runner in the same turn. Neither waits on the other.
-   - Give the gate runner toolbelt:ux-gate, the changed pages, the acceptance criteria, the environment, the commit range, the shot list path, the plan's absolute path, and the prototype ledger's absolute path when the boundary follows interactive-design.
-   - Send the gate's review file and the Review's findings to the same implementer in one dispatch.
-   - Copy each of the gate's capture folders into `<workspace>/boundary-N-ux/` beside the implementer's folder, because a retake holds only the shots a fix touched.
-6. **Publish** once the fixes and the gate's re-check finish.
+5. **UX review and Review, together.**
+   - Run the Review section's rebase first when it applies. When that rebase moves a boundary with a visible change, send the implementer back to rerun the final capture and the finished-capture check before either review starts.
+   - Start the Review and, when ux-review's entry condition holds, run toolbelt:ux-review yourself in the same turn and dispatch its reviewers. Neither waits on the other.
+   - Send the UX review files and the Review's findings to the same implementer in one dispatch.
+6. **Publish** once the fixes and the UX re-check finish.
 
 ## Review
 

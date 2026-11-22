@@ -213,7 +213,7 @@ assert_contains "$archive_paths" "skills/agent-routing/SKILL.md" "archive includ
 assert_contains "$archive_paths" "skills/agent-routing/routing/claude.md" "archive includes Claude routing default"
 assert_contains "$archive_paths" "skills/agent-routing/routing/codex.md" "archive includes Codex routing default"
 assert_contains "$archive_paths" "skills/agent-routing/agents/openai.yaml" "archive includes committed routing metadata"
-for ws_skill in quick-task pr-monitor ux-gate delivery; do
+for ws_skill in quick-task pr-monitor ux-review delivery; do
   assert_contains "$archive_paths" "skills/$ws_skill/SKILL.md" "archive includes $ws_skill skill"
   assert_contains "$archive_paths" "skills/$ws_skill/agents/openai.yaml" "archive includes committed $ws_skill metadata"
 done

@@ -3,7 +3,7 @@
 set -euo pipefail
 
 repo_root=$(git rev-parse --show-toplevel)
-scripts="$repo_root/skills/ux-gate/scripts"
+scripts="$repo_root/skills/ux-review/scripts"
 node "$repo_root/tests/toolbelt/ux-capture-guard.test.mjs" "$scripts/lib"
 
 module=${PLAYWRIGHT_MODULE:-}

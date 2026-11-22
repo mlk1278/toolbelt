@@ -1,0 +1,4 @@
+interface:
+  display_name: "UX Review"
+  short_description: "Review rendered screens for UX defects"
+  default_prompt: "Use $ux-review to review rendered screens for UX defects."
