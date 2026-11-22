@@ -2,6 +2,19 @@
 
 Toolbelt is a fork of [Superpowers](https://github.com/obra/superpowers). It diverged at upstream v6.1.1 (2026-07-02); every release up to and including that one is upstream's work, and those notes live at https://github.com/obra/superpowers.
 
+## v10.15.0 (2026-11-22)
+
+The UX review skill is rewritten around one handoff and renamed from `ux-gate` to `ux-review`. The author of a change captures and checks its own screens, and a reviewer reads a small part of that capture.
+
+- **The skill falls from about 1,200 words to about 630.** Preflight, coverage, capture, and matching-screen sections are gone, along with the separate gate runner agent and its second capture. The orchestrating session runs `ux-review` itself and never opens the images.
+- **Reviews start two ways**, at a gate before final review or when someone asks for screens to be checked. The second needs no plan or branch and returns findings with no verdict.
+- **The author's final capture is the evidence.** After committing, the implementer reruns the whole shot list and runs the finished-capture check when the project's UX policy names one. Its reply names each changed piece with its page, review shots, and task numbers, and lists other shots as author-checked. Delivery sends an incomplete reply back.
+- **One reviewer runs per changed piece**, replacing one per changed page. A changed piece is what a user sees as one unit, such as a card, dialog, panel, table, or new page. The reviewer reads only its hardest-state shot and the whole-screen shot.
+- **Smaller image sets found more defects.** On one screen with a blind judge and 11 known defects, one run each, the same reviewer found 6.5 from one shot plus the whole screen (7 images), 4.5 from four shots (18 images), and 4 from the whole capture (32 images). Telling it to finish each shot before opening the next still found 4.5.
+- **Rebasing requires a new capture.** A branch rebased after its final capture gets another before the first review.
+- **The reviewer prompt is unchanged.** A consuming project that named `ux-gate` in its own files should rename it to `ux-review`.
+- **Word ceilings update in `tests/toolbelt/test-word-counts.sh`.** `ux-review/SKILL.md` is 630, and `delivery/implementer-prompt.md` is 1,001.
+
 ## v10.14.1 (2026-11-20)
 
 The core workflow skills are rewritten in plain, readable prose with no behavior changes.
