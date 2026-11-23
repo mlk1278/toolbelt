@@ -30,6 +30,7 @@ Every finding names a concrete scenario the system can produce, including the ca
 - Reuse. Check the diff against each task's `Reuses:`. Where the diff adds a component, helper, service, or calculation, search for an existing one using the business words for it and the labels on the screen. A new shared piece must not branch on which caller is using it.
 - How screens behave after an access error.
 - Stale drafts.
+- Historical views or snapshots reading live settings instead of recorded state.
 - Refresh behavior in both directions.
 - Empty, duplicate, concurrent, retried, partial, and large inputs.
 - Units, time zones, rounding, and encoding.

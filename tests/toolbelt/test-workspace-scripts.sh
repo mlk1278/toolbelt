@@ -293,6 +293,35 @@ PLAN
         grep -En '\[[A-Z][A-Z_]*\]' "$prompt_path" || true
     fi
 
+    if grep -q 'review guidance: none' "$prompt_path"; then
+        pass "dispatch-prompt implementer reports review guidance: none when absent"
+    else
+        fail "dispatch-prompt implementer reports review guidance: none when absent"
+        grep -n 'review guidance' "$prompt_path" || true
+    fi
+
+    mkdir -p "$repo/docs"
+    printf '# Main Review Guidance\n' > "$repo/docs/REVIEW-GUIDANCE.md"
+    local repo_root
+    repo_root="$(cd "$repo" && pwd -P)"
+    prompt_path="$(cd "$repo" && "$SCRIPTS/dispatch-prompt" implementer --plan delivery-plan.md --boundary 1 --worktree "$wt")"
+    if grep -q "review guidance: $repo_root/docs/REVIEW-GUIDANCE.md" "$prompt_path"; then
+        pass "dispatch-prompt implementer falls back to main root docs/REVIEW-GUIDANCE.md"
+    else
+        fail "dispatch-prompt implementer falls back to main root docs/REVIEW-GUIDANCE.md"
+        grep -n 'review guidance' "$prompt_path" || true
+    fi
+
+    mkdir -p "$wt/docs"
+    printf '# Review Guidance\n' > "$wt/docs/REVIEW-GUIDANCE.md"
+    prompt_path="$(cd "$repo" && "$SCRIPTS/dispatch-prompt" implementer --plan delivery-plan.md --boundary 1 --worktree "$wt")"
+    if grep -q "review guidance: $wt_root/docs/REVIEW-GUIDANCE.md" "$prompt_path"; then
+        pass "dispatch-prompt implementer prefers worktree docs/REVIEW-GUIDANCE.md when present"
+    else
+        fail "dispatch-prompt implementer prefers worktree docs/REVIEW-GUIDANCE.md when present"
+        grep -n 'review guidance' "$prompt_path" || true
+    fi
+
     if (cd "$repo" && "$SCRIPTS/dispatch-prompt" implementer --plan delivery-plan.md --boundary 7 --worktree "$wt") >/dev/null 2>&1; then
         fail "dispatch-prompt rejects a boundary not in the table"
     else

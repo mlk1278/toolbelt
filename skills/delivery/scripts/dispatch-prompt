@@ -99,13 +99,14 @@ case $mode in
     main_root=$(dirname "$(git -C "$worktree" rev-parse --path-format=absolute --git-common-dir)")
     agents=$(first_existing "$worktree/AGENTS.md" "$main_root/AGENTS.md")
     policy=$(first_existing "$worktree/.toolbelt/worktree-policy.md" "$main_root/.toolbelt/worktree-policy.md")
+    review_guidance=$(first_existing "$worktree/docs/REVIEW-GUIDANCE.md" "$main_root/docs/REVIEW-GUIDANCE.md")
 
     prompt=$(cat "$skill_dir/implementer-prompt.md")
     prompt=${prompt//"[BOUNDARY]"/"$boundary"}
     prompt=${prompt//"[PLAN]"/"$plan_abs"}
     prompt=${prompt//"[WORKTREE]"/"$worktree"}
     prompt=${prompt//"[BRIEFS]"/"$briefs"}
-    prompt=${prompt//"[PROJECT_RULES]"/"AGENTS.md: $agents; worktree policy: $policy"}
+    prompt=${prompt//"[PROJECT_RULES]"/"AGENTS.md: $agents; worktree policy: $policy; review guidance: $review_guidance"}
     prompt=${prompt//"[LOOK_FOR]"/"$(dirname "$skill_dir")/requesting-code-review/code-reviewer.md"}
     prompt=${prompt//"[UX_MATRIX]"/"$(dirname "$skill_dir")/ux-review/matrix.md"}
     prompt=${prompt//"[UX_CAPTURE]"/"$(dirname "$skill_dir")/ux-review/scripts/ux-capture"}
